@@ -157,12 +157,10 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
       <section v-else-if="tab === 'acessos'" class="card">
         <h2>Regras de acesso por pasta</h2>
         <p class="meta">Bloqueie ou libere uma pasta para um usuário ou grupo, além do que já vale pelas pastas liberadas de cada usuário.</p>
-        <div class="form" style="max-width: 640px">
-          <div class="scoperow">
-            <label>Fonte<select v-model="acSource" class="scopein" @change="loadRule"><option v-for="n in sourceNames" :key="n" :value="n">{{ n }}</option></select></label>
-            <label style="flex: 1">Pasta<input v-model="acPath" placeholder="/" @keydown.enter.prevent="loadRule" /></label>
-            <button class="btn" type="button" @click="loadRule"><Icon name="refresh" /><span>Ver</span></button>
-          </div>
+        <div class="fillrow">
+          <label class="fld">Fonte<select v-model="acSource" class="scopein" @change="loadRule"><option v-for="n in sourceNames" :key="n" :value="n">{{ n }}</option></select></label>
+          <label class="fld grow">Pasta<input v-model="acPath" placeholder="/" @keydown.enter.prevent="loadRule" /></label>
+          <button class="btn" type="button" @click="loadRule"><Icon name="refresh" /><span>Ver</span></button>
         </div>
         <div v-if="acRule && !acRule.pathExists && acPath !== '/'" class="meta" style="margin: 8px 0">Essa pasta não existe na fonte (a regra pode ser criada mesmo assim).</div>
         <div v-if="acRule && acRule.denyAll" class="meta" style="margin: 8px 0">Todos negados nesta pasta.</div>
@@ -174,12 +172,12 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
           </div>
           <div v-if="!rules.length" class="vazio" style="border: 0">Sem regras nesta pasta.</div>
         </div>
-        <form class="form userform" @submit.prevent="addRule">
+        <form class="userform wide" @submit.prevent="addRule">
           <h2>Nova regra</h2>
-          <div class="scoperow">
-            <select v-model="acForm.allow" class="scopein"><option :value="false">Negar</option><option :value="true">Permitir</option></select>
-            <select v-model="acForm.ruleCategory" class="scopein"><option value="user">usuário</option><option value="group">grupo</option></select>
-            <input v-model="acForm.value" class="scopein" placeholder="nome" style="max-width: none" aria-label="Nome do usuário ou grupo" />
+          <div class="fillrow">
+            <select v-model="acForm.allow" class="scopein" aria-label="Ação"><option :value="false">Negar</option><option :value="true">Permitir</option></select>
+            <select v-model="acForm.ruleCategory" class="scopein" aria-label="Tipo"><option value="user">usuário</option><option value="group">grupo</option></select>
+            <input v-model="acForm.value" class="fld grow ctl" placeholder="nome do usuário ou grupo" aria-label="Nome do usuário ou grupo" />
             <button class="btn pri" :disabled="!acForm.value.trim()">Adicionar</button>
           </div>
         </form>
