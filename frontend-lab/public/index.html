@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="{{ if .htmlVars.defaultDarkMode }}dark-mode{{ end }}">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ .htmlVars.title }}</title>
+  <link rel="icon" type="image/png" sizes="256x256" href="{{ .htmlVars.favicon }}">
+  <link rel="manifest" href="{{ .htmlVars.manifestURL }}" crossorigin="use-credentials">
+  <meta name="theme-color" content="#170a38">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{ .htmlVars.title }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ .htmlVars.appIcon }}">
+  <meta name="msapplication-TileImage" content="{{ .htmlVars.winIcon }}">
+  <meta name="description" content="{{ .htmlVars.description }}">
+
+  <!-- Variáveis preenchidas pelo backend (bloco JSON não sofre a CSP de scripts) -->
+  <script id="app-config" type="application/json">{{ .globalVars }}</script>
+  <!-- Aplica o modo de cor salvo antes da primeira pintura (evita piscar claro/escuro) -->
+  <script nonce="{{ .cspNonce }}">
+    try {
+      var t = JSON.parse(localStorage.getItem("lab.ui") || "{}").theme;
+      if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+  <style>
+    html, body { margin: 0; background: #170a38; }
+    @media (prefers-color-scheme: light) { html:not([data-theme="dark"]), html:not([data-theme="dark"]) body { background: #e6e9ed; } }
+    html[data-theme="light"], html[data-theme="light"] body { background: #e6e9ed; }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>

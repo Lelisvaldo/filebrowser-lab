@@ -55,6 +55,19 @@ func (r *uploadSessionRegistry) release(realPath, sessionID string) {
 	}
 }
 
+// anyUnder diz se há envio em andamento (não expirado) em algum caminho que comece com prefix.
+func (r *uploadSessionRegistry) anyUnder(prefix string) bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	now := time.Now()
+	for p, e := range r.sessions {
+		if strings.HasPrefix(p, prefix) && now.Sub(e.lastSeen) <= uploadSessionTTL {
+			return true
+		}
+	}
+	return false
+}
+
 // expireForTest marks a path's session as expired without deleting it (for unit tests).
 func (r *uploadSessionRegistry) expireForTest(realPath string) {
 	r.mu.Lock()

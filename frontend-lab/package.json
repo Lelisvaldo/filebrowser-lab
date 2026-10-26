@@ -1,0 +1,22 @@
+{
+  "name": "filebrowser-lab-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Interface própria do filebrowser-lab (Vue 3). Fala com a API do backend do Filebrowser Quantum.",
+  "scripts": {
+    "build": "vite build",
+    "build:docker": "vite build",
+    "icons": "npm i --no-save @fluentui/svg-icons && node scripts/gen-icons.mjs"
+  },
+  "dependencies": {
+    "dompurify": "^3.2.4",
+    "marked": "^15.0.6",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.0",
+    "vite": "^6.2.0"
+  }
+}

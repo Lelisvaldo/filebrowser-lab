@@ -21,6 +21,10 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	api.HandleFunc("GET /health", healthHandler)
 	publicApi.HandleFunc("GET /health", healthHandler)
 
+	// filebrowser-lab: pendrives (ponte com o usb-manager do servidor)
+	api.HandleFunc("GET /usb", withUser(usbListHandler))
+	api.HandleFunc("POST /usb/{uuid}/eject", withUser(usbEjectHandler))
+
 	// ========================================
 	// User Routes - /api/users/ (with public routes)
 	// ========================================
