@@ -57,3 +57,7 @@ export { request };
 // Compactar / extrair no servidor
 export const archive = (source, paths, destination) => send("resources/archive", "POST", { fromSource: source, paths, destination, format: "zip" });
 export const unarchive = (source, path, destination) => send("resources/unarchive", "POST", { fromSource: source, path, destination });
+
+// Maiores arquivos dentro de uma pasta (minMb em MB); devolve do maior para o menor
+export const largest = (source, path, minMb) =>
+  get("tools/search", { query: `type:largerThan=${minMb} type:file`, sources: source, scope: `${source}:${path}`, largest: "true" });

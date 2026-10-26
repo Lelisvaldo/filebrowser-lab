@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import ItemMenu from "@/components/ItemMenu.vue";
@@ -13,6 +13,7 @@ import { crumbs, join, parent, routeFor } from "@/lib/paths";
 import { bytes, date } from "@/lib/format";
 import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
 import { shareItem } from "@/lib/share";
+import { clip, setClip, clearClip } from "@/store/clipboard";
 
 const route = useRoute();
 const router = useRouter();
@@ -31,6 +32,12 @@ let lastIdx = -1;
 const menu = ref(null);
 const dragging = ref(false);
 let dragDepth = 0;
+const pageEl = ref(null);
+const cursor = ref(-1);
+const mq = ref(null);
+const totalSize = computed(() => items.value.reduce((s, i) => s + (i.size || 0), 0));
+const usePct = (it) => (totalSize.value > 0 ? (it.size || 0) / totalSize.value : 0);
+const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0)));
 const fileInput = ref(null);
 const folderInput = ref(null);
 
@@ -93,7 +100,10 @@ function toggle(it, idx, e) {
   lastIdx = idx;
   sel.value = s;
 }
+let suppressClick = false;
 function rowClick(it, idx, e) {
+  if (suppressClick) return;
+  cursor.value = idx;
   if (e.ctrlKey || e.metaKey || e.shiftKey || sel.value.size) toggle(it, idx, e);
   else open(it);
 }
@@ -264,14 +274,110 @@ function menuPick(id) {
   else if (id === "delete") void doDelete(list);
 }
 
-// ---- teclado ----
+// ---- teclado (estilo Explorer) ----
+function gridCols() {
+  const g = pageEl.value?.querySelector(".fgrid");
+  return g ? Math.max(1, getComputedStyle(g).gridTemplateColumns.split(" ").length) : 1;
+}
+function moveCursor(to, e) {
+  const n = items.value.length;
+  if (!n) return;
+  to = Math.max(0, Math.min(n - 1, to));
+  const from = cursor.value < 0 ? 0 : cursor.value;
+  cursor.value = to;
+  if (e.shiftKey) {
+    const anchor = lastIdx >= 0 ? lastIdx : from;
+    const [a, b] = [Math.min(anchor, to), Math.max(anchor, to)];
+    sel.value = new Set(items.value.slice(a, b + 1).map((i) => i.path));
+  } else if (!(e.ctrlKey || e.metaKey)) {
+    sel.value = new Set([items.value[to].path]);
+    lastIdx = to;
+  }
+  nextTick(() => pageEl.value?.querySelector(`[data-idx="${to}"]`)?.scrollIntoView({ block: "nearest" }));
+}
+async function paste() {
+  if (!clip.items.length || !canCreate.value) return;
+  const action = clip.mode === "cut" ? "move" : "copy";
+  try {
+    const res = await filesApi.moveCopy(clip.items.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
+    const failed = res?.failed?.length || 0;
+    toast(failed ? `${failed} item(ns) não puderam ser colados.` : action === "move" ? "Movido." : "Copiado.", failed ? "err" : "ok");
+    if (action === "move") clearClip();
+    await load(true);
+    void refreshSources();
+  } catch (e) { toastError(e); }
+}
 function onKey(e) {
   if (/input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable) return;
   if (isFile.value) return;
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "a") { e.preventDefault(); selectAll(); }
-  else if (e.key === "Delete" && selected.value.length && canDelete.value) void doDelete(selected.value);
-  else if (e.key === "F2" && selected.value.length === 1 && canModify.value) void doRename(selected.value[0]);
-  else if (e.key === "Escape") clearSel();
+  const mod = e.ctrlKey || e.metaKey;
+  const key = e.key;
+  const step = ui.view === "grid" ? gridCols() : 1;
+  if (mod && key.toLowerCase() === "a") { e.preventDefault(); sel.value = new Set(items.value.map((i) => i.path)); }
+  else if (mod && key.toLowerCase() === "c" && selected.value.length) { e.preventDefault(); setClip("copy", source.value, selected.value); toast(`${selected.value.length} copiado(s). Cole com Ctrl+V.`); }
+  else if (mod && key.toLowerCase() === "x" && selected.value.length && canModify.value) { e.preventDefault(); setClip("cut", source.value, selected.value); toast(`${selected.value.length} recortado(s). Cole com Ctrl+V.`); }
+  else if (mod && key.toLowerCase() === "v") { e.preventDefault(); void paste(); }
+  else if (key === "ArrowDown") { e.preventDefault(); moveCursor((cursor.value < 0 ? -step : cursor.value) + step, e); }
+  else if (key === "ArrowUp") { e.preventDefault(); moveCursor((cursor.value < 0 ? 0 : cursor.value) - step, e); }
+  else if (key === "ArrowRight" && ui.view === "grid") { e.preventDefault(); moveCursor(cursor.value + 1, e); }
+  else if (key === "ArrowLeft" && ui.view === "grid") { e.preventDefault(); moveCursor(cursor.value - 1, e); }
+  else if (key === "Home") { e.preventDefault(); moveCursor(0, e); }
+  else if (key === "End") { e.preventDefault(); moveCursor(items.value.length - 1, e); }
+  else if (key === " " && cursor.value >= 0) { e.preventDefault(); toggle(items.value[cursor.value], cursor.value, e); }
+  else if (key === "Enter") {
+    const it = selected.value.length === 1 ? selected.value[0] : cursor.value >= 0 ? items.value[cursor.value] : null;
+    if (it) { e.preventDefault(); open(it); }
+  }
+  else if (key === "Backspace" && dirPath.value !== "/") { e.preventDefault(); router.push(routeFor(source.value, parent(dirPath.value))); }
+  else if (key === "Delete" && selected.value.length && canDelete.value) void doDelete(selected.value);
+  else if (key === "F2" && selected.value.length === 1 && canModify.value) void doRename(selected.value[0]);
+  else if (key === "F5") { e.preventDefault(); void load(true); }
+  else if (mod && e.shiftKey && key.toLowerCase() === "n" && canCreate.value) { e.preventDefault(); void newFolder(); }
+  else if (key === "Escape") { clearSel(); cursor.value = -1; }
+}
+
+// ---- seleção arrastando o mouse (retângulo) ----
+let mqStart = null;
+let mqBase = null;
+let mqMoved = false;
+function mqDown(e) {
+  if (e.button !== 0 || !pageEl.value) return;
+  const t = e.target;
+  const inList = t.closest(".flist, .fgrid");
+  const bg = t === pageEl.value || t.classList.contains("wrap") || t.classList.contains("foot-info");
+  if ((!inList && !bg) || t.closest("button, a, input, select, textarea, .fhead, .ctx")) return;
+  mqStart = { x: e.clientX, y: e.clientY };
+  mqBase = e.ctrlKey || e.metaKey || e.shiftKey ? new Set(sel.value) : new Set();
+  mqMoved = false;
+  window.addEventListener("mousemove", mqMove);
+  window.addEventListener("mouseup", mqUp);
+}
+function mqMove(e) {
+  const host = pageEl.value;
+  if (!mqStart || !host) return;
+  if (!mqMoved && Math.hypot(e.clientX - mqStart.x, e.clientY - mqStart.y) < 6) return;
+  mqMoved = true;
+  e.preventDefault();
+  const hr = host.getBoundingClientRect();
+  if (e.clientY > hr.bottom - 36) host.scrollTop += 18;
+  else if (e.clientY < hr.top + 36) host.scrollTop -= 18;
+  const x1 = Math.min(mqStart.x, e.clientX), x2 = Math.max(mqStart.x, e.clientX);
+  const y1 = Math.min(mqStart.y, e.clientY), y2 = Math.max(mqStart.y, e.clientY);
+  mq.value = { left: x1 - hr.left + host.scrollLeft, top: y1 - hr.top + host.scrollTop, width: x2 - x1, height: y2 - y1 };
+  const hits = new Set(mqBase);
+  host.querySelectorAll("[data-path]").forEach((el) => {
+    const r = el.getBoundingClientRect();
+    if (r.left < x2 && r.right > x1 && r.top < y2 && r.bottom > y1) hits.add(el.dataset.path);
+  });
+  sel.value = hits;
+}
+function mqUp(e) {
+  window.removeEventListener("mousemove", mqMove);
+  window.removeEventListener("mouseup", mqUp);
+  if (mqMoved) { suppressClick = true; setTimeout(() => { suppressClick = false; }, 0); }
+  else if (mqStart && !e.ctrlKey && !e.shiftKey && (e.target === pageEl.value || e.target.classList?.contains("wrap"))) clearSel();
+  mq.value = null;
+  mqStart = null;
 }
 
 let off = null;
@@ -301,7 +407,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
 </script>
 
 <template>
-  <div class="page browse" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop="drop" @click="menu = null">
+  <div ref="pageEl" class="page browse" @mousedown="mqDown" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop="drop" @click="menu = null">
     <div class="wrap wide">
       <div class="phead">
         <h1>{{ folderName }}</h1>
@@ -325,7 +431,8 @@ const crumbList = computed(() => crumbs(dirPath.value));
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
             <button :aria-pressed="ui.view === 'grid'" aria-label="Grade" title="Grade" @click="setUi({ view: 'grid' })"><Icon name="grid" /></button>
           </div>
-          <button class="ib" aria-label="Atualizar" title="Atualizar" @click="load(true)"><Icon name="refresh" /></button>
+          <button class="ib" aria-label="Atualizar" title="Atualizar (F5)" @click="load(true)"><Icon name="refresh" /></button>
+          <router-link class="ib" :to="'/limpeza/' + encodeURIComponent(source) + routeFor(source, dirPath).replace(/^\/f\/[^/]+/, '')" title="Limpeza: o que mais ocupa aqui" aria-label="Limpeza"><Icon name="broom" /></router-link>
         </template>
         <template v-else>
           <button class="ib" aria-label="Limpar seleção" title="Limpar seleção (Esc)" @click="clearSel"><Icon name="dismiss" /></button>
@@ -344,17 +451,19 @@ const crumbList = computed(() => crumbs(dirPath.value));
       <div v-else-if="!items.length" class="vazio">Pasta vazia.<span v-if="canCreate"> Arraste arquivos para cá ou use Enviar.</span></div>
 
       <div v-else-if="ui.view === 'list'" class="flist" role="table" aria-label="Arquivos">
-        <div class="frow fhead" role="row">
+        <div class="frow fhead hasbar" role="row">
           <button class="chk" :aria-label="sel.size === items.length ? 'Desmarcar todos' : 'Selecionar todos'" @click="selectAll"><Icon :name="sel.size === items.length ? 'checkboxon' : 'checkbox'" /></button>
           <button class="fh" @click="sortBy('name')">Nome <Icon v-if="ui.sortBy === 'name'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
+          <span class="hide-s" title="Quanto cada item ocupa da pasta"><Icon name="usage" /></span>
           <button class="fh hide-s" @click="sortBy('modified')">Modificado <Icon v-if="ui.sortBy === 'modified'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <button class="fh r" @click="sortBy('size')">Tamanho <Icon v-if="ui.sortBy === 'size'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <span></span>
         </div>
-        <div v-for="(it, i) in items" :key="it.path" class="frow" :class="{ sel: sel.has(it.path) }" role="row" tabindex="0"
+        <div v-for="(it, i) in items" :key="it.path" class="frow hasbar" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i }" :data-path="it.path" :data-idx="i" role="row" tabindex="0"
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
           <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : iconKey(kindOf(it))" /></button>
           <span class="n" :title="it.name">{{ it.name }}</span>
+          <div class="bar hide-s" :class="{ cheio: usePct(it) > 0.25 }" :title="Math.round(usePct(it) * 100) + '% da pasta'"><i :style="{ width: ((it.size || 0) / maxSize) * 100 + '%' }"></i></div>
           <span class="m hide-s">{{ date(it.modified) }}</span>
           <span class="s">{{ it.type === "directory" ? "—" : bytes(it.size) }}</span>
           <button class="ib more" aria-label="Mais ações" title="Mais ações" @click.stop="showMenu(it, $event)"><Icon name="more" /></button>
@@ -362,7 +471,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
       </div>
 
       <div v-else class="fgrid">
-        <div v-for="(it, i) in items" :key="it.path" class="gcard" :class="{ sel: sel.has(it.path) }" tabindex="0"
+        <div v-for="(it, i) in items" :key="it.path" class="gcard" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i }" :data-path="it.path" :data-idx="i" tabindex="0"
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
           <button class="gchk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : 'checkbox'" /></button>
           <div class="gthumb">
@@ -376,6 +485,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
 
     </div>
 
+    <div v-if="mq" class="marquee" :style="{ left: mq.left + 'px', top: mq.top + 'px', width: mq.width + 'px', height: mq.height + 'px' }"></div>
     <div v-if="dragging" class="dropzone"><div><Icon name="upload" /><b>Solte para enviar para {{ folderName }}</b></div></div>
     <ItemMenu v-if="menu" :x="menu.x" :y="menu.y" :entries="menu.entries" @pick="menuPick" @close="menu = null" />
     <FileViewer v-if="openFile" :source="source" :item="openFile" :siblings="siblingsFiles" :can-modify="canModify" :can-download="canDownload"

@@ -129,7 +129,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
               <span v-if="d.ejectable" class="ej" role="button" tabindex="0" :aria-label="'Remover ' + d.name" title="Remover com segurança"
                 @click.prevent.stop="eject(d)" @keydown.enter.prevent.stop="eject(d)"><Icon name="eject" /></span>
             </router-link>
-            <div v-if="!app.usb.length" class="sem-usb"><Icon name="usb" /><span class="t">Nenhum ligado</span></div>
+            <div v-if="!app.usb.length" class="sem-usb"><Icon name="usb" /><span class="t">Nenhum conectado</span></div>
           </template>
         </div>
         <div class="foot">

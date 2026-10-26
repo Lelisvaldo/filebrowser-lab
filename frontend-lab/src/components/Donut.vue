@@ -18,7 +18,7 @@ const dash = computed(() => ((props.pct / 100) * 213.63).toFixed(1));
 <template>
   <svg :class="mini ? 'mini' : 'big'" viewBox="0 0 100 100" role="img" :aria-label="pct + '% usado'">
     <circle cx="50" cy="50" r="46" fill="none" :stroke="ring" stroke-width="3" />
-    <circle cx="50" cy="50" r="34" fill="none" stroke="var(--bar)" stroke-width="15" />
+    <circle cx="50" cy="50" r="34" fill="none" stroke="var(--track)" stroke-width="15" />
     <circle cx="50" cy="50" r="34" fill="none" :stroke="'url(#' + grad + ')'" stroke-width="15"
       :stroke-dasharray="dash + ' 213.63'" transform="rotate(-90 50 50)" />
     <circle cx="50" cy="50" r="24" fill="var(--dkin)" />

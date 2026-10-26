@@ -244,3 +244,34 @@ a.ib{text-decoration:none}
 .usb-down .ico,.nav.usb-down>.i:first-child{color:#ff4d6d}
 .usb-down .ico{background:#3e2243}
 .path.off{color:#ff4d6d;font-family:var(--font)}
+
+/* barras de uso (lista e limpeza) */
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.sum div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px}
+.sum b{display:block;font-size:1.05rem;font-weight:500}
+.sum .s{font-size:.78rem;color:var(--sub)}
+.frow.hasbar{grid-template-columns:44px minmax(0,1fr) minmax(60px,120px) 150px 96px 40px}
+.frow.urow{grid-template-columns:44px minmax(0,1fr) minmax(70px,1fr) 110px 96px 40px}
+.frow .bar{height:7px;--grad:var(--gB)}
+.frow .bar.cheio{--grad:var(--gC)}
+.frow .bar.cheio i{background:var(--gC)}
+.frow .bar i{background:var(--gB)}
+@media (max-width:760px){.frow.hasbar,.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.hasbar .bar,.frow.urow .bar{display:none}}
+.cur-row{outline:2px solid var(--acc);outline-offset:-2px}
+.marquee{position:absolute;z-index:20;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent);pointer-events:none;border-radius:3px}
+
+/* trilho das roscas de uso: o espaço livre precisa se distinguir do fundo nos dois modos */
+:root{--track:#c3c9d2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--track:#4b3a94}}
+:root[data-theme="dark"]{--track:#4b3a94}
+.bar{background:var(--track)}
+
+/* formulários e linhas ocupam a largura toda da tela */
+.form{max-width:none}
+.userform{max-width:none}
+.scoperow{display:grid;grid-template-columns:minmax(120px,200px) minmax(0,1fr) auto;gap:12px;align-items:center}
+.scoperow .scopein{max-width:none;width:100%}
+.scoperow .chkl:last-child{justify-self:end}
+select.scopein{width:auto}
+.card .form>.btn,.card .form>button.btn{align-self:flex-end}
+@media (max-width:760px){.scoperow{grid-template-columns:minmax(0,1fr) auto}.scoperow .scopein{grid-column:1/-1;order:3}}
