@@ -8,6 +8,10 @@
       :disabled="isDisabledMultiAction"
       @action="multiAction"
     />
+    <div v-if="!isMobile" class="lab-brand" aria-hidden="true">
+      <span class="lab-brand-mark"><svg viewBox="0 0 24 24" v-html="labIcons.hdd"></svg></span>
+      <span class="lab-brand-name">filebrowser-lab</span>
+    </div>
     <div class="search-bar-container" :class="{ disabled: isDisabled }" 
          v-if="showSearch && !isSearchActive" @click="openSearch" >
       <i class="material-symbols">search</i>
@@ -19,6 +23,15 @@
       />
     </div>
     <title v-if="!showSearch" class="topTitle">{{ getTopTitle }}</title>
+    <div class="lab-actions">
+      <button type="button" class="lab-ib" :aria-label="isDarkMode ? 'Mudar para o modo claro' : 'Mudar para o modo escuro'"
+        :title="isDarkMode ? 'Modo claro' : 'Modo escuro'" @click="labToggleTheme">
+        <svg viewBox="0 0 24 24" aria-hidden="true" v-html="isDarkMode ? labIcons.sun : labIcons.moon"></svg>
+      </button>
+      <button type="button" class="lab-ib" aria-label="Configurações" title="Configurações" @click="labOpenSettings">
+        <svg viewBox="0 0 24 24" aria-hidden="true" v-html="labIcons.gear"></svg>
+      </button>
+    </div>
     <action
       v-if="showHeaderSwitchView && !disableNavButtons"
       class="menu-button"
@@ -53,6 +66,8 @@ import { getters, state, mutations } from "@/store";
 import Action from "@/components/Action.vue";
 import { globalVars } from "@/utils/constants";
 import { url } from "@/utils";
+import { ICONS } from "@/lab/icons";
+import { labToggleMenu, openSettingsPanel } from "@/lab/ui";
 
 export default {
   name: "UnifiedHeader",
@@ -61,10 +76,14 @@ export default {
   },
   data() {
     return {
+      labIcons: ICONS,
       viewModes: ["list", "normal", "icons"],
     };
   },
   computed: {
+    isMobile() {
+      return getters.isMobile();
+    },
     getTopTitle() {
       if (getters.isSettings()) {
         return this.$t("general.settings");
@@ -250,6 +269,12 @@ export default {
       mutations.updateDisplayPreferences({ viewMode: newViewMode });
       void mutations.updateCurrentUser({ viewMode: newViewMode });
     },
+    labToggleTheme() {
+      mutations.toggleDarkMode();
+    },
+    labOpenSettings() {
+      openSettingsPanel();
+    },
     multiAction() {
       const cv = getters.currentView();
 
@@ -263,7 +288,7 @@ export default {
     },
     performNavigation(cv) {
       if (cv === "listingView" || ( getters.isShare() && getters.multibuttonState() !== "close") || cv === "tools") {
-        mutations.toggleSidebar();
+        labToggleMenu();
       } else if (cv === "settings" && getters.isMobile()) {
         mutations.toggleSidebar();
       } else {

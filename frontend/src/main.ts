@@ -7,12 +7,14 @@ import router from "./router"; // Adjust the path as per your setup
 import "./css/styles.css";
 import "./css/dark.css";
 import "./css/lab.css"; // filebrowser-lab: camada visual do fork
+import { applyLabUi } from "@/lab/ui";
 import { initPwaInstall } from "@/utils/pwaInstall";
 import { defaultDarkMode, syncDocumentTheme } from "@/utils/theme";
 import { initViewportLayoutListener } from "@/utils/viewport.js";
 
 initPwaInstall();
 initViewportLayoutListener();
+applyLabUi();
 syncDocumentTheme(defaultDarkMode());
 
 const app = createApp(App);

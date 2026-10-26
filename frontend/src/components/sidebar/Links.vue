@@ -46,8 +46,9 @@
               class="action button source-button sidebar-link-button" :class="{
                 active: isLinkActive(link),
                 disabled: !isLinkAccessible(link)
-              }" @click.prevent="handleLinkClick(link)" :aria-label="link.name">
+              }" @click.prevent="handleLinkClick(link)" :aria-label="link.name" :title="link.name">
               <div class="source-container" :class="{ 'has-usage-info': hasUsageInfo(link) }">
+                <span v-if="!link.icon" class="lab-src-ico" aria-hidden="true"><svg viewBox="0 0 24 24" v-html="labIconFor(link.sourceName)"></svg></span>
                 <!-- Show custom icon if user has set one -->
                 <i v-if="link.icon" :class="`${getIconClass(link.icon)} link-icon`">{{ link.icon }}</i>
                 <!-- Otherwise show animated status indicator -->
@@ -106,7 +107,7 @@
             </a>
 
             <!-- Non-source links: tool and custom links with simple icon style -->
-            <a v-else :aria-label="link.name" :href="getLinkHref(link)" class="action button sidebar-link-button"
+            <a v-else :aria-label="link.name" :title="link.name" :href="getLinkHref(link)" class="action button sidebar-link-button"
               :class="{ active: isLinkActive(link) }" @click.prevent="handleLinkClick(link)">
               <div  class="link-container">
                 <i v-if="link.icon" :class="`${getIconClass(link.icon)} link-icon`">{{ link.icon }}</i>
@@ -214,6 +215,7 @@ import {
 } from "@/utils/tooltipHelp.js";
 import ProgressBar from "@/components/ProgressBar.vue";
 import { goToItem } from "@/utils/url";
+import { iconForSource } from "@/lab/icons";
 import { getIconClass } from "@/utils/material-symbols";
 import { baseSidebarCategory, isRootOnlySidebarCategory, isSourceSidebarCategory } from "@/utils/sidebarCategory";
 import { getObjectProperty } from '@/utils/object.js';
@@ -412,6 +414,9 @@ export default {
 
       const target = fullPath.startsWith('/') ? fullPath.substring(1) : fullPath;
       return baseURL + target;
+    },
+    labIconFor(name) {
+      return iconForSource(name);
     },
     goHome() {
       if (!this.isLoggedIn) {

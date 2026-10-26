@@ -277,3 +277,158 @@ html .sidebar-links a.source-button.active .vue-simple-progress-bar {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* ---------- barra superior ---------- */
+header.flexbar .lab-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: 0.25rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--textPrimary);
+}
+header.flexbar .lab-brand-mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--primaryColor) 18%, transparent);
+  color: var(--primaryColor);
+}
+header.flexbar .lab-brand-mark svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+header.flexbar .lab-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-right: 0.25rem;
+}
+header.flexbar .lab-ib {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--textSecondary);
+  cursor: pointer;
+}
+header.flexbar .lab-ib:hover {
+  background: color-mix(in srgb, var(--primaryColor) 14%, transparent);
+  color: var(--textPrimary);
+}
+header.flexbar .lab-ib svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+header.flexbar .search-bar-container {
+  border-radius: 12px;
+  background-color: var(--surfacePrimary);
+  border: 1px solid var(--divider);
+}
+
+/* ---------- ícones nas fontes do menu ---------- */
+html .sidebar-links .lab-src-ico {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--primaryColor);
+}
+html .sidebar-links .lab-src-ico svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+/* ---------- menu recolhido (desktop) ---------- */
+html.lab-rail #sidebar {
+  padding: 0.6rem 0.5rem 4em;
+  overflow-x: hidden;
+}
+html.lab-rail #sidebar .sidebar-resizer,
+html.lab-rail #sidebar .credits,
+html.lab-rail #sidebar .release-banner {
+  display: none;
+}
+html.lab-rail #sidebar .headline-card {
+  padding: 0.4rem 0.25rem;
+}
+html.lab-rail #sidebar .headline-card .person-button__name,
+html.lab-rail #sidebar .headline-card .person-button__icon:last-child,
+html.lab-rail #sidebar .headline-card .logout-button,
+html.lab-rail #sidebar .headline-card .quick-toggles {
+  display: none;
+}
+html.lab-rail #sidebar .headline-card .person-button {
+  justify-content: center;
+  padding: 0.3rem;
+  min-width: 0;
+}
+html.lab-rail #sidebar .file-actions {
+  font-size: 0;
+  justify-content: center;
+  padding: 0.5rem;
+}
+html.lab-rail #sidebar .file-actions i {
+  font-size: 24px;
+}
+html.lab-rail #sidebar .sidebar-links {
+  padding: 0.4rem 0.25rem;
+}
+html.lab-rail #sidebar .sidebar-links-header .mode-toggle,
+html.lab-rail #sidebar .sidebar-links-header .material-symbols.action:last-child {
+  display: none;
+}
+html.lab-rail #sidebar .sidebar-links-header {
+  justify-content: center;
+}
+html.lab-rail #sidebar .source-container > span:not(.lab-src-ico),
+html.lab-rail #sidebar .link-container > span,
+html.lab-rail #sidebar .usage-info,
+html.lab-rail #sidebar .tooltip-info-icon {
+  display: none;
+}
+html.lab-rail #sidebar a.source-button,
+html.lab-rail #sidebar a.sidebar-link-button {
+  justify-content: center;
+  padding: 0.25em;
+}
+html.lab-rail #sidebar .source-container,
+html.lab-rail #sidebar .link-container {
+  justify-content: center;
+}
+html.lab-rail #sidebar .realtime-pulse {
+  position: absolute;
+  right: 4px;
+  top: 4px;
+  width: 10px;
+  height: 10px;
+}
+html.lab-rail #sidebar a.source-button {
+  position: relative;
+}
+
+/* ---------- densidade compacta ---------- */
+html.lab-compact .lab-tile {
+  padding: 0.45rem 0.6rem;
+}
+html.lab-compact #sidebar a.source-button,
+html.lab-compact #sidebar a.sidebar-link-button {
+  min-height: 36px;
+}
+html.lab-compact #listingView .listing-item {
+  padding-top: 0.15em;
+  padding-bottom: 0.15em;
+}
