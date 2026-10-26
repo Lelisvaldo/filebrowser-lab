@@ -15,6 +15,7 @@ import Errors from "@/views/Errors.vue";
 import Files from "@/views/Files.vue";
 import Layout from "@/views/Layout.vue";
 import Login from "@/views/Login.vue";
+import Overview from "@/views/Overview.vue";
 import Settings from "@/views/Settings.vue";
 import Tools from "@/views/Tools.vue";
 
@@ -27,6 +28,7 @@ const titles: Record<string, string> = {
   /** Same component as Share; name differs for /public optional-auth routes. */
   PublicShare: translate("general.share"),
   Files: translate("general.files"),
+  Overview: "Este servidor",
   Tools: translate("tools.title"),
   ChildTool: translate("tools.title"),
   Settings: translate("general.settings"),
@@ -69,6 +71,20 @@ const routes: RouteRecordRaw[] = [
         path: ":path*",
         name: "PublicShare",
         component: Files,
+      },
+    ],
+  },
+  {
+    path: "/",
+    component: Layout,
+    meta: {
+      requiresAuth: true,
+    },
+    children: [
+      {
+        path: "",
+        name: "Overview",
+        component: Overview,
       },
     ],
   },
@@ -243,7 +259,7 @@ router.beforeResolve(async (to, from, next) => {
   }
 
   if (to.path.endsWith("/login") && getters.isLoggedIn()) {
-    next({ path: "/files/" });
+    next({ path: "/" });
     return;
   }
 
