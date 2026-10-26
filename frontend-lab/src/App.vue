@@ -77,6 +77,7 @@ onBeforeUnmount(() => {
 watch(() => app.user, (u) => { if (u) { startUsbPolling(); void refreshUsb(); } });
 
 const sidePath = (name) => routeFor(name, "/");
+const usbPct = (d) => (d.size && d.free != null ? Math.min(100, Math.round(((d.size - d.free) / d.size) * 100)) : 0);
 const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
 </script>
 
@@ -131,7 +132,10 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <span v-for="d in app.usb.filter((x) => !x.mounted)" :key="d.uuid" class="nav usb-down" :title="d.name + ' está desmontado: tire e espete de novo'"><Icon name="usb" /><span class="t">{{ d.name }}</span></span>
             <router-link v-for="d in app.usb.filter((x) => x.mounted)" :key="d.uuid" class="nav usb" :to="usbPath(d)" :title="d.name"
               :aria-current="route.params.source === 'Pendrives' && String(route.params.rest || '').startsWith(d.name + '/') ? 'true' : undefined">
-              <Icon name="usb" /><span class="t">{{ d.name }}</span>
+              <Icon name="usb" />
+              <span class="t"><span class="un">{{ d.name }}</span>
+                <template v-if="d.size"><span class="bar ubar" :class="{ cheio: usbPct(d) >= 90 }"><i :style="{ width: usbPct(d) + '%' }"></i></span>
+                <span class="us">{{ bytes(d.size - (d.free || 0)) }} de {{ bytes(d.size) }}</span></template></span>
               <span v-if="d.ejectable" class="ej" role="button" tabindex="0" :aria-label="'Remover ' + d.name" title="Remover com segurança"
                 @click.prevent.stop="eject(d)" @keydown.enter.prevent.stop="eject(d)"><Icon name="eject" /></span>
             </router-link>

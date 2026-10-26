@@ -326,3 +326,11 @@ body.rail .brandcell .lt{display:none}
 .foot .usr .ej:hover{background:var(--bar)}
 body.rail .foot .usr{justify-content:center;padding:8px 0 0}
 body.rail .foot .usr .t,body.rail .foot .usr .ej{display:none}
+
+/* Pendrive no menu lateral: nome, barra de uso e "X de Y" */
+.nav.usb{padding-top:6px;padding-bottom:6px}
+.nav.usb .t{display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.nav.usb .un{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav.usb .ubar{--grad:var(--gB);height:5px;display:block}
+.nav.usb .ubar.cheio{--grad:var(--gC)}
+.nav.usb .us{font-size:.7rem;color:var(--sub);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
