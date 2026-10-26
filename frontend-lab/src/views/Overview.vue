@@ -50,7 +50,7 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
             <div class="row" style="gap: 10px">
               <div class="ico sm usb"><Icon name="usb" /></div>
               <div style="min-width: 0; flex: 1"><div class="nm">{{ d.name }}</div><div v-if="d.mounted" class="path" :title="d.mountpoint + ' · ' + d.filesystem">{{ d.mountpoint }}</div><div v-else class="path off">Desmontado: tire e espete de novo</div></div>
-              <Donut v-if="d.mounted" mini :pct="d.pct" :index="1" :warn="d.pct > 85" />
+              <Donut v-if="d.mounted" mini :pct="d.pct" :index="1" :warn="d.pct > 85" hue="hue h-green" />
               <button v-if="d.ejectable" class="ib ejb" :class="{ busy: ejecting[d.uuid] }" :disabled="ejecting[d.uuid]" :aria-label="'Remover ' + d.name + ' com segurança'" title="Remover com segurança" @click.stop="eject(d)"><Icon name="eject" /></button>
             </div>
             <div v-if="d.mounted" class="cpm">
@@ -69,7 +69,7 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
           <div class="row" style="gap: 10px">
             <div class="ico sm" :class="hueOf(f.name)"><Icon :name="f.icon" /></div>
             <div style="min-width: 0; flex: 1"><div class="nm">{{ f.name }}</div><div class="path">{{ statusText(f.status) }}</div></div>
-            <Donut mini :pct="f.pct" :index="f.i" />
+            <Donut mini :pct="f.pct" :index="f.i" :hue="hueOf(f.name)" />
           </div>
           <div class="cpm">
             <span v-if="f.total > 0"><b>{{ bytes(f.used) }}</b> usados</span><span v-else>calculando…</span>
