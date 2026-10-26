@@ -302,11 +302,11 @@ svg.i.hue{color:var(--h)}
 .usbpop .sem-usb{padding:14px;color:var(--sub);display:flex;gap:10px;align-items:center}
 
 /* Marca */
-.logo{display:inline-flex;align-items:center;gap:5px}
+.logo{display:inline-flex;align-items:flex-end;gap:8px}
 .logo svg{flex:none}
-.logo .lt{display:flex;flex-direction:column;line-height:1.15;min-width:0}
-.logo .lt b{font-size:.86rem;font-weight:600;letter-spacing:.01em;color:var(--txt)}
+.logo .lt{display:flex;flex-direction:column;line-height:1.1;min-width:0;padding-bottom:3px}
+.logo .lt b{font-size:1rem;font-weight:700;letter-spacing:.01em;color:var(--txt)}
 .logo .lt b i{font-style:normal;color:var(--c-cyan)}
-.logo .lt small{font-size:.58rem;opacity:.85;color:var(--sub);font-weight:400;overflow:hidden;text-overflow:ellipsis}
+.logo .lt small{font-size:.6rem;margin-top:1px;opacity:.85;color:var(--sub);font-weight:400;overflow:hidden;text-overflow:ellipsis}
 body.rail .brandcell .lt{display:none}
 .brandcell{font-weight:400}
