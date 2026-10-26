@@ -14,7 +14,7 @@ import { cfg } from "@/lib/config";
 const route = useRoute();
 const router = useRouter();
 const tab = computed(() => route.params.tab || "usuarios");
-const tabs = [["usuarios", "Usuários"], ["sistema", "Sistema"], ["atividade", "Atividade"]];
+const tabs = [["usuarios", "Usuários"], ["acessos", "Regras de acesso"], ["sistema", "Sistema"], ["atividade", "Atividade"]];
 
 // ---- usuários ----
 const users = ref(null);
@@ -52,6 +52,8 @@ async function saveUser() {
     if (isNew.value) {
       if (!e.username || !e.password) return toast("Informe usuário e senha.", "err");
       await authApi.createUser({ username: e.username, password: e.password, loginMethod: "password", permissions, scopes: packScopes(e) }, headers);
+      // o servidor aplica as pastas padrão ao criar; em seguida ajustamos para as escolhidas aqui
+      await authApi.updateUser(e.username, ["scopes", "permissions"], { permissions, scopes: packScopes(e) }, headers);
       toast("Usuário criado.");
     } else {
       const which = ["permissions", "scopes"];
@@ -72,6 +74,38 @@ async function delUser(u) {
   try { await authApi.deleteUser(u.username, headers); toast("Usuário apagado."); await loadUsers(); } catch (e) { toastError(e); }
 }
 
+// ---- regras de acesso ----
+const acSource = ref("");
+const acPath = ref("/");
+const acRule = ref(null);
+const acForm = ref({ allow: false, ruleCategory: "user", value: "" });
+async function loadRule() {
+  if (!acSource.value) acSource.value = sourceNames.value[0] || "";
+  if (!acSource.value) return;
+  try { acRule.value = await adminApi.accessRule(acSource.value, acPath.value || "/"); } catch (e) { acRule.value = null; toastError(e); }
+}
+async function addRule() {
+  if (!acForm.value.value.trim()) return;
+  try {
+    await adminApi.accessAdd(acSource.value, acPath.value || "/", { allow: acForm.value.allow, ruleCategory: acForm.value.ruleCategory, value: acForm.value.value.trim() });
+    acForm.value.value = "";
+    toast("Regra salva.");
+    await loadRule();
+  } catch (e) { toastError(e); }
+}
+async function delRule(allow, ruleCategory, value) {
+  try { await adminApi.accessDel(acSource.value, acPath.value || "/", { allow, ruleCategory, value }); await loadRule(); } catch (e) { toastError(e); }
+}
+const rules = computed(() => {
+  const r = acRule.value || {};
+  const out = [];
+  for (const [kind, set] of [["Negar", r.deny], ["Permitir", r.allow]]) {
+    for (const u of set?.users || []) out.push({ kind, allow: kind === "Permitir", cat: "user", catLabel: "usuário", value: u });
+    for (const g of set?.groups || []) out.push({ kind, allow: kind === "Permitir", cat: "group", catLabel: "grupo", value: g });
+  }
+  return out;
+});
+
 // ---- sistema ----
 const sources = computed(() => Object.values(app.sources));
 
@@ -82,7 +116,7 @@ async function loadAct() { try { act.value = (await adminApi.activity({ limit: 5
 const when = (s) => date(new Date(s * 1000).toISOString()) + " " + new Date(s * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 onMounted(() => { page.title = "Administração"; if (!isAdmin()) router.replace("/"); });
-watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); }, { immediate: true });
+watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); if (t === "acessos") void loadRule(); }, { immediate: true });
 </script>
 
 <template>
@@ -117,6 +151,37 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
             <label class="chkl"><input v-model="s.edit" type="checkbox" :disabled="!s.on" /> Pode alterar</label>
           </div>
           <div class="dlg-b"><button type="button" class="btn" @click="editing = null">Cancelar</button><button class="btn pri">Salvar</button></div>
+        </form>
+      </section>
+
+      <section v-else-if="tab === 'acessos'" class="card">
+        <h2>Regras de acesso por pasta</h2>
+        <p class="meta">Bloqueie ou libere uma pasta para um usuário ou grupo, além do que já vale pelas pastas liberadas de cada usuário.</p>
+        <div class="form" style="max-width: 640px">
+          <div class="scoperow">
+            <label>Fonte<select v-model="acSource" class="scopein" @change="loadRule"><option v-for="n in sourceNames" :key="n" :value="n">{{ n }}</option></select></label>
+            <label style="flex: 1">Pasta<input v-model="acPath" placeholder="/" @keydown.enter.prevent="loadRule" /></label>
+            <button class="btn" type="button" @click="loadRule"><Icon name="refresh" /><span>Ver</span></button>
+          </div>
+        </div>
+        <div v-if="acRule && !acRule.pathExists && acPath !== '/'" class="meta" style="margin: 8px 0">Essa pasta não existe na fonte (a regra pode ser criada mesmo assim).</div>
+        <div v-if="acRule && acRule.denyAll" class="meta" style="margin: 8px 0">Todos negados nesta pasta.</div>
+        <div class="tbl" style="margin-top: 10px">
+          <div v-for="r in rules" :key="r.kind + r.cat + r.value" class="trow">
+            <span class="chip" :class="{ off: !r.allow }" style="margin: 0">{{ r.kind }}</span>
+            <div class="main"><b>{{ r.value }}</b><small>{{ r.catLabel }}</small></div>
+            <button class="ib" title="Remover regra" aria-label="Remover regra" @click="delRule(r.allow, r.cat, r.value)"><Icon name="trash" /></button>
+          </div>
+          <div v-if="!rules.length" class="vazio" style="border: 0">Sem regras nesta pasta.</div>
+        </div>
+        <form class="form userform" @submit.prevent="addRule">
+          <h2>Nova regra</h2>
+          <div class="scoperow">
+            <select v-model="acForm.allow" class="scopein"><option :value="false">Negar</option><option :value="true">Permitir</option></select>
+            <select v-model="acForm.ruleCategory" class="scopein"><option value="user">usuário</option><option value="group">grupo</option></select>
+            <input v-model="acForm.value" class="scopein" placeholder="nome" style="max-width: none" aria-label="Nome do usuário ou grupo" />
+            <button class="btn pri" :disabled="!acForm.value.trim()">Adicionar</button>
+          </div>
         </form>
       </section>
 

@@ -53,3 +53,7 @@ export const deleteShare = (hash) => send("share", "DELETE", undefined, { hash }
 export const shareFor = (source, path) => get("share", { source, path });
 export const fileChecksum = (source, path, algo) => get("resources", { source, path, checksum: algo });
 export { request };
+
+// Compactar / extrair no servidor
+export const archive = (source, paths, destination) => send("resources/archive", "POST", { fromSource: source, paths, destination, format: "zip" });
+export const unarchive = (source, path, destination) => send("resources/unarchive", "POST", { fromSource: source, path, destination });

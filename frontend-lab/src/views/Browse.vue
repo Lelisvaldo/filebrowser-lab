@@ -142,6 +142,29 @@ async function doDelete(list) {
   } catch (e) { toastError(e); }
 }
 
+async function doZip(list) {
+  const base = list.length === 1 ? list[0].name.replace(/\.[^.]+$/, "") : folderName.value;
+  const name = await askText({ title: "Compactar em .zip", label: "Nome do arquivo", value: base + ".zip", confirm: "Compactar" });
+  if (!name) return;
+  try {
+    await filesApi.archive(source.value, list.map((i) => i.path), join(dirPath.value, name.endsWith(".zip") ? name : name + ".zip", false));
+    toast("Arquivo compactado.");
+    clearSel();
+    await load(true);
+    void refreshSources();
+  } catch (e) { toastError(e); }
+}
+
+async function doUnzip(it) {
+  try {
+    await filesApi.unarchive(source.value, it.path, dirPath.value);
+    toast("Extraído nesta pasta.");
+    await load(true);
+    void refreshSources();
+  } catch (e) { toastError(e); }
+}
+const isArchive = (it) => /\.(zip|tar|tar\.gz|tgz|gz)$/i.test(it.name);
+
 function doDownload(list) {
   const paths = list.map((i) => i.path);
   const archive = list.length > 1 || list[0].type === "directory";
@@ -206,6 +229,8 @@ function menuFor(it) {
   if (canModify.value && one) e.push({ id: "rename", icon: "edit", label: "Renomear" });
   if (canCreate.value) e.push({ id: "copy", icon: "copy", label: "Copiar para…" });
   if (canModify.value) e.push({ id: "move", icon: "move", label: "Mover para…" });
+  if (canCreate.value) e.push({ id: "zip", icon: "zip", label: "Compactar (.zip)" });
+  if (canCreate.value && one && isArchive(it)) e.push({ id: "unzip", icon: "zip", label: "Extrair aqui" });
   if (one) e.push({ id: "share", icon: "share", label: "Compartilhar" });
   if (canDelete.value) { e.push({ sep: true }); e.push({ id: "delete", icon: "trash", label: t.length > 1 ? `Apagar ${t.length} itens` : "Apagar", danger: true }); }
   return e;
@@ -227,6 +252,8 @@ function menuPick(id) {
   else if (id === "rename") void doRename(it);
   else if (id === "copy") void doMoveCopy(list, "copy");
   else if (id === "move") void doMoveCopy(list, "move");
+  else if (id === "zip") void doZip(list);
+  else if (id === "unzip") void doUnzip(it);
   else if (id === "share") void shareItem(source.value, it);
   else if (id === "delete") void doDelete(list);
 }
@@ -289,6 +316,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button v-if="canModify && selected.length === 1" class="btn" @click="doRename(selected[0])"><Icon name="edit" /><span class="lbl">Renomear</span></button>
           <button v-if="canCreate" class="btn" @click="doMoveCopy(selected, 'copy')"><Icon name="copy" /><span class="lbl">Copiar</span></button>
           <button v-if="canModify" class="btn" @click="doMoveCopy(selected, 'move')"><Icon name="move" /><span class="lbl">Mover</span></button>
+          <button v-if="canCreate" class="btn" @click="doZip(selected)"><Icon name="zip" /><span class="lbl">Compactar</span></button>
           <button v-if="selected.length === 1" class="btn" @click="shareItem(source, selected[0])"><Icon name="share" /><span class="lbl">Compartilhar</span></button>
           <button v-if="canDelete" class="btn danger" @click="doDelete(selected)"><Icon name="trash" /><span class="lbl">Apagar</span></button>
         </template>
