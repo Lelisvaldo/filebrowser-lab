@@ -35,6 +35,7 @@ watch(() => route.fullPath, () => { if (ui.menuOpen) setUi({ menuOpen: false });
 watch(() => route.name, (n) => { if (n === "home") page.title = "Este servidor"; });
 
 function toggleSearch() {
+  if (!isMobile()) { document.getElementById("busca")?.focus(); return; }
   searchOpen.value = !searchOpen.value;
   if (searchOpen.value) nextTick(() => document.getElementById("busca")?.focus());
 }
@@ -97,7 +98,10 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <button class="ib sbtn" type="button" aria-label="Buscar" title="Buscar (/)" @click="toggleSearch"><Icon name="search" /></button>
             <input id="busca" v-model="q" type="search" placeholder="Buscar arquivos…" aria-label="Buscar arquivos" autocomplete="off" @keydown.esc="searchOpen = false" />
           </form>
-          <router-link v-if="usbOn" class="chip" :class="{ off: !usbCount }" to="/" :title="usbCount ? usbCount + ' pendrive(s) ligado(s)' : 'Nenhum pendrive ligado'" :aria-label="usbCount ? usbCount + ' pendrives ligados' : 'Nenhum pendrive ligado'"><Icon name="usb" />{{ usbCount }}</router-link>
+          <span v-if="usbOn && usbCount" class="ibw">
+            <router-link class="ib" to="/" :title="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')" :aria-label="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')"><Icon name="usb" /></router-link>
+            <span class="badge ok">{{ usbCount }}</span>
+          </span>
           <span class="ibw">
             <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen })"><Icon name="transfer" /></button>
             <span v-if="activeCount" class="badge">{{ activeCount }}</span>

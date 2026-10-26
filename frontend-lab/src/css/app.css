@@ -230,3 +230,12 @@ select.scopein,.sortsel select{min-height:40px}
 .usb-off .i,.sem-usb .i{color:#ff4d6d;opacity:1}
 /* seta do seletor com respiro à direita (a nativa fica colada na borda) */
 select{appearance:none;-webkit-appearance:none;padding-right:34px!important;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%23a99bd8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;cursor:pointer}
+
+/* busca: só a lupa; expande ao passar o mouse ou focar (no celular a lupa abre a barra) */
+a.ib{text-decoration:none}
+.badge.ok{background:var(--ok);color:var(--bg)}
+@media (min-width:761px){
+  .busca .sbtn{display:grid}
+  .busca input{width:0;padding:0;border-width:0;opacity:0;margin-left:-4px;transition:width .2s,opacity .15s,padding .2s}
+  .busca:hover input,.busca:focus-within input,.busca input:not(:placeholder-shown){width:230px;padding:0 14px;border-width:1px;opacity:1;margin-left:0}
+}
