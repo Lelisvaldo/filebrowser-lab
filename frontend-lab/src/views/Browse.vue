@@ -1,11 +1,11 @@
 <script setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import ItemMenu from "@/components/ItemMenu.vue";
 import FileViewer from "@/components/FileViewer.vue";
 import * as filesApi from "@/api/files";
-import { app, ui, setUi, page, canIn, toast, toastError, refreshSources } from "@/store/app";
+import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, refreshSources } from "@/store/app";
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
 import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
 import { kindOf, iconKey } from "@/lib/fileTypes";
@@ -273,7 +273,20 @@ onMounted(() => {
   document.addEventListener("keydown", onKey);
   off = onTransferDone((t) => { if (t.source === source.value && t.dir.startsWith(dirPath.value.replace(/\/$/, "") + "/") || t.source === source.value && t.dir === dirPath.value) void load(true); });
 });
-onBeforeUnmount(() => { document.removeEventListener("keydown", onKey); off && off(); });
+onBeforeUnmount(() => { document.removeEventListener("keydown", onKey); off && off(); hideStatus(); });
+
+watchEffect(() => {
+  const info = app.sources[source.value] || {};
+  const list = items.value;
+  const folders = list.filter((i) => i.type === "directory").length;
+  Object.assign(status, {
+    show: !!data.value && !error.value,
+    label: "", used: Number(info.used) || 0, total: Number(info.total) || 0,
+    count: list.length, folders, files: list.length - folders, noun: "itens",
+    size: list.reduce((s, i) => s + (i.type === "directory" ? 0 : i.size || 0), 0),
+    selCount: selected.value.length, selSize: selected.value.reduce((s, i) => s + (i.type === "directory" ? 0 : i.size || 0), 0),
+  });
+});
 
 const sortLabel = { name: "Nome", size: "Tamanho", modified: "Modificado" };
 function sortBy(k) { setUi(ui.sortBy === k ? { sortAsc: !ui.sortAsc } : { sortBy: k, sortAsc: true }); }
@@ -359,7 +372,6 @@ const crumbList = computed(() => crumbs(dirPath.value));
         </div>
       </div>
 
-      <div v-if="data" class="foot-info">{{ items.length }} {{ items.length === 1 ? "item" : "itens" }}</div>
     </div>
 
     <div v-if="dragging" class="dropzone"><div><Icon name="upload" /><b>Solte para enviar para {{ folderName }}</b></div></div>

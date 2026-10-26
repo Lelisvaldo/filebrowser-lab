@@ -1,9 +1,9 @@
 <script setup>
-import { ref, watch, computed } from "vue";
+import { ref, watch, watchEffect, computed, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as filesApi from "@/api/files";
-import { app, page, userSources, hasUsbSource, usbSourceName, toastError } from "@/store/app";
+import { app, page, status, hideStatus, userSources, hasUsbSource, usbSourceName, toastError } from "@/store/app";
 import { kindOf, iconKey } from "@/lib/fileTypes";
 import { bytes, date } from "@/lib/format";
 import { parent, routeFor } from "@/lib/paths";
@@ -43,6 +43,14 @@ async function run() {
   } catch (e) { toastError(e); results.value = []; } finally { loading.value = false; }
 }
 watch(() => route.fullPath, run, { immediate: true });
+watchEffect(() => {
+  Object.assign(status, {
+    show: q.value.length >= 2 && !loading.value, label: onlySource.value ? "Busca em " + onlySource.value : "Busca em todas as pastas",
+    used: 0, total: 0, count: results.value.length, folders: 0, files: 0, noun: results.value.length === 1 ? "resultado" : "resultados",
+    size: results.value.reduce((s, r) => s + (r.type === "directory" ? 0 : r.size || 0), 0), selCount: 0, selSize: 0,
+  });
+});
+onBeforeUnmount(hideStatus);
 
 function open(r) {
   if (r.type === "directory") router.push(routeFor(r.source, r.path));

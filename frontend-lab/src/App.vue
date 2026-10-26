@@ -7,11 +7,12 @@ import Toasts from "@/components/Toasts.vue";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
-import { app, ui, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
+import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
 import { iconForSource } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
 import { appName } from "@/lib/config";
+import { bytes } from "@/lib/format";
 
 const route = useRoute();
 const router = useRouter();
@@ -134,6 +135,20 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
 
       <main>
         <router-view />
+        <footer v-if="status.show" class="statusbar" aria-live="polite">
+          <span v-if="status.total > 0" class="sb-disk"><span class="sb-mini"><i :style="{ width: Math.min(100, Math.round(status.used / status.total * 100)) + '%' }"></i></span>{{ bytes(status.used) }} usados de {{ bytes(status.total) }}</span>
+          <span v-else-if="status.label" class="sb-disk">{{ status.label }}</span>
+          <span class="sp"></span>
+          <template v-if="status.selCount">
+            <span class="sb-n">de {{ status.count }} {{ status.noun }}</span><span class="sb-sep"></span>
+            <span class="sb-sel"><b>{{ status.selCount }}</b> {{ status.selCount === 1 ? "selecionado" : "selecionados" }}<template v-if="status.selSize"> · <b>{{ bytes(status.selSize) }}</b></template></span>
+          </template>
+          <template v-else>
+            <span class="sb-n"><b>{{ status.count }}</b> {{ status.count === 1 ? status.noun.replace(/s$/, "").replace("iten", "item") : status.noun }}</span>
+            <template v-if="status.noun === 'itens'"><span class="sb-sep sb-opt"></span><span class="sb-opt">{{ status.folders }} {{ status.folders === 1 ? "pasta" : "pastas" }} · {{ status.files }} {{ status.files === 1 ? "arquivo" : "arquivos" }}</span></template>
+            <template v-if="status.size"><span class="sb-sep"></span><span>soma <b>{{ bytes(status.size) }}</b></span></template>
+          </template>
+        </footer>
       </main>
     </div>
     <SettingsDrawer v-if="ui.settingsOpen" />

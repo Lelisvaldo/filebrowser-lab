@@ -4,14 +4,14 @@ import { useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import Donut from "@/components/Donut.vue";
 import TransferRows from "@/components/TransferRows.vue";
-import { app, ui, setUi, page, userSources, hasUsbSource, eject, ejecting, refreshSources, refreshUsb } from "@/store/app";
+import { hideStatus, app, ui, setUi, page, userSources, hasUsbSource, eject, ejecting, refreshSources, refreshUsb } from "@/store/app";
 import { visible } from "@/store/transfers";
 import { bytes, pct } from "@/lib/format";
 import { iconForSource } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
 
 const router = useRouter();
-onMounted(() => { page.title = "Este servidor"; void refreshSources(); void refreshUsb(); });
+onMounted(() => { hideStatus(); page.title = "Este servidor"; void refreshSources(); void refreshUsb(); });
 
 const folders = computed(() => userSources().map((s, i) => {
   const info = app.sources[s.name] || {};

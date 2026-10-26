@@ -5,7 +5,7 @@ import Icon from "@/components/Icon.vue";
 import * as authApi from "@/api/auth";
 import * as filesApi from "@/api/files";
 import * as adminApi from "@/api/admin";
-import { app, page, isAdmin, toast, toastError } from "@/store/app";
+import { hideStatus, app, page, isAdmin, toast, toastError } from "@/store/app";
 import { askText, askConfirm } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
 import { bytes, date, pct } from "@/lib/format";
@@ -115,7 +115,7 @@ const evLabel = { upload: "Envio", download: "Download", delete: "Apagou", bulkD
 async function loadAct() { try { act.value = (await adminApi.activity({ limit: 50 })).items || []; } catch (e) { act.value = []; toastError(e); } }
 const when = (s) => date(new Date(s * 1000).toISOString()) + " " + new Date(s * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-onMounted(() => { page.title = "Administração"; if (!isAdmin()) router.replace("/"); });
+onMounted(() => { hideStatus(); page.title = "Administração"; if (!isAdmin()) router.replace("/"); });
 watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); if (t === "acessos") void loadRule(); }, { immediate: true });
 </script>
 

@@ -165,3 +165,7 @@ export async function eject(dev) {
     void refreshUsb();
   }
 }
+
+// ---- rodapé (barra de status fixa no fim da página) ----
+export const status = reactive({ show: false, label: "", used: 0, total: 0, count: 0, folders: 0, files: 0, size: 0, selCount: 0, selSize: 0, noun: "itens" });
+export const hideStatus = () => { status.show = false; };

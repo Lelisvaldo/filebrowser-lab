@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as authApi from "@/api/auth";
 import * as filesApi from "@/api/files";
-import { app, page, toast, toastError } from "@/store/app";
+import { hideStatus, app, page, toast, toastError } from "@/store/app";
 import { askText, askConfirm, showInfo } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
 import { date } from "@/lib/format";
@@ -15,7 +15,7 @@ const router = useRouter();
 const origin = window.location.origin;
 const tab = computed(() => route.params.tab || "perfil");
 const tabs = [["perfil", "Perfil"], ["seguranca", "Segurança"], ["chaves", "Chaves de API"], ["links", "Links compartilhados"]];
-onMounted(() => { page.title = "Minha conta"; });
+onMounted(() => { hideStatus(); page.title = "Minha conta"; });
 
 // senha
 const cur = ref(""); const n1 = ref(""); const n2 = ref(""); const busy = ref(false);
