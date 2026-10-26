@@ -21,7 +21,7 @@ const searchOpen = ref(false);
 
 const logged = computed(() => !!app.user && !route.meta.public);
 const activeCount = computed(() => visible().filter((t) => ["queued", "running", "paused"].includes(t.status)).length);
-const usbCount = computed(() => (app.usb || []).length);
+const usbCount = computed(() => (app.usb || []).filter((d) => d.mounted).length);
 const usbOn = computed(() => app.usb !== null);
 
 function toggleMenu() {
@@ -122,7 +122,8 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             :aria-current="route.params.source === s.name ? 'true' : undefined"><Icon :name="iconForSource(s.name)" /><span class="t">{{ s.name }}</span></router-link>
           <template v-if="hasUsbSource() && usbOn">
             <div class="grp">Pendrives</div>
-            <router-link v-for="d in app.usb" :key="d.uuid" class="nav usb" :to="usbPath(d)" :title="d.name"
+            <span v-for="d in app.usb.filter((x) => !x.mounted)" :key="d.uuid" class="nav usb-down" :title="d.name + ' está desmontado: tire e espete de novo'"><Icon name="usb" /><span class="t">{{ d.name }}</span></span>
+            <router-link v-for="d in app.usb.filter((x) => x.mounted)" :key="d.uuid" class="nav usb" :to="usbPath(d)" :title="d.name"
               :aria-current="route.params.source === 'Pendrives' && String(route.params.rest || '').startsWith(d.name + '/') ? 'true' : undefined">
               <Icon name="usb" /><span class="t">{{ d.name }}</span>
               <span v-if="d.ejectable" class="ej" role="button" tabindex="0" :aria-label="'Remover ' + d.name" title="Remover com segurança"

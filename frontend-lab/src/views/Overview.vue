@@ -46,14 +46,14 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
       <template v-if="showUsb">
         <h2>Pendrives <small v-if="usbs.length">· {{ usbs.length }} ligado{{ usbs.length > 1 ? "s" : "" }}</small></h2>
         <div class="tiles" id="usbs">
-          <div v-for="d in usbs" :key="d.uuid" class="tile cp go usbc" tabindex="0" role="button" @click="openUsb(d)" @keydown.enter="openUsb(d)">
+          <div v-for="d in usbs" :key="d.uuid" class="tile cp usbc" :class="{ go: d.mounted, 'usb-down': !d.mounted }" tabindex="0" role="button" @click="d.mounted && openUsb(d)" @keydown.enter="d.mounted && openUsb(d)">
             <div class="row" style="gap: 10px">
               <div class="ico sm usb"><Icon name="usb" /></div>
-              <div style="min-width: 0; flex: 1"><div class="nm">{{ d.name }}</div><div class="path" :title="d.mountpoint + ' · ' + d.filesystem">{{ d.mountpoint }}</div></div>
-              <Donut mini :pct="d.pct" :index="1" :warn="d.pct > 85" />
+              <div style="min-width: 0; flex: 1"><div class="nm">{{ d.name }}</div><div v-if="d.mounted" class="path" :title="d.mountpoint + ' · ' + d.filesystem">{{ d.mountpoint }}</div><div v-else class="path off">Desmontado: tire e espete de novo</div></div>
+              <Donut v-if="d.mounted" mini :pct="d.pct" :index="1" :warn="d.pct > 85" />
               <button v-if="d.ejectable" class="ib ejb" :class="{ busy: ejecting[d.uuid] }" :disabled="ejecting[d.uuid]" :aria-label="'Remover ' + d.name + ' com segurança'" title="Remover com segurança" @click.stop="eject(d)"><Icon name="eject" /></button>
             </div>
-            <div class="cpm">
+            <div v-if="d.mounted" class="cpm">
               <span v-if="ejecting[d.uuid]" style="color: var(--warn); font-weight: 500">Removendo… não tire o pendrive</span>
               <span v-else><b>{{ bytes(d.used) }}</b> usados</span>
               <span>{{ bytes(d.size) }}</span>

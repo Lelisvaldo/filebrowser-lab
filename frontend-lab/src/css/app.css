@@ -239,3 +239,8 @@ a.ib{text-decoration:none}
   .busca input{width:0;padding:0;border-width:0;opacity:0;margin-left:-4px;transition:width .2s,opacity .15s,padding .2s}
   .busca:hover input,.busca:focus-within input,.busca input:not(:placeholder-shown){width:230px;padding:0 14px;border-width:1px;opacity:1;margin-left:0}
 }
+
+.usb-down{opacity:.85;cursor:default}
+.usb-down .ico,.nav.usb-down>.i:first-child{color:#ff4d6d}
+.usb-down .ico{background:#3e2243}
+.path.off{color:#ff4d6d;font-family:var(--font)}
