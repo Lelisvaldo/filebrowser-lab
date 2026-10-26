@@ -390,3 +390,7 @@ main{position:relative}
 .selbar{position:sticky;bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 6px 24px rgba(0,0,0,.25)}
 @media (max-width:760px){.crow{grid-template-columns:44px minmax(0,1fr) 52px 76px}.crow .bar{display:none}.tmap{aspect-ratio:100/90}}
 .cleanup .tbar .meta{min-width:0;flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cleanup .tbar .sp{display:none}
+.tm{padding:10px 12px;text-shadow:0 1px 2px rgba(0,0,0,.45)}
+.tm .tn{font-size:1.15rem;font-weight:700;line-height:1.2;padding-right:30px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;white-space:normal}
+.tm .ts{font-size:.95rem;opacity:.95}
+.tm .tc{width:28px;height:28px}.tm .tc .i{width:17px;height:17px}

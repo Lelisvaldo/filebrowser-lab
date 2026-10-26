@@ -106,16 +106,16 @@ const blocks = computed(() => {
   if (row.length) flush();
   return out.map((b, n) => ({ ...b, n }));
 });
+const PAL = ["cyan", "violet", "magenta", "orange", "green", "blue", "pink", "yellow", "red"];
 const blockStyle = (b) => {
-  const k = Math.max(38, 88 - b.n * 5);
-  const tint = b.it.rest || !b.it.dir ? "var(--sub)" : "var(--h)";
+  const tint = b.it.rest ? "var(--sub)" : `var(--c-${PAL[b.n % PAL.length]})`;
   return {
     left: b.x + "%", top: (b.y / H) * 100 + "%", width: b.w + "%", height: (b.h / H) * 100 + "%",
-    background: `color-mix(in srgb, ${tint} ${b.it.rest ? 40 : k}%, #1b1530)`,
+    background: `color-mix(in srgb, ${tint} ${b.it.rest ? 40 : 62}%, #1b1530)`,
   };
 };
-const label = (b) => b.w * b.h > 150;
-const tiny = (b) => b.w * b.h > 40;
+const label = (b) => b.w * b.h > 60;
+const tiny = (b) => b.w * b.h > 25;
 </script>
 
 <template>
@@ -149,26 +149,26 @@ const tiny = (b) => b.w * b.h > 40;
         </div>
 
         <div class="tbar">
+          <router-link class="ib" :to="routeFor(source, dirPath)" title="Abrir esta pasta nos arquivos" aria-label="Abrir esta pasta nos arquivos"><Icon name="folderopen" /></router-link>
+          <span class="meta">{{ mode === "map" ? "Cada bloco é do tamanho que ocupa. Toque numa pasta para entrar." : "Do maior para o menor." }}</span>
+          <span class="sp"></span>
           <div class="seg" role="group" aria-label="Modo">
             <button :aria-pressed="mode === 'map'" title="Mapa" aria-label="Mapa" @click="setMode('map')"><Icon name="grid" /></button>
             <button :aria-pressed="mode === 'list'" title="Lista" aria-label="Lista" @click="setMode('list')"><Icon name="list" /></button>
           </div>
-          <span class="meta">{{ mode === "map" ? "Cada bloco é do tamanho que ocupa. Toque numa pasta para entrar." : "Do maior para o menor." }}</span>
-          <span class="sp"></span>
-          <router-link class="ib" :to="routeFor(source, dirPath)" title="Abrir esta pasta nos arquivos" aria-label="Abrir esta pasta nos arquivos"><Icon name="folderopen" /></router-link>
         </div>
 
         <div v-if="items === null" class="vazio">Calculando…</div>
         <div v-else-if="!items.length" class="vazio vi"><Icon name="folder" /><span>Esta pasta está vazia.</span></div>
 
-        <div v-else-if="mode === 'map'" class="tmap" :class="hueOf(source)">
+        <div v-else-if="mode === 'map'" class="tmap">
           <div v-for="b in blocks" :key="b.it.path || 'rest'" class="tm" :class="{ sel: sel.has(b.it.path), rest: b.it.rest }" :style="blockStyle(b)"
             :title="b.it.name + ' · ' + bytes(b.it.size) + ' · ' + pctTxt(b.it)"
             :tabindex="b.it.rest ? -1 : 0" @click="!b.it.rest && tap(b.it)" @keydown.enter="!b.it.rest && tap(b.it)">
             <template v-if="tiny(b)">
               <span v-if="!b.it.rest" class="tc" role="button" :aria-label="'Selecionar ' + b.it.name" @click.stop="toggle(b.it)"><Icon :name="sel.has(b.it.path) ? 'check' : b.it.dir ? 'folder' : iconKey(kindOf(b.it))" /></span>
               <span v-if="label(b)" class="tn">{{ b.it.name }}</span>
-              <span v-if="label(b)" class="ts">{{ bytes(b.it.size) }} · {{ pctTxt(b.it) }}</span>
+              <span v-if="b.w * b.h > 140" class="ts">{{ bytes(b.it.size) }} · {{ pctTxt(b.it) }}</span>
             </template>
           </div>
         </div>
