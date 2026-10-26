@@ -1,0 +1,202 @@
+/*
+ * filebrowser-lab: camada visual do fork (HL-111, 26/10/2026).
+ * Um arquivo só, carregado por último (main.ts), para o fork conflitar pouco com o original.
+ * Paleta amostrada do modelo de dashboard aprovado; fonte Open Sans (SIL OFL, ver public/fonts/OPEN-SANS-OFL.txt).
+ */
+
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url(/fonts/open-sans-latin-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Open Sans";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url(/fonts/open-sans-latin-ext-wght-normal.woff2) format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------- tokens: claro ---------- */
+html:root {
+  --lab-grad-a: linear-gradient(90deg, #0bc7d3, #7a76d4, #f31ed2);
+  --lab-grad-b: linear-gradient(90deg, #00c6cf, #065e9e);
+  --lab-grad-c: linear-gradient(90deg, #ff9630, #ff1bca);
+  --lab-page: #e6e9ed;
+  --lab-on-accent: #0e0726;
+  --background: #e6e9ed;
+  --alt-background: #dbdfe4;
+  --surfacePrimary: #f1f3f5;
+  --surfaceSecondary: #c9ced6;
+  --divider: #c9ced6;
+  --textPrimary: #1b1f26;
+  --textSecondary: #586070;
+  --iconBackground: #d3d9e2;
+  --primaryColor: #0b62b8;
+  --blue: #0b62b8;
+  --dark-blue: #095099;
+}
+
+/* ---------- tokens: escuro (o padrão do lab) ---------- */
+html.dark-mode:root {
+  --lab-page: linear-gradient(135deg, #1f0c4c 0%, #170a38 50%, #0f0623 100%);
+  --background: #170a38;
+  --alt-background: #120a33;
+  --surfacePrimary: #1c0d46;
+  --surfaceSecondary: #2f1a67;
+  --divider: #2f1a67;
+  --textPrimary: #f6f3ff;
+  --textSecondary: #a99bd8;
+  --iconBackground: #241258;
+  --activeWhiteIcon: #ffffff;
+  --primaryColor: #01ced3;
+  --blue: #01ced3;
+  --dark-blue: #00c6cf;
+}
+
+/* ---------- tipografia ---------- */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "Open Sans", "Roboto", system-ui, sans-serif;
+}
+
+/* ---------- botões e campos ---------- */
+.button {
+  background: var(--lab-grad-a);
+  color: var(--lab-on-accent);
+  font-weight: 700;
+  border-radius: 12px;
+}
+.button:hover:not([disabled]) {
+  filter: brightness(1.08);
+}
+.button--red {
+  background: var(--red);
+  color: white;
+}
+.button--flat {
+  background: var(--surfaceSecondary);
+  color: var(--primaryColor);
+}
+.input {
+  border-radius: 12px;
+  border-width: 1px;
+}
+.input:focus {
+  border-color: var(--primaryColor);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaryColor) 22%, transparent);
+}
+
+/* ---------- tela de entrada ---------- */
+#login {
+  background: var(--lab-page);
+  overflow: hidden;
+}
+#login .login-card {
+  max-width: 400px;
+  width: min(92%, 400px);
+  padding: 28px 24px 22px;
+  border-radius: 18px;
+  background: var(--surfacePrimary);
+  border: 1px solid var(--divider);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+#login .login-brand {
+  justify-content: flex-start;
+  padding-top: 0 !important;
+}
+#login .login-brand .login-icon {
+  display: none;
+}
+#login .lab-logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primaryColor) 18%, transparent);
+  color: var(--primaryColor);
+}
+#login .lab-logo svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
+}
+#login .brand-text {
+  padding: 0.6em 0 0.2em !important;
+  justify-content: flex-start;
+}
+#login .brand-text h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--textPrimary);
+}
+#login .lab-sub {
+  margin: 0 0 0.9em;
+  text-align: left;
+  color: var(--textSecondary);
+  font-size: 0.92rem;
+}
+#login .field-wrap {
+  position: relative;
+  margin-bottom: 0.7em;
+}
+#login .field-wrap .lab-ico {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translateY(-50%);
+  fill: var(--textSecondary);
+  pointer-events: none;
+}
+#login .field-wrap .input {
+  min-height: 48px;
+  padding-left: 44px;
+  margin-bottom: 0;
+}
+#login .field-wrap:focus-within .lab-ico {
+  fill: var(--primaryColor);
+}
+#login .button--block {
+  min-height: 48px;
+  margin-top: 0.4em;
+  font-size: 1rem;
+  border-radius: 12px;
+}
+#login .wrong-login {
+  background: color-mix(in srgb, var(--icon-orange) 16%, transparent);
+  color: var(--icon-orange);
+  border: 0;
+  border-radius: 10px;
+  margin-bottom: 0.7em;
+  font-weight: 600;
+}
+#login .lab-foot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(14px + var(--safe-area-bottom));
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--textSecondary);
+  pointer-events: none;
+}
+#login .lab-rings {
+  position: fixed;
+  right: -120px;
+  bottom: -140px;
+  width: min(720px, 120vw);
+  height: auto;
+  opacity: 0.5;
+  pointer-events: none;
+}

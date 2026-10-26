@@ -15,11 +15,13 @@
       <!-- eslint-disable-next-line @intlify/vue-i18n/no-raw-text -->
       <span v-if="eventTheme === 'halloween'" class="tombstone-rip" aria-hidden="true">R.I.P.</span>
       <div class="login-brand">
+        <span class="lab-logo" aria-hidden="true"><svg class="" viewBox="0 0 24 24" aria-hidden="true"><path d="M5.42 5.27A2.3 2.3 0 0 1 7.44 4h9.12c.86 0 1.65.5 2.02 1.27l3.1 6.39q.31.67.32 1.41v3.68c0 1.24-1 2.25-2.25 2.25H4.25C3.01 19 2 18 2 16.75v-3.68q0-.74.32-1.41zm11.81.65a.8.8 0 0 0-.67-.42H7.44a.8.8 0 0 0-.67.42L4.3 11h15.38zM3.5 13.25v3.5c0 .41.34.75.75.75h15.5c.41 0 .75-.34.75-.75v-3.5a.75.75 0 0 0-.75-.75H4.25a.75.75 0 0 0-.75.75M18 16a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></svg></span>
         <img :src="loginIconUrl" alt="Login Icon" class="login-icon" />
       </div>
       <div v-if="!inProgress" class="login-brand brand-text">
         <h3>{{ loginName }}</h3>
       </div>
+      <p v-if="!inProgress" class="lab-sub">Acesse seus arquivos e pendrives.</p>
       <transition name="login-options" @before-enter="beforeEnter" @enter="enter" @leave="leave">
         <div v-if="inProgress" class="login-spinner-wrapper">
           <LoadingSpinner size="medium" />
@@ -32,11 +34,13 @@
             </div>
             <div class="field-wrap" :class="{ 'tombstone-field': eventTheme === 'halloween', born: eventTheme === 'halloween' }">
               <span v-if="eventTheme === 'halloween'" class="tombstone-label" aria-hidden="true"></span>
+              <svg class="lab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.75 14C19 14 20 15 20 16.25v.57c0 .9-.32 1.76-.9 2.44Q16.74 22.01 12 22q-4.74.01-7.1-2.74a3.8 3.8 0 0 1-.9-2.43v-.58C4 15 5.01 14 6.25 14zm0 1.5H6.25a.75.75 0 0 0-.75.75v.58c0 .53.2 1.05.54 1.46C7.3 19.76 9.26 20.5 12 20.5q4.09 0 5.96-2.21c.35-.41.54-.93.54-1.47v-.57a.75.75 0 0 0-.75-.75M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7"/></svg>
               <input autofocus class="input" type="text" autocapitalize="off" v-model="username"
                 :placeholder="$t('general.username')" />
             </div>
             <div class="field-wrap" :class="{ 'tombstone-field': eventTheme === 'halloween', died: eventTheme === 'halloween' }">
               <span v-if="eventTheme === 'halloween'" class="tombstone-label" aria-hidden="true"></span>
+              <svg class="lab-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1a5 5 0 0 1 5 5v2.01c1.68.13 3 1.53 3 3.24v7.5c0 1.8-1.46 3.25-3.25 3.25h-9.5A3.25 3.25 0 0 1 4 18.75v-7.5a3.25 3.25 0 0 1 3-3.24V6a5 5 0 0 1 5-5M7.25 9.5c-.97 0-1.75.78-1.75 1.75v7.5c0 .97.78 1.75 1.75 1.75h9.5c.97 0 1.75-.78 1.75-1.75v-7.5c0-.97-.78-1.75-1.75-1.75zM12 13.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5M12 2.5A3.5 3.5 0 0 0 8.5 6v2h7V6A3.5 3.5 0 0 0 12 2.5"/></svg>
               <input class="input" type="password" v-model="password" :placeholder="$t('general.password')" />
             </div>
             <input class="input" v-if="createMode" type="password" v-model="passwordConfirm"
@@ -58,6 +62,23 @@
         </div>
       </transition>
     </form>
+
+    <svg class="lab-rings" viewBox="0 0 600 600" aria-hidden="true">
+      <defs>
+        <linearGradient id="lab-gb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00c6cf"/><stop offset="1" stop-color="#065e9e"/></linearGradient>
+        <linearGradient id="lab-ga" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0bc7d3"/><stop offset=".55" stop-color="#7a76d4"/><stop offset="1" stop-color="#f31ed2"/></linearGradient>
+        <linearGradient id="lab-gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9630"/><stop offset="1" stop-color="#ff1bca"/></linearGradient>
+      </defs>
+      <g fill="none" stroke-width="34">
+        <circle cx="300" cy="300" r="250" stroke="#2f1a67" stroke-dasharray="52 8" opacity=".6"/>
+        <circle cx="300" cy="300" r="250" stroke="url(#lab-gb)" stroke-dasharray="52 8" style="clip-path:polygon(50% 50%,50% 0,100% 0,100% 100%,60% 100%)"/>
+        <circle cx="300" cy="300" r="205" stroke="#2f1a67" stroke-dasharray="44 8" opacity=".6"/>
+        <circle cx="300" cy="300" r="205" stroke="url(#lab-ga)" stroke-dasharray="44 8" style="clip-path:polygon(50% 50%,50% 0,100% 0,100% 40%)"/>
+        <circle cx="300" cy="300" r="160" stroke="#2f1a67" stroke-dasharray="36 8" opacity=".6"/>
+        <circle cx="300" cy="300" r="160" stroke="url(#lab-gc)" stroke-dasharray="36 8" style="clip-path:polygon(50% 50%,50% 0,100% 0,100% 60%)"/>
+      </g>
+    </svg>
+    <div class="lab-foot">filebrowser-lab · base Filebrowser Quantum</div>
 
     <!-- Halloween Decorations -->
     <div v-if="eventTheme === 'halloween'" class="halloween-decorations">
