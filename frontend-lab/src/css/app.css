@@ -225,3 +225,6 @@ select.scopein,.sortsel select{min-height:40px}
 /* ícones no lugar de texto: rótulos só como dica (title) e leitor de tela */
 .lbl{display:none}
 .tbar .btn,.cardhead .btn,.fillrow .btn.ico,.vw-top .btn{min-width:42px;padding:0 10px}
+
+.tiles .vazio{grid-column:1/-1}
+.usb-off .i,.sem-usb .i{color:#ff4d6d;opacity:1}
