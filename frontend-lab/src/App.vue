@@ -6,6 +6,7 @@ import DialogHost from "@/components/DialogHost.vue";
 import Toasts from "@/components/Toasts.vue";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
+import UsbPop from "@/components/UsbPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
 import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
@@ -99,11 +100,11 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <input id="busca" v-model="q" type="search" placeholder="Buscar arquivos…" aria-label="Buscar arquivos" autocomplete="off" @keydown.esc="searchOpen = false" />
           </form>
           <span v-if="usbOn && usbCount" class="ibw">
-            <router-link class="ib" to="/" :title="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')" :aria-label="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')"><Icon name="usb" /></router-link>
+            <button class="ib" type="button" :title="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')" :aria-label="'Pendrives: ' + usbCount + (usbCount === 1 ? ' ligado' : ' ligados')" :aria-expanded="ui.usbOpen" @click="setUi({ usbOpen: !ui.usbOpen, transfersOpen: false })"><Icon name="usb" /></button>
             <span class="badge ok">{{ usbCount }}</span>
           </span>
           <span class="ibw">
-            <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen })"><Icon name="transfer" /></button>
+            <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen, usbOpen: false })"><Icon name="transfer" /></button>
             <span v-if="activeCount" class="badge">{{ activeCount }}</span>
           </span>
           <button class="ib" aria-label="Alternar claro e escuro" title="Alternar claro e escuro" @click="toggleTheme"><Icon :name="isDark() ? 'sun' : 'moon'" /></button>
@@ -112,6 +113,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
       </header>
 
       <TransfersPop />
+      <UsbPop />
       <TransferDock />
 
       <nav class="side" aria-label="Locais">
