@@ -75,7 +75,7 @@ const where = (r) => r.source + parent(r.path).replace(/\/$/, "");
           <span></span>
         </div>
         <div v-for="r in sorted" :key="r.source + r.path" class="frow srow" tabindex="0" @click="open(r)" @keydown.enter="open(r)">
-          <span class="chk" aria-hidden="true"><Icon :name="iconKey(kindOf(r))" :class="hueClass(kindOf(r))" /></span>
+          <span class="chk" aria-hidden="true"><Icon :name="iconKey(kindOf(r))" :class="hueClass(kindOf(r), r.source)" /></span>
           <span class="n"><span>{{ r.path.replace(/\/$/, "").split("/").pop() }}</span><small>{{ where(r) }}</small></span>
           <span class="m hide-s">{{ date(r.modified) }}</span>
           <span class="s">{{ r.type === "directory" ? "—" : bytes(r.size) }}</span>

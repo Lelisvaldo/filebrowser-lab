@@ -105,7 +105,7 @@ const sizes = [[1, "1 MB"], [100, "100 MB"], [1024, "1 GB"]];
         <div v-else-if="!dirs.length" class="vazio vi"><Icon name="folder" /><span>Esta pasta não tem subpastas.</span></div>
         <div v-else class="flist">
           <div v-for="d in dirs" :key="d.path" class="frow urow" tabindex="0" @click="goDir(d)" @keydown.enter="goDir(d)">
-            <span class="chk"><Icon name="folder" /></span>
+            <span class="chk"><Icon name="folder" :class="hueClass('folder', source)" /></span>
             <span class="n">{{ d.name }}</span>
             <div class="bar" :class="{ cheio: hot(d.size || 0, total) }"><i :style="{ width: Math.max(2, ((d.size || 0) / maxDir) * 100) + '%' }"></i></div>
             <span class="m hide-s">{{ total ? Math.round(((d.size || 0) / total) * 100) + "%" : "" }}</span>
