@@ -334,3 +334,9 @@ body.rail .foot .usr .t,body.rail .foot .usr .ej{display:none}
 .nav.usb .ubar{--grad:var(--gB);height:5px;display:block}
 .nav.usb .ubar.cheio{--grad:var(--gC)}
 .nav.usb .us{font-size:.7rem;color:var(--sub);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Login: o preenchimento automático do navegador pintava só o miolo do campo; fica igual ao fundo do campo */
+.lg-campo input{padding-left:6px;border-radius:8px}
+.lg-campo input:-webkit-autofill,.lg-campo input:-webkit-autofill:hover,.lg-campo input:-webkit-autofill:focus{
+  -webkit-text-fill-color:var(--txt);caret-color:var(--txt);box-shadow:0 0 0 1000px var(--bg) inset;-webkit-box-shadow:0 0 0 1000px var(--bg) inset;transition:background-color 99999s ease-out}
+.lg-campo input:autofill{box-shadow:0 0 0 1000px var(--bg) inset;-webkit-text-fill-color:var(--txt)}
