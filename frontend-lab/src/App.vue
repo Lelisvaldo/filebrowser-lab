@@ -91,7 +91,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
   <template v-else>
     <div class="app">
       <header class="top">
-        <div class="brandcell" :title="appName"><Logo :size="34" /></div>
+        <div class="brandcell" :title="appName"><Logo :size="30" /></div>
         <div class="navbar">
           <button class="ib" :aria-label="menuLabel" :title="menuLabel" @click="toggleMenu"><Icon name="menu" /></button>
           <span class="crumbtop">{{ page.title }}</span>

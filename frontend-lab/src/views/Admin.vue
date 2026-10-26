@@ -113,7 +113,10 @@ const sources = computed(() => Object.values(app.sources));
 const act = ref(null);
 const evLabel = { upload: "Envio", download: "Download", delete: "Apagou", bulkDelete: "Apagou", move: "Moveu", copy: "Copiou", rename: "Renomeou", login: "Entrou", logout: "Saiu", create: "Criou", edit: "Editou", shareCreate: "Criou link", shareDelete: "Removeu link" };
 async function loadAct() { try { act.value = (await adminApi.activity({ limit: 50 })).items || []; } catch (e) { act.value = []; toastError(e); } }
-const when = (s) => date(new Date(s * 1000).toISOString()) + " " + new Date(s * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const when = (s) => {
+  const d = date(new Date(s * 1000).toISOString());
+  return /\d:\d\d/.test(d) ? d : d + " " + new Date(s * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+};
 
 onMounted(() => { hideStatus(); page.title = "Administração"; if (!isAdmin()) router.replace("/"); });
 watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); if (t === "acessos") void loadRule(); }, { immediate: true });
