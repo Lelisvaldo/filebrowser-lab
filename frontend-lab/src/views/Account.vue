@@ -102,7 +102,7 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
       </section>
 
       <section v-else-if="tab === 'chaves'" class="card">
-        <div class="cardhead"><h2>Chaves de API</h2><button class="btn" @click="newKey"><Icon name="plus" /><span>Nova chave</span></button></div>
+        <div class="cardhead"><h2>Chaves de API</h2><button class="btn" @click="newKey" title="Nova chave" aria-label="Nova chave"><Icon name="plus" /><span class="lbl">Nova chave</span></button></div>
         <div v-if="keys === null" class="vazio">Carregando…</div>
         <div v-else-if="!keys.length" class="vazio">Nenhuma chave criada.</div>
         <div v-else class="tbl">

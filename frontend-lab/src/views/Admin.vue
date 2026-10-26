@@ -126,7 +126,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
       <div class="tabs" role="tablist"><button v-for="[id, l] in tabs" :key="id" role="tab" :aria-selected="tab === id" @click="router.push('/admin/' + id)">{{ l }}</button></div>
 
       <section v-if="tab === 'usuarios'" class="card">
-        <div class="cardhead"><h2>Usuários</h2><button class="btn" @click="newUser"><Icon name="plus" /><span>Novo usuário</span></button></div>
+        <div class="cardhead"><h2>Usuários</h2><button class="btn" @click="newUser" title="Novo usuário" aria-label="Novo usuário"><Icon name="plus" /><span class="lbl">Novo usuário</span></button></div>
         <div v-if="users === null" class="vazio">Carregando…</div>
         <div v-else class="tbl">
           <div v-for="u in users" :key="u.username" class="trow">
@@ -160,7 +160,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
         <div class="fillrow">
           <label class="fld">Fonte<select v-model="acSource" class="scopein" @change="loadRule"><option v-for="n in sourceNames" :key="n" :value="n">{{ n }}</option></select></label>
           <label class="fld grow">Pasta<input v-model="acPath" placeholder="/" @keydown.enter.prevent="loadRule" /></label>
-          <button class="btn" type="button" @click="loadRule"><Icon name="refresh" /><span>Ver</span></button>
+          <button class="btn" type="button" @click="loadRule" title="Ver" aria-label="Ver"><Icon name="refresh" /><span class="lbl">Ver</span></button>
         </div>
         <div v-if="acRule && !acRule.pathExists && acPath !== '/'" class="meta" style="margin: 8px 0">Essa pasta não existe na fonte (a regra pode ser criada mesmo assim).</div>
         <div v-if="acRule && acRule.denyAll" class="meta" style="margin: 8px 0">Todos negados nesta pasta.</div>

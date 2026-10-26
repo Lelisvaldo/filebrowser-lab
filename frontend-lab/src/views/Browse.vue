@@ -243,6 +243,12 @@ function showMenu(it, ev) {
   const y = ev.clientY || (r ? r.bottom : 100);
   menu.value = { it, x, y, entries: menuFor(it) };
 }
+function moreMenu(ev) {
+  const r = ev.currentTarget.getBoundingClientRect();
+  const entries = menuFor(selected.value[0]).filter((e) => !["open", "download", "delete"].includes(e.id));
+  const clean = entries.filter((e, i, a) => !(e.sep && (i === 0 || i === a.length - 1 || a[i - 1].sep)));
+  menu.value = { it: selected.value[0], x: r.left, y: r.bottom + 4, entries: clean };
+}
 function menuPick(id) {
   const it = menu.value.it;
   const list = targets(it);
@@ -308,10 +314,10 @@ const crumbList = computed(() => crumbs(dirPath.value));
 
       <div class="tbar" :class="{ has: selected.length }">
         <template v-if="!selected.length">
-          <button v-if="canCreate" class="btn pri" type="button" @click="fileInput.click()"><Icon name="upload" /><span class="lbl">Enviar</span></button>
-          <button v-if="canCreate" class="btn" type="button" title="Enviar uma pasta inteira" @click="folderInput.click()"><Icon name="folderopen" /><span class="lbl">Enviar pasta</span></button>
-          <button v-if="canCreate" class="btn" type="button" @click="newFolder"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
-          <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
+          <button v-if="canCreate" class="btn pri" type="button" @click="fileInput.click()" title="Enviar" aria-label="Enviar"><Icon name="upload" /><span class="lbl">Enviar</span></button>
+          <button v-if="canCreate" class="btn" type="button" title="Enviar uma pasta inteira" @click="folderInput.click()" aria-label="Enviar pasta"><Icon name="folderopen" /><span class="lbl">Enviar pasta</span></button>
+          <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
+          <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
           <label class="sortsel"><Icon name="sort" /><select :value="ui.sortBy" aria-label="Ordenar por" @change="setUi({ sortBy: $event.target.value })"><option v-for="(l, k) in sortLabel" :key="k" :value="k">{{ l }}</option></select></label>
           <button class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
@@ -325,13 +331,9 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button class="ib" aria-label="Limpar seleção" title="Limpar seleção (Esc)" @click="clearSel"><Icon name="dismiss" /></button>
           <b class="selcount">{{ selected.length }} selecionado{{ selected.length > 1 ? "s" : "" }}</b>
           <span class="sp"></span>
-          <button v-if="canDownload" class="btn" @click="doDownload(selected)"><Icon name="download" /><span class="lbl">Baixar</span></button>
-          <button v-if="canModify && selected.length === 1" class="btn" @click="doRename(selected[0])"><Icon name="edit" /><span class="lbl">Renomear</span></button>
-          <button v-if="canCreate" class="btn" @click="doMoveCopy(selected, 'copy')"><Icon name="copy" /><span class="lbl">Copiar</span></button>
-          <button v-if="canModify" class="btn" @click="doMoveCopy(selected, 'move')"><Icon name="move" /><span class="lbl">Mover</span></button>
-          <button v-if="canCreate" class="btn" @click="doZip(selected)"><Icon name="zip" /><span class="lbl">Compactar</span></button>
-          <button v-if="selected.length === 1" class="btn" @click="shareItem(source, selected[0])"><Icon name="share" /><span class="lbl">Compartilhar</span></button>
-          <button v-if="canDelete" class="btn danger" @click="doDelete(selected)"><Icon name="trash" /><span class="lbl">Apagar</span></button>
+          <button v-if="canDownload" class="btn" @click="doDownload(selected)" title="Baixar" aria-label="Baixar"><Icon name="download" /><span class="lbl">Baixar</span></button>
+          <button v-if="canDelete" class="btn danger" @click="doDelete(selected)" title="Apagar" aria-label="Apagar"><Icon name="trash" /><span class="lbl">Apagar</span></button>
+          <button class="btn" aria-label="Mais ações" aria-haspopup="menu" @click.stop="moreMenu($event)" title="Mais"><Icon name="more" /><span class="lbl">Mais</span></button>
         </template>
       </div>
       <input ref="fileInput" type="file" multiple hidden @change="onPick($event)" />

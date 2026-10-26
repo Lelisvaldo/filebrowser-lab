@@ -30,7 +30,7 @@ function freq(v) { setUi({ usbRefresh: v }); startUsbPolling(); }
       <div class="conta">
         <span class="ico"><Icon name="person" /></span>
         <div class="l"><b>{{ app.user?.username }}</b><span>{{ isAdmin() ? "Administrador" : "Usuário" }}</span></div>
-        <button class="btn" type="button" style="min-height: 40px" @click="sair"><Icon name="signout" /><span>Sair</span></button>
+        <button class="btn" type="button" style="min-height: 40px" @click="sair" title="Sair" aria-label="Sair"><Icon name="signout" /><span class="lbl">Sair</span></button>
       </div>
 
       <div class="sec">Modo de cor</div>

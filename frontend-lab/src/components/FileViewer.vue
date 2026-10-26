@@ -99,7 +99,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <span class="sp"></span>
       <template v-if="isEditable(kind) && !tooBig">
         <button v-if="isMd" class="ib" :title="mdPreview ? 'Editar' : 'Ver formatado'" :aria-label="mdPreview ? 'Editar' : 'Ver formatado'" @click="mdPreview = !mdPreview"><Icon :name="mdPreview ? 'edit' : 'eye'" /></button>
-        <button v-if="canModify" class="btn pri sm" :disabled="!dirty || saving" @click="save"><Icon name="save" /><span>{{ saving ? "Salvando…" : "Salvar" }}</span></button>
+        <button v-if="canModify" class="btn pri sm" title="Salvar (Ctrl+S)" aria-label="Salvar" :disabled="!dirty || saving" @click="save"><Icon name="save" /><span class="lbl">{{ saving ? "Salvando…" : "Salvar" }}</span></button>
       </template>
       <button v-if="prev" class="ib" aria-label="Anterior" title="Anterior (←)" @click="emit('go', prev)"><Icon name="left" /></button>
       <button v-if="next" class="ib" aria-label="Próximo" title="Próximo (→)" @click="emit('go', next)"><Icon name="right" /></button>
