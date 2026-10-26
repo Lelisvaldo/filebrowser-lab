@@ -15,6 +15,7 @@ onMounted(() => document.addEventListener("mousedown", away));
 onBeforeUnmount(() => document.removeEventListener("mousedown", away));
 const name = computed(() => (app.user && app.user.username) || "");
 
+function config() { setUi({ userOpen: false, settingsOpen: true }); }
 function conta() { close(); void router.push("/ajustes"); }
 async function sair() {
   close();
@@ -27,6 +28,7 @@ async function sair() {
   <div v-if="ui.userOpen" ref="el" class="pop userpop" role="menu" aria-label="Menu da conta" @keydown.esc="close">
     <div class="mu">{{ name }}</div>
     <button class="mi" role="menuitem" type="button" @click="conta"><Icon name="person" /><span>Minha conta</span></button>
+    <button class="mi" role="menuitem" type="button" @click="config"><Icon name="gear" /><span>Configurações</span></button>
     <button class="mi danger" role="menuitem" type="button" @click="sair"><Icon name="signout" /><span>Sair</span></button>
   </div>
 </template>

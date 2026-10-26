@@ -111,8 +111,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen, usbOpen: false, userOpen: false })"><Icon name="transfer" /></button>
             <span v-if="activeCount" class="badge">{{ activeCount }}</span>
           </span>
-                    <button class="ib" aria-label="Configurações" title="Configurações" @click="setUi({ settingsOpen: true })"><Icon name="gear" /></button>
-          <button class="ib avb" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !ui.userOpen, usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span></button>
+                    <button class="ib avb" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !ui.userOpen, usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span></button>
         </div>
       </header>
 
