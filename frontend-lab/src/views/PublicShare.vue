@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as shareApi from "@/api/share";
-import { kindOf, iconKey } from "@/lib/fileTypes";
+import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { bytes, date } from "@/lib/format";
 import { appName } from "@/lib/config";
 import { toastError } from "@/store/app";
@@ -66,12 +66,12 @@ const single = computed(() => !!data.value && data.value.type !== "directory");
         <div v-else-if="error" class="vazio">{{ error }}</div>
         <div v-else-if="data" class="flist">
           <div v-if="single" class="frow" tabindex="0" @click="download({ name: data.name, path: '/', type: data.type })">
-            <span class="chk"><Icon :name="iconKey(kindOf(data))" /></span><span class="n">{{ data.name }}</span><span class="m hide-s">{{ date(data.modified) }}</span><span class="s">{{ bytes(data.size) }}</span>
+            <span class="chk"><Icon :name="iconKey(kindOf(data))" :class="hueClass(kindOf(data))" /></span><span class="n">{{ data.name }}</span><span class="m hide-s">{{ date(data.modified) }}</span><span class="s">{{ bytes(data.size) }}</span>
             <button class="ib more" :aria-label="'Baixar ' + data.name" title="Baixar" @click.stop="download({ name: data.name, path: '/', type: data.type })"><Icon name="download" /></button>
           </div>
           <div v-if="rest" class="frow" tabindex="0" @click="router.back()"><span class="chk"><Icon name="back" /></span><span class="n">Voltar</span><span></span><span></span><span></span></div>
           <div v-for="it in data.items" :key="it.path" class="frow" tabindex="0" @click="it.type === 'directory' ? open(it) : download(it)">
-            <span class="chk"><Icon :name="iconKey(kindOf(it))" /></span>
+            <span class="chk"><Icon :name="iconKey(kindOf(it))" :class="hueClass(kindOf(it))" /></span>
             <span class="n">{{ it.name }}</span>
             <span class="m hide-s">{{ date(it.modified) }}</span>
             <span class="s">{{ it.type === "directory" ? "—" : bytes(it.size) }}</span>

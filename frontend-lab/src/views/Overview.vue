@@ -7,7 +7,7 @@ import TransferRows from "@/components/TransferRows.vue";
 import { hideStatus, app, ui, setUi, page, userSources, hasUsbSource, eject, ejecting, refreshSources, refreshUsb } from "@/store/app";
 import { visible } from "@/store/transfers";
 import { bytes, pct } from "@/lib/format";
-import { iconForSource } from "@/lib/sourceIcons";
+import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
 
 const router = useRouter();
@@ -67,7 +67,7 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
       <div class="tiles" id="pastas">
         <div v-for="f in folders" :key="f.name" class="tile cp go" tabindex="0" role="button" @click="open(f.name)" @keydown.enter="open(f.name)">
           <div class="row" style="gap: 10px">
-            <div class="ico sm"><Icon :name="f.icon" /></div>
+            <div class="ico sm" :class="hueOf(f.name)"><Icon :name="f.icon" /></div>
             <div style="min-width: 0; flex: 1"><div class="nm">{{ f.name }}</div><div class="path">{{ statusText(f.status) }}</div></div>
             <Donut mini :pct="f.pct" :index="f.i" />
           </div>

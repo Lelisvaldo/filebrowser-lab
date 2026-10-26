@@ -8,7 +8,7 @@ import * as filesApi from "@/api/files";
 import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, refreshSources } from "@/store/app";
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
 import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
-import { kindOf, iconKey } from "@/lib/fileTypes";
+import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { crumbs, join, parent, routeFor } from "@/lib/paths";
 import { bytes, date } from "@/lib/format";
 import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
@@ -461,7 +461,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
         </div>
         <div v-for="(it, i) in items" :key="it.path" class="frow hasbar" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i }" :data-path="it.path" :data-idx="i" role="row" tabindex="0"
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
-          <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : iconKey(kindOf(it))" /></button>
+          <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : iconKey(kindOf(it))" :class="sel.has(it.path) ? '' : hueClass(kindOf(it))" /></button>
           <span class="n" :title="it.name">{{ it.name }}</span>
           <div class="bar hide-s" :class="{ cheio: usePct(it) > 0.25 }" :title="Math.round(usePct(it) * 100) + '% da pasta'"><i :style="{ width: ((it.size || 0) / maxSize) * 100 + '%' }"></i></div>
           <span class="m hide-s">{{ date(it.modified) }}</span>
@@ -476,7 +476,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button class="gchk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : 'checkbox'" /></button>
           <div class="gthumb">
             <img v-if="thumb(it)" :src="thumb(it)" :alt="''" loading="lazy" @error="$event.target.remove()" />
-            <Icon :name="iconKey(kindOf(it))" />
+            <Icon :name="iconKey(kindOf(it))" :class="hueClass(kindOf(it))" />
           </div>
           <div class="gname" :title="it.name">{{ it.name }}</div>
           <div class="gmeta">{{ it.type === "directory" ? "Pasta" : bytes(it.size) }}</div>

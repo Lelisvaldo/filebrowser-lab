@@ -9,7 +9,7 @@ import TransfersPop from "@/components/TransfersPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
 import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
-import { iconForSource } from "@/lib/sourceIcons";
+import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
 import { appName } from "@/lib/config";
 import { bytes } from "@/lib/format";
@@ -116,10 +116,10 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
 
       <nav class="side" aria-label="Locais">
         <div class="scroll">
-          <router-link class="nav" to="/" title="Este servidor" :aria-current="route.name === 'home' ? 'true' : undefined"><Icon name="server" /><span class="t">{{ app.host || "Este servidor" }}</span></router-link>
+          <router-link class="nav" to="/" title="Este servidor" :aria-current="route.name === 'home' ? 'true' : undefined"><Icon name="server" class="hue h-blue" /><span class="t">{{ app.host || "Este servidor" }}</span></router-link>
           <div class="grp">Pastas</div>
           <router-link v-for="s in userSources()" :key="s.name" class="nav" :to="sidePath(s.name)" :title="s.name"
-            :aria-current="route.params.source === s.name ? 'true' : undefined"><Icon :name="iconForSource(s.name)" /><span class="t">{{ s.name }}</span></router-link>
+            :aria-current="route.params.source === s.name ? 'true' : undefined"><Icon :name="iconForSource(s.name)" :class="hueOf(s.name)" /><span class="t">{{ s.name }}</span></router-link>
           <template v-if="hasUsbSource() && usbOn">
             <div class="grp">Pendrives</div>
             <span v-for="d in app.usb.filter((x) => !x.mounted)" :key="d.uuid" class="nav usb-down" :title="d.name + ' está desmontado: tire e espete de novo'"><Icon name="usb" /><span class="t">{{ d.name }}</span></span>

@@ -26,6 +26,9 @@ export function kindOf(item) {
 }
 
 const ICON = { folder: "folder", image: "image", video: "video", audio: "music", pdf: "pdf", zip: "zip", code: "code", text: "text", table: "table", file: "file" };
+const HUE = { folder: "orange", image: "magenta", video: "violet", audio: "pink", pdf: "red", zip: "yellow", code: "cyan", text: "blue", table: "green" };
+/** Classe de cor do ícone por tipo de arquivo (arquivo comum fica no cinza padrão). */
+export const hueClass = (kind) => (HUE[kind] ? "hue h-" + HUE[kind] : "");
 export const iconKey = (kind) => ICON[kind] || "file";
 
 export const canView = (kind) => ["image", "video", "audio", "pdf", "code", "text"].includes(kind);

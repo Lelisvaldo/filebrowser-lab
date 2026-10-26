@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as filesApi from "@/api/files";
 import { app, page, status, hideStatus, userSources, hasUsbSource, usbSourceName, toastError } from "@/store/app";
-import { kindOf, iconKey } from "@/lib/fileTypes";
+import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { bytes, date } from "@/lib/format";
 import { parent, routeFor } from "@/lib/paths";
 
@@ -75,7 +75,7 @@ const where = (r) => r.source + parent(r.path).replace(/\/$/, "");
           <span></span>
         </div>
         <div v-for="r in sorted" :key="r.source + r.path" class="frow srow" tabindex="0" @click="open(r)" @keydown.enter="open(r)">
-          <span class="chk" aria-hidden="true"><Icon :name="iconKey(kindOf(r))" /></span>
+          <span class="chk" aria-hidden="true"><Icon :name="iconKey(kindOf(r))" :class="hueClass(kindOf(r))" /></span>
           <span class="n"><span>{{ r.path.replace(/\/$/, "").split("/").pop() }}</span><small>{{ where(r) }}</small></span>
           <span class="m hide-s">{{ date(r.modified) }}</span>
           <span class="s">{{ r.type === "directory" ? "—" : bytes(r.size) }}</span>

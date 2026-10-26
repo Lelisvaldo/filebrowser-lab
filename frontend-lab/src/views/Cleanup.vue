@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as filesApi from "@/api/files";
 import { app, page, hideStatus, toastError, refreshSources } from "@/store/app";
-import { kindOf, iconKey } from "@/lib/fileTypes";
+import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { bytes, date, pct } from "@/lib/format";
 import { crumbs, parent, routeFor } from "@/lib/paths";
 
@@ -91,7 +91,7 @@ const sizes = [[1, "1 MB"], [100, "100 MB"], [1024, "1 GB"]];
         <div v-else-if="!files.length" class="vazio vi"><Icon name="broom" /><span>Nenhum arquivo com {{ minMb >= 1024 ? "1 GB" : minMb + " MB" }} ou mais aqui.</span></div>
         <div v-else class="flist">
           <div v-for="f in files" :key="f.path" class="frow urow" tabindex="0" @click="openFile(f)" @keydown.enter="openFile(f)">
-            <span class="chk"><Icon :name="iconKey(kindOf(f))" /></span>
+            <span class="chk"><Icon :name="iconKey(kindOf(f))" :class="hueClass(kindOf(f))" /></span>
             <span class="n"><span>{{ f.path.split("/").pop() }}</span><small>{{ parentOf(f) }}</small></span>
             <div class="bar" :class="{ cheio: hot(f.size, total) }"><i :style="{ width: Math.max(2, (f.size / maxFile) * 100) + '%' }"></i></div>
             <span class="m hide-s">{{ date(f.modified) }}</span>

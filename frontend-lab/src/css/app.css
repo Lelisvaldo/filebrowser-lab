@@ -275,3 +275,14 @@ a.ib{text-decoration:none}
 select.scopein{width:auto}
 .card .form>.btn,.card .form>button.btn{align-self:flex-end}
 @media (max-width:760px){.scoperow{grid-template-columns:minmax(0,1fr) auto}.scoperow .scopein{grid-column:1/-1;order:3}}
+
+/* Paleta variada: cada pasta e cada tipo de arquivo tem a sua cor (classe h-*, variável --h). */
+:root{--c-cyan:#0a8f95;--c-violet:#6a56d8;--c-magenta:#c4199f;--c-pink:#d6336c;--c-orange:#c9640d;--c-green:#1d8a57;--c-blue:#1d6fc0;--c-yellow:#a67c00;--c-red:#c8332f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--c-cyan:#01ced3;--c-violet:#a99bff;--c-magenta:#ff4fd8;--c-pink:#ff7aa8;--c-orange:#ff9630;--c-green:#3ddc97;--c-blue:#5aaeff;--c-yellow:#ffd24d;--c-red:#ff6b7a}}
+:root[data-theme="dark"]{--c-cyan:#01ced3;--c-violet:#a99bff;--c-magenta:#ff4fd8;--c-pink:#ff7aa8;--c-orange:#ff9630;--c-green:#3ddc97;--c-blue:#5aaeff;--c-yellow:#ffd24d;--c-red:#ff6b7a}
+.h-cyan{--h:var(--c-cyan)}.h-violet{--h:var(--c-violet)}.h-magenta{--h:var(--c-magenta)}.h-pink{--h:var(--c-pink)}.h-orange{--h:var(--c-orange)}.h-green{--h:var(--c-green)}.h-blue{--h:var(--c-blue)}.h-yellow{--h:var(--c-yellow)}.h-red{--h:var(--c-red)}
+svg.i.hue{color:var(--h)}
+.ico.hue{color:var(--h);background:color-mix(in srgb,var(--h) 18%,transparent)}
+.ico.hue .i{color:var(--h)}
+.nav.usb>.i:first-child,.ico.usb{color:var(--c-green)}
+.ico.usb{background:color-mix(in srgb,var(--c-green) 18%,transparent)}
