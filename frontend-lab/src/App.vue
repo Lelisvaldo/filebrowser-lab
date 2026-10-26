@@ -8,8 +8,9 @@ import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
 import Logo from "@/components/Logo.vue";
 import UsbPop from "@/components/UsbPop.vue";
+import UserPop from "@/components/UserPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
-import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
+import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources, doLogout } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
 import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
@@ -31,10 +32,12 @@ function toggleMenu() {
   else setUi({ rail: !ui.rail });
 }
 const menuLabel = computed(() => (isMobile() ? "Abrir menu" : ui.rail ? "Expandir menu" : "Recolher menu"));
-function toggleTheme() { setUi({ theme: isDark() ? "light" : "dark" }); }
+const userName = computed(() => (app.user && app.user.username) || "");
+const initial = computed(() => (userName.value[0] || "?").toUpperCase());
+async function sair() { setUi({ menuOpen: false }); await doLogout(); void router.replace("/login"); }
 
 watch(() => route.fullPath, () => { if (ui.menuOpen) setUi({ menuOpen: false }); });
-watch(() => route.name, (n) => { if (n === "home") page.title = "Este servidor"; });
+watch(() => route.name, (n) => { if (n === "home") page.title = ""; });
 
 function toggleSearch() {
   if (!isMobile()) { document.getElementById("busca")?.focus(); return; }
@@ -101,20 +104,21 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <input id="busca" v-model="q" type="search" placeholder="Buscar arquivos…" aria-label="Buscar arquivos" autocomplete="off" @keydown.esc="searchOpen = false" />
           </form>
           <span v-if="usbOn && usbCount" class="ibw">
-            <button class="ib" type="button" :title="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')" :aria-label="'Pendrives: ' + usbCount + (usbCount === 1 ? ' ligado' : ' ligados')" :aria-expanded="ui.usbOpen" @click="setUi({ usbOpen: !ui.usbOpen, transfersOpen: false })"><Icon name="usb" /></button>
+            <button class="ib" type="button" :title="usbCount + (usbCount === 1 ? ' pendrive ligado' : ' pendrives ligados')" :aria-label="'Pendrives: ' + usbCount + (usbCount === 1 ? ' ligado' : ' ligados')" :aria-expanded="ui.usbOpen" @click="setUi({ usbOpen: !ui.usbOpen, transfersOpen: false, userOpen: false })"><Icon name="usb" /></button>
             <span class="badge ok">{{ usbCount }}</span>
           </span>
           <span class="ibw">
-            <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen, usbOpen: false })"><Icon name="transfer" /></button>
+            <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen, usbOpen: false, userOpen: false })"><Icon name="transfer" /></button>
             <span v-if="activeCount" class="badge">{{ activeCount }}</span>
           </span>
-          <button class="ib" aria-label="Alternar claro e escuro" title="Alternar claro e escuro" @click="toggleTheme"><Icon :name="isDark() ? 'sun' : 'moon'" /></button>
-          <button class="ib" aria-label="Configurações" title="Configurações" @click="setUi({ settingsOpen: true })"><Icon name="gear" /></button>
+                    <button class="ib" aria-label="Configurações" title="Configurações" @click="setUi({ settingsOpen: true })"><Icon name="gear" /></button>
+          <button class="ib avb" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !ui.userOpen, usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span></button>
         </div>
       </header>
 
       <TransfersPop />
       <UsbPop />
+      <UserPop />
       <TransferDock />
 
       <nav class="side" aria-label="Locais">
@@ -137,6 +141,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
         </div>
         <div class="foot">
           <button class="nav" title="Configurações" @click="setUi({ settingsOpen: true })"><Icon name="gear" /><span class="t">Configurações</span></button>
+          <div class="usr"><span class="av">{{ initial }}</span><span class="t">{{ userName }}</span><button class="ej" type="button" aria-label="Sair" title="Sair" @click="sair"><Icon name="signout" /></button></div>
         </div>
       </nav>
       <div class="scrim" @click="setUi({ menuOpen: false })"></div>

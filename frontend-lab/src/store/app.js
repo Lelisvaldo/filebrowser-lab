@@ -26,6 +26,7 @@ export const ui = reactive({
   menuOpen: false,
   transfersOpen: false,
   usbOpen: false,
+  userOpen: false,
 });
 
 export const app = reactive({

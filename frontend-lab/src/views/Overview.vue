@@ -11,7 +11,7 @@ import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import { routeFor } from "@/lib/paths";
 
 const router = useRouter();
-onMounted(() => { hideStatus(); page.title = "Este servidor"; void refreshSources(); void refreshUsb(); });
+onMounted(() => { hideStatus(); page.title = ""; void refreshSources(); void refreshUsb(); });
 
 const folders = computed(() => userSources().map((s, i) => {
   const info = app.sources[s.name] || {};
@@ -34,7 +34,7 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
 <template>
   <div class="page">
     <div class="wrap">
-      <div class="phead"><h1>Este servidor</h1><div class="crumbs"><span>Início</span></div></div>
+      
 
       <section v-if="nActive" class="th">
         <button class="thb" type="button" :aria-expanded="!ui.tcomp" title="Compactar ou expandir" @click="setUi({ tcomp: !ui.tcomp })">

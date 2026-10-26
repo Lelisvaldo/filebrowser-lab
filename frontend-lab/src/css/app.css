@@ -310,3 +310,19 @@ svg.i.hue{color:var(--h)}
 .logo .lt small{font-size:.6rem;margin-top:1px;opacity:.85;color:var(--sub);font-weight:400;overflow:hidden;text-overflow:ellipsis}
 body.rail .brandcell .lt{display:none}
 .brandcell{font-weight:400}
+
+/* Conta: avatar na barra (menu) e usuário no rodapé do menu lateral */
+.av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#ff9630,#ff1bca);color:#fff;font-size:.8rem;font-weight:700;display:grid;place-items:center;flex:none}
+.ib.avb{display:grid;place-items:center}
+.userpop{width:200px;padding:6px;gap:2px}
+.userpop .mu{padding:6px 10px;color:var(--sub);font-size:.78rem}
+.userpop .mi{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:8px;background:none;color:inherit;cursor:pointer;text-align:left}
+.userpop .mi:hover{background:var(--hover)}
+.userpop .mi.danger{color:var(--c-red)}
+.userpop .mi.danger .i{color:var(--c-red)}
+.foot .usr{display:flex;align-items:center;gap:10px;padding:8px 4px 4px 12px;margin-top:6px;border-top:1px solid var(--line)}
+.foot .usr .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.foot .usr .ej{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:8px;background:none;color:var(--c-red);cursor:pointer}
+.foot .usr .ej:hover{background:var(--bar)}
+body.rail .foot .usr{justify-content:center;padding:8px 0 0}
+body.rail .foot .usr .t,body.rail .foot .usr .ej{display:none}
