@@ -32,6 +32,37 @@ function toggleMenu() {
   else setUi({ rail: !ui.rail });
 }
 const menuLabel = computed(() => (isMobile() ? "Abrir menu" : ui.rail ? "Expandir menu" : "Recolher menu"));
+// Puxar para atualizar (celular): a página não rola inteira, então o gesto nativo do navegador não dispara.
+const pull = ref(0);
+const pulling = ref(false);
+const refreshing = ref(false);
+let ty0 = 0;
+let armed = false;
+function scrolledInside(el, stop) {
+  for (let n = el; n && n !== stop; n = n.parentElement) if (n.scrollTop > 0) return true;
+  return false;
+}
+function pStart(e) {
+  armed = e.touches.length === 1 && !refreshing.value && !scrolledInside(e.target, e.currentTarget) && !e.target.closest("input,textarea,.marquee,[draggable=true]");
+  ty0 = armed ? e.touches[0].clientY : 0;
+}
+function pMove(e) {
+  if (!armed) return;
+  const dy = e.touches[0].clientY - ty0;
+  if (dy <= 0) { pull.value = 0; pulling.value = false; return; }
+  if (scrolledInside(e.target, e.currentTarget)) { armed = false; pull.value = 0; return; }
+  pulling.value = true;
+  pull.value = Math.min(80, dy * 0.5);
+}
+async function pEnd() {
+  const ok = armed && pull.value >= 60;
+  armed = false; pulling.value = false;
+  if (!ok) { pull.value = 0; return; }
+  refreshing.value = true; pull.value = 52;
+  window.dispatchEvent(new CustomEvent("lab:refresh"));
+  await Promise.allSettled([refreshSources(), refreshUsb()]);
+  setTimeout(() => { refreshing.value = false; pull.value = 0; }, 600);
+}
 const userName = computed(() => (app.user && app.user.username) || "");
 const initial = computed(() => (userName.value[0] || "?").toUpperCase());
 async function sair() { setUi({ menuOpen: false }); await doLogout(); void router.replace("/login"); }
@@ -148,7 +179,8 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
       </nav>
       <div class="scrim" @click="setUi({ menuOpen: false })"></div>
 
-      <main>
+      <main @touchstart.passive="pStart" @touchmove.passive="pMove" @touchend="pEnd" @touchcancel="pEnd">
+        <div class="ptr" :class="{ spin: refreshing, drag: pulling }" :style="{ transform: 'translate(-50%,' + (pull - 44) + 'px)', opacity: pull > 6 ? 1 : 0 }" aria-hidden="true"><Icon name="refresh" /></div>
         <router-view />
         <footer v-if="status.show" class="statusbar" aria-live="polite">
           <span v-if="status.total > 0" class="sb-disk"><span class="sb-mini"><i :style="{ width: Math.min(100, Math.round(status.used / status.total * 100)) + '%' }"></i></span>{{ bytes(status.used) }} usados de {{ bytes(status.total) }}</span>

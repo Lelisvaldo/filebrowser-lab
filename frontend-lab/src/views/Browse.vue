@@ -383,9 +383,11 @@ function mqUp(e) {
 let off = null;
 onMounted(() => {
   document.addEventListener("keydown", onKey);
+  window.addEventListener("lab:refresh", onPullRefresh);
   off = onTransferDone((t) => { if (t.source === source.value && t.dir.startsWith(dirPath.value.replace(/\/$/, "") + "/") || t.source === source.value && t.dir === dirPath.value) void load(true); });
 });
-onBeforeUnmount(() => { document.removeEventListener("keydown", onKey); off && off(); hideStatus(); });
+function onPullRefresh() { void load(true); }
+onBeforeUnmount(() => { window.removeEventListener("lab:refresh", onPullRefresh); document.removeEventListener("keydown", onKey); off && off(); hideStatus(); });
 
 watchEffect(() => {
   const info = app.sources[source.value] || {};
