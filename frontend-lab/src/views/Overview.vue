@@ -59,7 +59,7 @@ const openUsb = (d) => router.push(routeFor("Pendrives", "/" + d.name + "/"));
               <span>{{ bytes(d.size) }}</span>
             </div>
           </div>
-          <div v-if="!usbs.length" class="vazio">Nenhum pendrive ligado.</div>
+          <div v-if="!usbs.length" class="vazio vi"><Icon name="usb" /><span>Nenhum pendrive ligado.</span></div>
         </div>
       </template>
 

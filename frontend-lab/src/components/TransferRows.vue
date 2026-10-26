@@ -47,6 +47,6 @@ const text = (t) => {
         <div class="meta">{{ text(t) }}</div>
       </div>
     </template>
-    <div v-if="!visible().length" class="tvazio">Nenhuma transferência em andamento.</div>
+    <div v-if="!visible().length" class="tvazio vi"><Icon name="transfer" /><span>Nenhuma transferência em andamento.</span></div>
   </div>
 </template>
