@@ -228,3 +228,5 @@ select.scopein,.sortsel select{min-height:40px}
 
 .tiles .vazio{grid-column:1/-1}
 .usb-off .i,.sem-usb .i{color:#ff4d6d;opacity:1}
+/* seta do seletor com respiro à direita (a nativa fica colada na borda) */
+select{appearance:none;-webkit-appearance:none;padding-right:34px!important;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' fill='none' stroke='%23a99bd8' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;background-size:12px 8px;cursor:pointer}
