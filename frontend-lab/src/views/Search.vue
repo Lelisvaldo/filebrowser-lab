@@ -22,7 +22,7 @@ async function run() {
   loading.value = true;
   try {
     const srcs = onlySource.value ? [onlySource.value] : allSources.value;
-    const res = await filesApi.search(q.value, srcs, "/");
+    const res = await filesApi.search(q.value, srcs);
     results.value = (Array.isArray(res) ? res : []).map((r) => {
       const path = "/" + String(r.path).replace(/^\/+/, "");
       return { ...r, path: r.type === "directory" && !path.endsWith("/") ? path + "/" : path };

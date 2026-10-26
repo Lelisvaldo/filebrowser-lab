@@ -30,7 +30,8 @@ export async function moveCopy(items, action, { overwrite = false, rename = fals
   });
 }
 
-export const search = (query, sources, scope) => get("tools/search", { query, sources: sources.join(","), scope: sources.length === 1 ? scope : undefined });
+// scope (opcional): "Fonte:/subpasta/"
+export const search = (query, sources, scope) => get("tools/search", { query, sources: sources.join(","), scope });
 
 // URLs diretas (o navegador envia o cookie de sessão sozinho)
 export const downloadUrl = (source, paths, { inline = false, archive = false } = {}) =>

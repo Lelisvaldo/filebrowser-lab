@@ -47,7 +47,7 @@ async function download(it) {
   document.body.appendChild(a); a.click(); a.remove();
 }
 const title = computed(() => data.value?.name || "Compartilhado");
-const single = computed(() => data.value && data.value.type !== "directory" && !data.value.items?.length);
+const single = computed(() => !!data.value && data.value.type !== "directory");
 </script>
 
 <template>
@@ -65,6 +65,10 @@ const single = computed(() => data.value && data.value.type !== "directory" && !
         </form>
         <div v-else-if="error" class="vazio">{{ error }}</div>
         <div v-else-if="data" class="flist">
+          <div v-if="single" class="frow" tabindex="0" @click="download({ name: data.name, path: '/', type: data.type })">
+            <span class="chk"><Icon :name="iconKey(kindOf(data))" /></span><span class="n">{{ data.name }}</span><span class="m hide-s">{{ date(data.modified) }}</span><span class="s">{{ bytes(data.size) }}</span>
+            <button class="ib more" :aria-label="'Baixar ' + data.name" title="Baixar" @click.stop="download({ name: data.name, path: '/', type: data.type })"><Icon name="download" /></button>
+          </div>
           <div v-if="rest" class="frow" tabindex="0" @click="router.back()"><span class="chk"><Icon name="back" /></span><span class="n">Voltar</span><span></span><span></span><span></span></div>
           <div v-for="it in data.items" :key="it.path" class="frow" tabindex="0" @click="it.type === 'directory' ? open(it) : download(it)">
             <span class="chk"><Icon :name="iconKey(kindOf(it))" /></span>
@@ -73,7 +77,7 @@ const single = computed(() => data.value && data.value.type !== "directory" && !
             <span class="s">{{ it.type === "directory" ? "—" : bytes(it.size) }}</span>
             <button class="ib more" :aria-label="'Baixar ' + it.name" title="Baixar" @click.stop="download(it)"><Icon name="download" /></button>
           </div>
-          <div v-if="!data.items.length" class="vazio" style="border: 0">Pasta vazia.</div>
+          <div v-if="!single && !data.items.length" class="vazio" style="border: 0">Pasta vazia.</div>
         </div>
       </div>
     </div>

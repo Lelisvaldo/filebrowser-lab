@@ -29,7 +29,7 @@ export async function list(hash, path, pw) {
   return { ...d, items };
 }
 
-export const downloadUrl = (hash, paths, archive) => url("resources/download", { hash, file: paths.length === 1 ? paths[0] : undefined, algo: archive ? "zip" : undefined });
+export const downloadUrl = (hash, paths, archive) => url("resources/download", { hash, file: paths.length === 1 && paths[0] !== "/" ? paths[0] : undefined, algo: archive ? "zip" : undefined });
 
 // Baixa com a senha do link (cabeçalho) e entrega ao navegador como arquivo.
 export async function downloadWithPassword(hash, path, name, pw) {

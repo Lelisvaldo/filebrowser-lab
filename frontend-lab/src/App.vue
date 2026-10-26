@@ -6,6 +6,7 @@ import DialogHost from "@/components/DialogHost.vue";
 import Toasts from "@/components/Toasts.vue";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
+import TransferDock from "@/components/TransferDock.vue";
 import { app, ui, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
 import { iconForSource } from "@/lib/sourceIcons";
@@ -106,6 +107,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
       </header>
 
       <TransfersPop />
+      <TransferDock />
 
       <nav class="side" aria-label="Locais">
         <div class="scroll">

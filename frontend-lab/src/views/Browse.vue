@@ -179,7 +179,6 @@ async function startUpload(files) {
   }
   if (!list.length) return;
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
-  setUi({ transfersOpen: true });
 }
 async function onPick(e, folder) {
   const files = filesFromInput(e.target);
@@ -275,7 +274,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
           <label class="sortsel"><Icon name="sort" /><select :value="ui.sortBy" aria-label="Ordenar por" @change="setUi({ sortBy: $event.target.value })"><option v-for="(l, k) in sortLabel" :key="k" :value="k">{{ l }}</option></select></label>
-          <button class="ib" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
+          <button class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <div class="seg" role="group" aria-label="Modo de exibição">
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
             <button :aria-pressed="ui.view === 'grid'" aria-label="Grade" title="Grade" @click="setUi({ view: 'grid' })"><Icon name="grid" /></button>
