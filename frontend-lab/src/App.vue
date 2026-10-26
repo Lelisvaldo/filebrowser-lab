@@ -172,6 +172,8 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             </router-link>
             <div v-if="!app.usb.length" class="sem-usb"><Icon name="usb" /><span class="t">Nenhum conectado</span></div>
           </template>
+          <div class="grp">Ferramentas</div>
+          <router-link class="nav" to="/limpeza" title="Limpeza: o que mais ocupa espaço" :aria-current="route.name === 'cleanup' ? 'true' : undefined"><Icon name="broom" class="hue h-yellow" /><span class="t">Limpeza</span></router-link>
         </div>
         <div class="foot">
           <button class="nav usr" type="button" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !(ui.userOpen && ui.userFrom === 'side'), userFrom: 'side', usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span><span class="t">{{ userName }}</span><Icon name="chev" class="usrchev" /></button>

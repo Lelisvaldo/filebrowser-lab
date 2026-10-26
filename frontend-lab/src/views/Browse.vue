@@ -433,8 +433,6 @@ const crumbList = computed(() => crumbs(dirPath.value));
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
             <button :aria-pressed="ui.view === 'grid'" aria-label="Grade" title="Grade" @click="setUi({ view: 'grid' })"><Icon name="grid" /></button>
           </div>
-          <button class="ib" aria-label="Atualizar" title="Atualizar (F5)" @click="load(true)"><Icon name="refresh" /></button>
-          <router-link class="ib" :to="'/limpeza/' + encodeURIComponent(source) + routeFor(source, dirPath).replace(/^\/f\/[^/]+/, '')" title="Limpeza: o que mais ocupa aqui" aria-label="Limpeza"><Icon name="broom" /></router-link>
         </template>
         <template v-else>
           <button class="ib" aria-label="Limpar seleção" title="Limpar seleção (Esc)" @click="clearSel"><Icon name="dismiss" /></button>
