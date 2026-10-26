@@ -68,10 +68,11 @@ textarea {
 }
 
 /* ---------- botões e campos ---------- */
+/* Botão padrão: ciano liso com texto escuro. O degradê fica só nas ações principais (ver mais abaixo). */
 .button {
-  background: var(--lab-grad-a);
+  background: var(--primaryColor);
   color: var(--lab-on-accent);
-  font-weight: 700;
+  font-weight: 600;
   border-radius: 12px;
 }
 .button:hover:not([disabled]) {
@@ -92,6 +93,82 @@ textarea {
 .input:focus {
   border-color: var(--primaryColor);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--primaryColor) 22%, transparent);
+}
+#login .button--block,
+.card .button--block.lab-primary {
+  background: var(--lab-grad-a);
+}
+
+/* ---------- menu lateral ---------- */
+html .sidebar-links .card,
+html .headline-card {
+  background: var(--surfacePrimary);
+  border: 1px solid var(--divider);
+  border-radius: 16px;
+  box-shadow: none;
+}
+html .sidebar-links a.sidebar-link-button,
+html .sidebar-links a.source-button {
+  background: transparent;
+  color: var(--textPrimary);
+  box-shadow: none;
+  border-radius: 12px;
+  padding: 0.25em 0.7em;
+  min-height: 44px;
+  font-weight: 500;
+  transition: background 0.12s;
+}
+html .sidebar-links a.sidebar-link-button:hover,
+html .sidebar-links a.source-button:hover {
+  background: color-mix(in srgb, var(--primaryColor) 10%, transparent);
+  filter: none;
+}
+html .sidebar-links a.sidebar-link-button.active,
+html .sidebar-links a.source-button.active {
+  background: color-mix(in srgb, var(--primaryColor) 18%, transparent);
+  color: var(--primaryColor);
+  font-weight: 600;
+}
+html .sidebar-links .link-container,
+html .sidebar-links .source-container {
+  color: inherit;
+}
+html .sidebar-links .link-icon {
+  color: var(--primaryColor);
+}
+html .person-button.action.button,
+html .logout-button.action.button {
+  background: color-mix(in srgb, var(--primaryColor) 18%, transparent);
+  color: var(--primaryColor);
+  box-shadow: none;
+}
+html .quick-toggles .clickable.active {
+  background: var(--primaryColor);
+  color: var(--lab-on-accent);
+}
+
+/* ---------- barras de uso ---------- */
+html .usage-info .vue-simple-progress {
+  background: var(--surfaceSecondary) !important;
+  border: 0 !important;
+  border-radius: 99px !important;
+  height: 18px !important;
+  margin: 0.35em 0.2em 0.1em;
+  overflow: hidden;
+}
+html .usage-info .vue-simple-progress-bar {
+  background: var(--lab-grad-b) !important;
+  border-radius: 99px !important;
+}
+html .usage-info .vue-simple-progress-text {
+  color: var(--textPrimary) !important;
+  font-size: 0.68rem !important;
+  font-weight: 600;
+  line-height: 18px !important;
+  text-shadow: 0 0 3px var(--surfacePrimary);
+}
+html .sidebar-links a.source-button.active .vue-simple-progress-bar {
+  background: var(--lab-grad-a) !important;
 }
 
 /* ---------- tela de entrada ---------- */
