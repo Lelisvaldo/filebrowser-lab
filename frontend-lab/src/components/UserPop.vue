@@ -25,7 +25,7 @@ async function sair() {
 </script>
 
 <template>
-  <div v-if="ui.userOpen" ref="el" class="pop userpop" role="menu" aria-label="Menu da conta" @keydown.esc="close">
+  <div v-if="ui.userOpen" ref="el" class="pop userpop" :class="{ fromside: ui.userFrom === 'side' }" role="menu" aria-label="Menu da conta" @keydown.esc="close">
     <div class="mu">{{ name }}</div>
     <button class="mi" role="menuitem" type="button" @click="conta"><Icon name="person" /><span>Minha conta</span></button>
     <button class="mi" role="menuitem" type="button" @click="config"><Icon name="gear" /><span>Configurações</span></button>

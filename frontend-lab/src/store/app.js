@@ -27,6 +27,7 @@ export const ui = reactive({
   transfersOpen: false,
   usbOpen: false,
   userOpen: false,
+  userFrom: "top",
 });
 
 export const app = reactive({

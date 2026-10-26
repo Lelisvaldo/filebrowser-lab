@@ -340,3 +340,12 @@ body.rail .foot .usr .t,body.rail .foot .usr .ej{display:none}
 .lg-campo input:-webkit-autofill,.lg-campo input:-webkit-autofill:hover,.lg-campo input:-webkit-autofill:focus{
   -webkit-text-fill-color:var(--txt);caret-color:var(--txt);box-shadow:0 0 0 1000px var(--bg) inset;-webkit-box-shadow:0 0 0 1000px var(--bg) inset;transition:background-color 99999s ease-out}
 .lg-campo input:autofill{box-shadow:0 0 0 1000px var(--bg) inset;-webkit-text-fill-color:var(--txt)}
+
+/* Rodapé do menu lateral: usuário abre o mesmo menu do avatar do topo (para cima) */
+.foot .nav.usr{gap:10px;padding:6px 8px 6px 12px;margin-top:0;border-top:0}
+.foot .nav.usr .usrchev{width:16px;height:16px;transform:rotate(180deg);color:var(--sub);flex:none}
+.userpop{z-index:60}
+.userpop.fromside{top:auto;right:auto;left:10px;bottom:62px}
+body.rail .foot .nav.usr{justify-content:center;padding:6px 0}
+body.rail .foot .nav.usr .usrchev{display:none}
+body.rail .userpop.fromside{left:74px}

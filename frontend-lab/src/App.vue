@@ -112,7 +112,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
             <button class="ib" aria-label="Transferências" title="Transferências" :aria-expanded="ui.transfersOpen" @click="setUi({ transfersOpen: !ui.transfersOpen, usbOpen: false, userOpen: false })"><Icon name="transfer" /></button>
             <span v-if="activeCount" class="badge">{{ activeCount }}</span>
           </span>
-                    <button class="ib avb" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !ui.userOpen, usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span></button>
+                    <button class="ib avb" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !(ui.userOpen && ui.userFrom === 'top'), userFrom: 'top', usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span></button>
         </div>
       </header>
 
@@ -143,8 +143,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
           </template>
         </div>
         <div class="foot">
-          <button class="nav" title="Configurações" @click="setUi({ settingsOpen: true })"><Icon name="gear" /><span class="t">Configurações</span></button>
-          <div class="usr"><span class="av">{{ initial }}</span><span class="t">{{ userName }}</span><button class="ej" type="button" aria-label="Sair" title="Sair" @click="sair"><Icon name="signout" /></button></div>
+          <button class="nav usr" type="button" :aria-label="'Conta de ' + userName" :title="userName" :aria-expanded="ui.userOpen" @click="setUi({ userOpen: !(ui.userOpen && ui.userFrom === 'side'), userFrom: 'side', usbOpen: false, transfersOpen: false })"><span class="av">{{ initial }}</span><span class="t">{{ userName }}</span><Icon name="chev" class="usrchev" /></button>
         </div>
       </nav>
       <div class="scrim" @click="setUi({ menuOpen: false })"></div>
