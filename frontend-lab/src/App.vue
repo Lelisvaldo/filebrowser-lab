@@ -6,6 +6,7 @@ import DialogHost from "@/components/DialogHost.vue";
 import Toasts from "@/components/Toasts.vue";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
+import Logo from "@/components/Logo.vue";
 import UsbPop from "@/components/UsbPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
 import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources } from "@/store/app";
@@ -90,7 +91,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
   <template v-else>
     <div class="app">
       <header class="top">
-        <div class="brandcell"><Icon name="hdd" /><b>{{ appName }}</b></div>
+        <div class="brandcell" :title="appName"><Logo :size="34" /></div>
         <div class="navbar">
           <button class="ib" :aria-label="menuLabel" :title="menuLabel" @click="toggleMenu"><Icon name="menu" /></button>
           <span class="crumbtop">{{ page.title }}</span>

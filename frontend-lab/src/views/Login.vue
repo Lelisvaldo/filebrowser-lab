@@ -1,4 +1,5 @@
 <script setup>
+import Logo from "@/components/Logo.vue";
 import { ref, computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Icon from "@/components/Icon.vue";
@@ -73,7 +74,7 @@ const toggleTheme = () => setUi({ theme: isDark() ? "light" : "dark" });
     <button class="ib lg-tema" type="button" aria-label="Alternar claro e escuro" title="Alternar claro e escuro" @click="toggleTheme"><Icon :name="isDark() ? 'sun' : 'moon'" /></button>
     <div class="lg-wrap">
       <form class="lg-card" novalidate @submit.prevent="submit">
-        <div class="lg-brand"><span class="ico"><Icon name="hdd" /></span><span>{{ appName }}</span></div>
+        <div class="lg-brand"><Logo :size="44" /></div>
         <h1>{{ step === "change" ? "Escolha uma nova senha" : "Entrar" }}</h1>
         <p class="lg-sub">{{ step === "change" ? "Por segurança, troque a senha provisória agora." : step === "otp" ? "Digite o código do aplicativo autenticador." : "Acesse seus arquivos e pendrives." }}</p>
         <div v-if="error" class="lg-erro" role="alert"><Icon name="warning" /><span>{{ error }}</span></div>
