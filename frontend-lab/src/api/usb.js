@@ -6,3 +6,5 @@ export async function listUsb() {
 }
 
 export const ejectUsb = (uuid) => send("usb/" + encodeURIComponent(uuid) + "/eject", "POST");
+
+export const hostName = () => get("lab/host");

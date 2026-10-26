@@ -1,7 +1,7 @@
 import { reactive } from "vue";
 import * as authApi from "@/api/auth";
 import * as filesApi from "@/api/files";
-import { listUsb } from "@/api/usb";
+import { listUsb, hostName } from "@/api/usb";
 import { setUnauthorizedHandler } from "@/api/client";
 
 const KEY = "lab.ui";
@@ -31,6 +31,7 @@ export const app = reactive({
   ready: false,
   user: null,
   sources: {},     // nome -> info de uso (settings/sources)
+  host: "",        // nome do servidor (hostname)
   usb: null,       // lista do usb-manager, ou null se a integração não existe
   toasts: [],
 });
@@ -85,6 +86,7 @@ export async function loadSession() {
     startRenew();
     await refreshSources();
     void refreshUsb();
+    hostName().then((h) => { app.host = (h && h.name) || ""; }).catch(() => {});
   }
   return app.user;
 }

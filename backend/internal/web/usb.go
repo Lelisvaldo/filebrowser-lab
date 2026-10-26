@@ -158,3 +158,14 @@ func usbEjectHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, e
 	}
 	return res.StatusCode, fmt.Errorf("%s", msg)
 }
+
+// hostHandler devolve o nome do sistema (hostname do container; no compose do lab é o nome do servidor).
+func hostHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	name := strings.TrimSpace(os.Getenv("FILEBROWSER_LAB_HOST_NAME"))
+	if name == "" {
+		name, _ = os.Hostname()
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(map[string]string{"name": name})
+	return 0, nil
+}

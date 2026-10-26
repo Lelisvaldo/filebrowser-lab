@@ -116,7 +116,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
 
       <nav class="side" aria-label="Locais">
         <div class="scroll">
-          <router-link class="nav" to="/" title="Este servidor" :aria-current="route.name === 'home' ? 'true' : undefined"><Icon name="home" /><span class="t">Este servidor</span></router-link>
+          <router-link class="nav" to="/" title="Este servidor" :aria-current="route.name === 'home' ? 'true' : undefined"><Icon name="server" /><span class="t">{{ app.host || "Este servidor" }}</span></router-link>
           <div class="grp">Pastas</div>
           <router-link v-for="s in userSources()" :key="s.name" class="nav" :to="sidePath(s.name)" :title="s.name"
             :aria-current="route.params.source === s.name ? 'true' : undefined"><Icon :name="iconForSource(s.name)" /><span class="t">{{ s.name }}</span></router-link>
