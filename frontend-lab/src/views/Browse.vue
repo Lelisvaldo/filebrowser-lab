@@ -18,7 +18,6 @@ import { clip, setClip, clearClip } from "@/store/clipboard";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import { folderLook, isPinned, togglePin } from "@/lib/folderPrefs";
-import { reveal } from "@/lib/tree";
 import { startDrag, isLabDrag, dropInto } from "@/store/dnd";
 
 const route = useRoute();
@@ -96,7 +95,7 @@ async function load(quiet = false) {
   }
 }
 
-watch([source, dirPath], () => { sel.value = new Set(); lastIdx = -1; void load(); reveal(source.value, dirPath.value); }, { immediate: true });
+watch([source, dirPath], () => { sel.value = new Set(); lastIdx = -1; void load(); }, { immediate: true });
 watch([folderName], () => { page.title = folderName.value; }, { immediate: true });
 
 const fileRoute = (it) => routeFor(source.value, it.path).replace(/\/$/, "");
@@ -441,6 +440,7 @@ watchEffect(() => {
   });
 });
 
+const sortIco = { name: "az", size: "usage", modified: "clock" };
 const sortLabel = { name: "Nome", size: "Tamanho", modified: "Modificado" };
 function sortBy(k) { setUi(ui.sortBy === k ? { sortAsc: !ui.sortAsc } : { sortBy: k, sortAsc: true }); }
 const thumb = (it) => (it.hasPreview && ["image", "video"].includes(kindOf(it)) ? filesApi.previewUrl(source.value, it.path, it.modified) : "");
@@ -451,7 +451,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
   <div ref="pageEl" class="page browse" @mousedown="mqDown" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop="drop" @click="menu = null">
     <div class="wrap wide">
       <div class="phead">
-        <div class="ph-t"><span class="ph-ico" :class="hueOf(source)"><Icon :name="iconForSource(source)" /></span><h1>{{ folderName }}</h1></div>
+        <div class="ph-t" :class="hueOf(source)"><span class="ph-ico"><Icon :name="iconForSource(source)" /></span><h1>{{ folderName }}</h1></div>
         <div class="crumbs">
           <router-link to="/">Início</router-link><span>/</span>
           <router-link :to="routeFor(source, '/')" :class="{ dropT: dropKey === 'c:/' }" @dragover="crumbOver('/', $event)" @dragleave="dropKey = ''" @drop="crumbDrop('/', $event)">{{ source }}</router-link>
@@ -466,8 +466,8 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
-          <label class="sortsel"><Icon name="sort" /><select :value="ui.sortBy" aria-label="Ordenar por" @change="setUi({ sortBy: $event.target.value })"><option v-for="(l, k) in sortLabel" :key="k" :value="k">{{ l }}</option></select></label>
-          <button class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
+          <label v-if="isGrid" class="sortsel"><Icon name="sort" class="sd" /><Icon :name="sortIco[ui.sortBy] || 'az'" class="sm" /><select :value="ui.sortBy" aria-label="Ordenar por" @change="setUi({ sortBy: $event.target.value })"><option v-for="(l, k) in sortLabel" :key="k" :value="k">{{ l }}</option></select></label>
+          <button v-if="isGrid" class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <div class="seg" role="group" aria-label="Modo de exibição">
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
             <button :aria-pressed="ui.view === 'compact'" aria-label="Compacto" title="Compacto" @click="setUi({ view: 'compact' })"><Icon name="table" /></button>

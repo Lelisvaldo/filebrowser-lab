@@ -117,6 +117,7 @@ watch(() => app.user, (u) => { if (u) { startUsbPolling(); void refreshUsb(); } 
 
 const sidePath = (name) => routeFor(name, "/");
 const usbPct = (d) => (d.size && d.free != null ? Math.min(100, Math.round(((d.size - d.free) / d.size) * 100)) : 0);
+const usbDir = (d) => "/" + d.name + "/";
 const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
 </script>
 
@@ -181,7 +182,9 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
                 <span class="us">{{ bytes(d.size - (d.free || 0)) }} de {{ bytes(d.size) }}</span></template></span>
               <span v-if="d.ejectable" class="ej" role="button" tabindex="0" :aria-label="'Remover ' + d.name" title="Remover com segurança"
                 @click.prevent.stop="eject(d)" @keydown.enter.prevent.stop="eject(d)"><Icon name="eject" /></span>
+              <button class="tw tw-root" type="button" :aria-label="isOpen('Pendrives', usbDir(d)) ? 'Recolher pastas' : 'Mostrar pastas'" :aria-expanded="isOpen('Pendrives', usbDir(d))" @click.stop.prevent="toggleOpen('Pendrives', usbDir(d))"><Icon name="chev" :class="{ open: isOpen('Pendrives', usbDir(d)) }" /></button>
             </router-link>
+            <FolderTree v-for="d in app.usb.filter((x) => x.mounted && isOpen('Pendrives', usbDir(x)))" :key="'t' + d.uuid" source="Pendrives" :path="usbDir(d)" :depth="1" />
             <div v-if="!app.usb.length" class="sem-usb"><Icon name="usb" /><span class="t">Nenhum conectado</span></div>
           </template>
           <template v-if="prefs.pins.length">

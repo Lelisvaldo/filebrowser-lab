@@ -561,4 +561,7 @@ body.rail .tree,body.rail .tw-root{display:none}
 .ph-ico{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,var(--h) 18%,transparent);flex:none}
 .ph-ico .i{width:25px;height:25px;color:var(--h)}
 .phead:has(.ph-t){align-items:center}
-@media (max-width:700px){.tbar{gap:6px}.sortsel>.i{display:none}}
+.sortsel>.sm{display:none}
+@media (max-width:700px){.tbar{gap:6px}.sortsel>.sd{display:none}.sortsel{position:relative;justify-content:center;width:44px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--txt)}.sortsel>.sm{display:block;width:22px;height:22px}.sortsel select{position:absolute;inset:0;width:100%;height:100%;opacity:0}}
+
+.ph-t h1,.phead.lhead h1{color:var(--h)}

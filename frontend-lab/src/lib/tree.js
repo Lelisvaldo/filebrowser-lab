@@ -1,6 +1,6 @@
 // Quais pastas estão abertas na árvore do menu lateral (lembrado neste navegador).
 import { reactive } from "vue";
-const KEY = "lab.tree";
+const KEY = "lab.tree2"; // pastas começam fechadas; só abrem quando o usuário abre
 let saved = [];
 try { saved = JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (_e) { /* sem storage */ }
 const open = reactive(new Set(Array.isArray(saved) ? saved : []));
