@@ -7,3 +7,4 @@ export const saveApp = (id, clientId, clientSecret) => send("lab/cloud/app", "PU
 export const passwordLogin = (id, user, pass) => send("lab/cloud/senha", "POST", { user, pass }, { id });
 export const setReadOnly = (id, readOnly) => send("lab/cloud/mode", "POST", undefined, { id, readOnly });
 export const disconnect = (id) => send("lab/cloud", "DELETE", undefined, { id });
+export const refresh = () => send("lab/cloud/refresh", "POST");

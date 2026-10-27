@@ -39,6 +39,7 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	api.HandleFunc("POST /lab/cloud/senha", withAdmin(labCloudLoginHandler))
 	api.HandleFunc("POST /lab/cloud/mode", withAdmin(labCloudModeHandler))
 	api.HandleFunc("GET /lab/cloud/callback", withoutUser(labCloudCallbackHandler))
+	api.HandleFunc("POST /lab/cloud/refresh", withUser(labCloudRefreshHandler))
 	api.HandleFunc("GET /usb", withUser(usbListHandler))
 	api.HandleFunc("POST /usb/{uuid}/eject", withUser(usbEjectHandler))
 

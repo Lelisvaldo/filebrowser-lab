@@ -571,3 +571,14 @@ func labCloudDisconnectHandler(w http.ResponseWriter, r *http.Request, d *Contex
 	}
 	return labJSON(w, map[string]string{"status": "ok"})
 }
+
+// POST /api/lab/cloud/refresh  (qualquer usuário): pede ao rclone-mount que esqueça o cache das listas de pastas.
+func labCloudRefreshHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	if err := labCloudOn(); err != nil {
+		return http.StatusNotFound, err
+	}
+	if err := os.WriteFile(filepath.Join(labCloudDir(), "atualizar"), nil, 0o600); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	return labJSON(w, map[string]string{"status": "ok"})
+}

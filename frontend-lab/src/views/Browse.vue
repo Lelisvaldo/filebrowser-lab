@@ -6,6 +6,7 @@ import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import ItemMenu from "@/components/ItemMenu.vue";
 import FileViewer from "@/components/FileViewer.vue";
 import * as filesApi from "@/api/files";
+import * as cloudApi from "@/api/cloud";
 import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, refreshSources } from "@/store/app";
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
 import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
@@ -436,7 +437,11 @@ onMounted(() => {
   window.addEventListener("lab:refresh", onPullRefresh);
   off = onTransferDone((t) => { if (t.source === source.value && t.dir.startsWith(dirPath.value.replace(/\/$/, "") + "/") || t.source === source.value && t.dir === dirPath.value) void load(true); });
 });
-function onPullRefresh() { void load(true); }
+async function onPullRefresh() {
+  // nuvens: o rclone guarda a lista de pastas; pede para esquecer antes de recarregar
+  if (source.value === "Nuvens") { try { await cloudApi.refresh(); await new Promise((r) => setTimeout(r, 1800)); } catch (_e) { /* segue com a lista que há */ } }
+  void load(true);
+}
 onBeforeUnmount(() => { window.removeEventListener("lab:refresh", onPullRefresh); document.removeEventListener("keydown", onKey); off && off(); hideStatus(); });
 
 watchEffect(() => {
