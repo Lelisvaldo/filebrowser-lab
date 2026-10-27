@@ -17,7 +17,7 @@ export const ui = reactive({
   theme: ["light", "dark"].includes(saved.theme) ? saved.theme : "auto",
   density: saved.density === "compact" ? "compact" : "comfortable",
   rail: saved.rail === true,
-  view: saved.view === "grid" ? "grid" : "list",
+  view: ["list", "grid", "gallery", "compact"].includes(saved.view) ? saved.view : "list",
   sortBy: ["name", "size", "modified"].includes(saved.sortBy) ? saved.sortBy : "name",
   sortAsc: saved.sortAsc !== false,
   usbRefresh: [3, 10, 0].includes(saved.usbRefresh) ? saved.usbRefresh : 5,

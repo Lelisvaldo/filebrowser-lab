@@ -10,6 +10,10 @@ import Logo from "@/components/Logo.vue";
 import UsbPop from "@/components/UsbPop.vue";
 import UserPop from "@/components/UserPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
+import FolderTree from "@/components/FolderTree.vue";
+import { isOpen, toggleOpen } from "@/lib/tree";
+import { prefs, folderLook, togglePin } from "@/lib/folderPrefs";
+import { isLabDrag, dropInto } from "@/store/dnd";
 import { app, ui, status, setUi, page, userSources, hasUsbSource, isMobile, isDark, eject, ejecting, startUsbPolling, refreshUsb, refreshSources, doLogout } from "@/store/app";
 import { visible, active, onTransferDone } from "@/store/transfers";
 import { iconForSource, hueOf } from "@/lib/sourceIcons";
@@ -36,6 +40,9 @@ const menuLabel = computed(() => (isMobile() ? "Abrir menu" : ui.rail ? "Expandi
 const pull = ref(0);
 const pulling = ref(false);
 const refreshing = ref(false);
+const dropRoot = ref("");
+function rootOver(n, e) { if (isLabDrag(e)) { e.preventDefault(); dropRoot.value = n; } }
+async function rootDrop(n, e) { dropRoot.value = ""; if (!isLabDrag(e)) return; e.preventDefault(); await dropInto(e, n, "/"); }
 let ty0 = 0;
 let armed = false;
 function scrolledInside(el, stop) {
@@ -156,8 +163,12 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
         <div class="scroll">
           <router-link class="nav" to="/" title="Este servidor" :aria-current="route.name === 'home' ? 'true' : undefined"><Icon name="server" class="hue h-blue" /><span class="t">{{ app.host || "Este servidor" }}</span></router-link>
           <div class="grp">Pastas</div>
-          <router-link v-for="s in userSources()" :key="s.name" class="nav" :to="sidePath(s.name)" :title="s.name"
-            :aria-current="route.params.source === s.name ? 'true' : undefined"><Icon :name="iconForSource(s.name)" :class="hueOf(s.name)" /><span class="t">{{ s.name }}</span></router-link>
+          <template v-for="s in userSources()" :key="s.name">
+            <router-link class="nav" :class="{ dropT: dropRoot === s.name }" :to="sidePath(s.name)" :title="s.name" :aria-current="route.params.source === s.name ? 'true' : undefined"
+              @dragover="rootOver(s.name, $event)" @dragleave="dropRoot = ''" @drop="rootDrop(s.name, $event)"><Icon :name="iconForSource(s.name)" :class="hueOf(s.name)" /><span class="t">{{ s.name }}</span>
+              <button class="tw tw-root" type="button" :aria-label="isOpen(s.name, '/') ? 'Recolher pastas' : 'Mostrar pastas'" :aria-expanded="isOpen(s.name, '/')" @click.stop.prevent="toggleOpen(s.name, '/')"><Icon name="chev" :class="{ open: isOpen(s.name, '/') }" /></button></router-link>
+            <FolderTree v-if="isOpen(s.name, '/')" :source="s.name" path="/" :depth="1" />
+          </template>
           <template v-if="hasUsbSource() && usbOn">
             <div class="grp">Pendrives</div>
             <span v-for="d in app.usb.filter((x) => !x.mounted)" :key="d.uuid" class="nav usb-down" :title="d.name + ' está desmontado: tire e espete de novo'"><Icon name="usb" /><span class="t">{{ d.name }}</span></span>
@@ -171,6 +182,11 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
                 @click.prevent.stop="eject(d)" @keydown.enter.prevent.stop="eject(d)"><Icon name="eject" /></span>
             </router-link>
             <div v-if="!app.usb.length" class="sem-usb"><Icon name="usb" /><span class="t">Nenhum conectado</span></div>
+          </template>
+          <template v-if="prefs.pins.length">
+            <div class="grp">Atalhos</div>
+            <router-link v-for="p in prefs.pins" :key="p.source + p.path" class="nav pin" :to="routeFor(p.source, p.path)" :title="p.source + p.path"><Icon :name="folderLook(p.source, p.path).icon" :class="folderLook(p.source, p.path).cls" /><span class="t">{{ p.name }}</span>
+              <span class="ej" role="button" tabindex="0" aria-label="Tirar do menu" title="Tirar do menu" @click.prevent.stop="togglePin(p.source, p.path)" @keydown.enter.prevent.stop="togglePin(p.source, p.path)"><Icon name="dismiss" /></span></router-link>
           </template>
           <div class="grp">Ferramentas</div>
           <router-link class="nav" to="/limpeza" title="Limpeza: o que mais ocupa espaço" :aria-current="route.name === 'cleanup' ? 'true' : undefined"><Icon name="broom" class="hue h-yellow" /><span class="t">Limpeza</span></router-link>

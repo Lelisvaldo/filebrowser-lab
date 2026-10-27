@@ -14,6 +14,10 @@ import { bytes, date } from "@/lib/format";
 import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
 import { shareItem } from "@/lib/share";
 import { clip, setClip, clearClip } from "@/store/clipboard";
+import FolderStyle from "@/components/FolderStyle.vue";
+import { folderLook, isPinned, togglePin } from "@/lib/folderPrefs";
+import { reveal } from "@/lib/tree";
+import { startDrag, isLabDrag, dropInto } from "@/store/dnd";
 
 const route = useRoute();
 const router = useRouter();
@@ -35,6 +39,17 @@ let dragDepth = 0;
 const pageEl = ref(null);
 const cursor = ref(-1);
 const mq = ref(null);
+const styleFor = ref(null);
+const dropKey = ref("");
+const isGrid = computed(() => ui.view === "grid" || ui.view === "gallery");
+const isList = computed(() => ui.view === "list" || ui.view === "compact");
+const fIcon = (it) => (it.type === "directory" ? folderLook(source.value, it.path).icon : iconKey(kindOf(it)));
+const fCls = (it) => (it.type === "directory" ? folderLook(source.value, it.path).cls : hueClass(kindOf(it), source.value));
+function onDragStart(it, e) { startDrag(e, source.value, targets(it)); }
+function dirOver(it, e) { if (it.type === "directory" && isLabDrag(e) && !sel.value.has(it.path)) { e.preventDefault(); dropKey.value = it.path; } }
+async function dirDrop(it, e) { dropKey.value = ""; if (it.type !== "directory" || !isLabDrag(e)) return; e.preventDefault(); e.stopPropagation(); await dropInto(e, source.value, it.path); }
+async function crumbDrop(path, e) { dropKey.value = ""; if (!isLabDrag(e)) return; e.preventDefault(); e.stopPropagation(); await dropInto(e, source.value, path); }
+function crumbOver(path, e) { if (isLabDrag(e)) { e.preventDefault(); dropKey.value = "c:" + path; } }
 const totalSize = computed(() => items.value.reduce((s, i) => s + (i.size || 0), 0));
 const usePct = (it) => (totalSize.value > 0 ? (it.size || 0) / totalSize.value : 0);
 const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0)));
@@ -79,7 +94,7 @@ async function load(quiet = false) {
   }
 }
 
-watch([source, dirPath], () => { sel.value = new Set(); lastIdx = -1; void load(); }, { immediate: true });
+watch([source, dirPath], () => { sel.value = new Set(); lastIdx = -1; void load(); reveal(source.value, dirPath.value); }, { immediate: true });
 watch([folderName], () => { page.title = folderName.value; }, { immediate: true });
 
 const fileRoute = (it) => routeFor(source.value, it.path).replace(/\/$/, "");
@@ -242,6 +257,7 @@ function menuFor(it) {
   if (canCreate.value) e.push({ id: "zip", icon: "zip", label: "Compactar (.zip)" });
   if (canCreate.value && one && isArchive(it)) e.push({ id: "unzip", icon: "zip", label: "Extrair aqui" });
   if (one) e.push({ id: "share", icon: "share", label: "Compartilhar" });
+  if (one && it.type === "directory") { e.push({ sep: true }); e.push({ id: "style", icon: "star", label: "Personalizar pasta…" }); e.push({ id: "pin", icon: "link", label: isPinned(source.value, it.path) ? "Tirar do menu lateral" : "Fixar no menu lateral" }); }
   if (canDelete.value) { e.push({ sep: true }); e.push({ id: "delete", icon: "trash", label: t.length > 1 ? `Apagar ${t.length} itens` : "Apagar", danger: true }); }
   return e;
 }
@@ -271,6 +287,8 @@ function menuPick(id) {
   else if (id === "zip") void doZip(list);
   else if (id === "unzip") void doUnzip(it);
   else if (id === "share") void shareItem(source.value, it);
+  else if (id === "style") styleFor.value = it;
+  else if (id === "pin") { togglePin(source.value, it.path, it.name); toast(isPinned(source.value, it.path) ? "Fixada no menu lateral." : "Removida do menu lateral."); }
   else if (id === "delete") void doDelete(list);
 }
 
@@ -312,15 +330,15 @@ function onKey(e) {
   if (isFile.value) return;
   const mod = e.ctrlKey || e.metaKey;
   const key = e.key;
-  const step = ui.view === "grid" ? gridCols() : 1;
+  const step = isGrid.value ? gridCols() : 1;
   if (mod && key.toLowerCase() === "a") { e.preventDefault(); sel.value = new Set(items.value.map((i) => i.path)); }
   else if (mod && key.toLowerCase() === "c" && selected.value.length) { e.preventDefault(); setClip("copy", source.value, selected.value); toast(`${selected.value.length} copiado(s). Cole com Ctrl+V.`); }
   else if (mod && key.toLowerCase() === "x" && selected.value.length && canModify.value) { e.preventDefault(); setClip("cut", source.value, selected.value); toast(`${selected.value.length} recortado(s). Cole com Ctrl+V.`); }
   else if (mod && key.toLowerCase() === "v") { e.preventDefault(); void paste(); }
   else if (key === "ArrowDown") { e.preventDefault(); moveCursor((cursor.value < 0 ? -step : cursor.value) + step, e); }
   else if (key === "ArrowUp") { e.preventDefault(); moveCursor((cursor.value < 0 ? 0 : cursor.value) - step, e); }
-  else if (key === "ArrowRight" && ui.view === "grid") { e.preventDefault(); moveCursor(cursor.value + 1, e); }
-  else if (key === "ArrowLeft" && ui.view === "grid") { e.preventDefault(); moveCursor(cursor.value - 1, e); }
+  else if (key === "ArrowRight" && isGrid.value) { e.preventDefault(); moveCursor(cursor.value + 1, e); }
+  else if (key === "ArrowLeft" && isGrid.value) { e.preventDefault(); moveCursor(cursor.value - 1, e); }
   else if (key === "Home") { e.preventDefault(); moveCursor(0, e); }
   else if (key === "End") { e.preventDefault(); moveCursor(items.value.length - 1, e); }
   else if (key === " " && cursor.value >= 0) { e.preventDefault(); toggle(items.value[cursor.value], cursor.value, e); }
@@ -343,6 +361,7 @@ let mqMoved = false;
 function mqDown(e) {
   if (e.button !== 0 || !pageEl.value) return;
   const t = e.target;
+  if (!(e.ctrlKey || e.metaKey || e.shiftKey) && t.closest(".frow[data-path], .gcard[data-path]")) return;
   const inList = t.closest(".flist, .fgrid");
   const bg = t === pageEl.value || t.classList.contains("wrap") || t.classList.contains("foot-info");
   if ((!inList && !bg) || t.closest("button, a, input, select, textarea, .fhead, .ctx")) return;
@@ -415,8 +434,8 @@ const crumbList = computed(() => crumbs(dirPath.value));
         <h1>{{ folderName }}</h1>
         <div class="crumbs">
           <router-link to="/">Início</router-link><span>/</span>
-          <router-link :to="routeFor(source, '/')">{{ source }}</router-link>
-          <template v-for="c in crumbList" :key="c.path"><span>/</span><router-link :to="routeFor(source, c.path)">{{ c.name }}</router-link></template>
+          <router-link :to="routeFor(source, '/')" :class="{ dropT: dropKey === 'c:/' }" @dragover="crumbOver('/', $event)" @dragleave="dropKey = ''" @drop="crumbDrop('/', $event)">{{ source }}</router-link>
+          <template v-for="c in crumbList" :key="c.path"><span>/</span><router-link :to="routeFor(source, c.path)" :class="{ dropT: dropKey === 'c:' + c.path }" @dragover="crumbOver(c.path, $event)" @dragleave="dropKey = ''" @drop="crumbDrop(c.path, $event)">{{ c.name }}</router-link></template>
         </div>
       </div>
 
@@ -431,7 +450,9 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <div class="seg" role="group" aria-label="Modo de exibição">
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
+            <button :aria-pressed="ui.view === 'compact'" aria-label="Compacto" title="Compacto" @click="setUi({ view: 'compact' })"><Icon name="table" /></button>
             <button :aria-pressed="ui.view === 'grid'" aria-label="Grade" title="Grade" @click="setUi({ view: 'grid' })"><Icon name="grid" /></button>
+            <button :aria-pressed="ui.view === 'gallery'" aria-label="Galeria" title="Galeria" @click="setUi({ view: 'gallery' })"><Icon name="image" /></button>
           </div>
         </template>
         <template v-else>
@@ -450,7 +471,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
       <div v-else-if="error" class="vazio">{{ error }}</div>
       <div v-else-if="!items.length" class="vazio">Pasta vazia.<span v-if="canCreate"> Arraste arquivos para cá ou use Enviar.</span></div>
 
-      <div v-else-if="ui.view === 'list'" class="flist" role="table" aria-label="Arquivos">
+      <div v-else-if="isList" class="flist" :class="{ compact: ui.view === 'compact' }" role="table" aria-label="Arquivos">
         <div class="frow fhead hasbar" role="row">
           <button class="chk" :aria-label="sel.size === items.length ? 'Desmarcar todos' : 'Selecionar todos'" @click="selectAll"><Icon :name="sel.size === items.length ? 'checkboxon' : 'checkbox'" /></button>
           <button class="fh" @click="sortBy('name')">Nome <Icon v-if="ui.sortBy === 'name'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
@@ -459,9 +480,10 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button class="fh r" @click="sortBy('size')">Tamanho <Icon v-if="ui.sortBy === 'size'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <span></span>
         </div>
-        <div v-for="(it, i) in items" :key="it.path" class="frow hasbar" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i }" :data-path="it.path" :data-idx="i" role="row" tabindex="0"
+        <div v-for="(it, i) in items" :key="it.path" class="frow hasbar" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i, dropT: dropKey === it.path }" :data-path="it.path" :data-idx="i" role="row" tabindex="0" draggable="true"
+          @dragstart="onDragStart(it, $event)" @dragover="dirOver(it, $event)" @dragleave="dropKey = ''" @drop="dirDrop(it, $event)"
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
-          <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : iconKey(kindOf(it))" :class="sel.has(it.path) ? '' : hueClass(kindOf(it), source)" /></button>
+          <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : fIcon(it)" :class="sel.has(it.path) ? '' : fCls(it)" /></button>
           <span class="n" :title="it.name">{{ it.name }}</span>
           <div class="bar hide-s" :class="{ cheio: usePct(it) > 0.25 }" :title="Math.round(usePct(it) * 100) + '% da pasta'"><i :style="{ width: ((it.size || 0) / maxSize) * 100 + '%' }"></i></div>
           <span class="m hide-s">{{ date(it.modified) }}</span>
@@ -470,13 +492,14 @@ const crumbList = computed(() => crumbs(dirPath.value));
         </div>
       </div>
 
-      <div v-else class="fgrid">
-        <div v-for="(it, i) in items" :key="it.path" class="gcard" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i }" :data-path="it.path" :data-idx="i" tabindex="0"
+      <div v-else class="fgrid" :class="{ gallery: ui.view === 'gallery' }">
+        <div v-for="(it, i) in items" :key="it.path" class="gcard" :class="{ sel: sel.has(it.path), 'cur-row': cursor === i, dropT: dropKey === it.path }" :data-path="it.path" :data-idx="i" tabindex="0" draggable="true"
+          @dragstart="onDragStart(it, $event)" @dragover="dirOver(it, $event)" @dragleave="dropKey = ''" @drop="dirDrop(it, $event)"
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
           <button class="gchk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : 'checkbox'" /></button>
           <div class="gthumb">
             <img v-if="thumb(it)" :src="thumb(it)" :alt="''" loading="lazy" @error="$event.target.remove()" />
-            <Icon :name="iconKey(kindOf(it))" :class="hueClass(kindOf(it), source)" />
+            <Icon :name="fIcon(it)" :class="fCls(it)" />
           </div>
           <div class="gname" :title="it.name">{{ it.name }}</div>
           <div class="gmeta">{{ it.type === "directory" ? "Pasta" : bytes(it.size) }}</div>
@@ -487,6 +510,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
 
     <div v-if="mq" class="marquee" :style="{ left: mq.left + 'px', top: mq.top + 'px', width: mq.width + 'px', height: mq.height + 'px' }"></div>
     <div v-if="dragging" class="dropzone"><div><Icon name="upload" /><b>Solte para enviar para {{ folderName }}</b></div></div>
+    <FolderStyle v-if="styleFor" :source="source" :path="styleFor.path" :name="styleFor.name" @close="styleFor = null" />
     <ItemMenu v-if="menu" :x="menu.x" :y="menu.y" :entries="menu.entries" @pick="menuPick" @close="menu = null" />
     <FileViewer v-if="openFile" :source="source" :item="openFile" :siblings="siblingsFiles" :can-modify="canModify" :can-download="canDownload"
       @close="closeViewer" @go="open" @saved="load(true)" @delete="doDelete([$event])" @share="shareItem(source, $event)" />
