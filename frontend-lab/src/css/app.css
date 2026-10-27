@@ -170,7 +170,7 @@ code{background:var(--bar);border-radius:5px;padding:1px 5px}
   .frow .hide-s,.fh.hide-s{display:none}
   .toasts{bottom:max(76px,env(safe-area-inset-bottom,0px))}
 }
-@media (max-width:760px){.sortsel,.sortord{display:none}}
+@media (max-width:600px){.sortsel,.sortord{display:none}}
 
 .gthumb img ~ .i{display:none}
 .share-top{display:flex;align-items:center;gap:10px;padding:10px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));background:var(--side);border-bottom:1px solid var(--line);font-weight:700}
@@ -220,7 +220,7 @@ select.scopein,.sortsel select{min-height:40px}
 .sb-mini i{display:block;height:100%;background:var(--fill);border-radius:99px}
 .sb-sep{width:1px;height:14px;background:var(--line);flex:none}
 .statusbar .sb-sel,.statusbar .sb-sel b{color:var(--acc)}
-@media (max-width:760px){.statusbar .sb-disk,.statusbar .sb-opt{display:none}.tbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.tbar>*{flex:none}.tbar .sp{display:none}.selcount{white-space:nowrap}.statusbar .sp{display:none}.statusbar{justify-content:flex-end}}
+@media (max-width:760px){.statusbar .sb-disk,.statusbar .sb-opt{display:none}.selcount{white-space:nowrap}.statusbar .sp{display:none}.statusbar{justify-content:flex-end}}
 
 /* ícones no lugar de texto: rótulos só como dica (title) e leitor de tela */
 .lbl{display:none}
@@ -524,3 +524,5 @@ body.rail .tree,body.rail .tw-root{display:none}
 .pd-c button:hover{background:var(--hover)}
 .pd-c>span{color:var(--sub)}
 .pick-dest b{white-space:normal}
+
+@media (max-width:600px){.tbar{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.tbar>*{flex:none}.tbar .sp{display:none}}
