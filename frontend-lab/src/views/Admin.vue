@@ -143,7 +143,13 @@ async function saveCloudApp() {
   const a = cloudApp.value;
   try {
     if (a.senha) { await cloudApi.passwordLogin(a.id, a.user, a.pass); toast(a.name + " conectado."); }
-    else { await cloudApi.saveApp(a.id, a.clientId, a.clientSecret); toast("Aplicativo guardado. Agora toque em entrar."); }
+    else {
+      await cloudApi.saveApp(a.id, a.clientId, a.clientSecret);
+      cloudApp.value = null; await loadCloud();
+      const it = cloud.value?.items.find((x) => x.id === a.id);
+      if (it) { toast("Aplicativo guardado. Abrindo o login…"); await connectCloud(it); }
+      return;
+    }
     cloudApp.value = null; await loadCloud();
   } catch (e) { toastError(e); }
 }
