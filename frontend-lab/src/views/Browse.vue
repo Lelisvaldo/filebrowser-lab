@@ -441,6 +441,8 @@ watchEffect(() => {
 });
 
 const sortIco = { name: "az", size: "usage", modified: "clock" };
+const sortOpts = [["name:a", "Nome (A → Z)"], ["name:d", "Nome (Z → A)"], ["modified:d", "Mais recentes"], ["modified:a", "Mais antigos"], ["size:d", "Maiores"], ["size:a", "Menores"]];
+function setSortOpt(v) { const [k, d] = v.split(":"); setUi({ sortBy: k, sortAsc: d === "a" }); }
 const sortLabel = { name: "Nome", size: "Tamanho", modified: "Modificado" };
 function sortBy(k) { setUi(ui.sortBy === k ? { sortAsc: !ui.sortAsc } : { sortBy: k, sortAsc: true }); }
 const thumb = (it) => (it.hasPreview && ["image", "video"].includes(kindOf(it)) ? filesApi.previewUrl(source.value, it.path, it.modified) : "");
@@ -466,8 +468,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
           <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
-          <label v-if="isGrid" class="sortsel"><Icon name="sort" class="sd" /><Icon :name="sortIco[ui.sortBy] || 'az'" class="sm" /><select :value="ui.sortBy" aria-label="Ordenar por" @change="setUi({ sortBy: $event.target.value })"><option v-for="(l, k) in sortLabel" :key="k" :value="k">{{ l }}</option></select></label>
-          <button v-if="isGrid" class="ib sortord" :title="ui.sortAsc ? 'Crescente' : 'Decrescente'" :aria-label="ui.sortAsc ? 'Ordem crescente' : 'Ordem decrescente'" @click="setUi({ sortAsc: !ui.sortAsc })"><Icon :name="ui.sortAsc ? 'up' : 'down'" /></button>
+          <label v-if="isGrid" class="sortsel"><Icon name="sort" class="sd" /><Icon :name="sortIco[ui.sortBy] || 'az'" class="sm" /><select :value="ui.sortBy + ':' + (ui.sortAsc ? 'a' : 'd')" aria-label="Ordenar por" @change="setSortOpt($event.target.value)"><option v-for="o in sortOpts" :key="o[0]" :value="o[0]">{{ o[1] }}</option></select></label>
           <div class="seg" role="group" aria-label="Modo de exibição">
             <button :aria-pressed="ui.view === 'list'" aria-label="Lista" title="Lista" @click="setUi({ view: 'list' })"><Icon name="list" /></button>
             <button :aria-pressed="ui.view === 'compact'" aria-label="Compacto" title="Compacto" @click="setUi({ view: 'compact' })"><Icon name="table" /></button>

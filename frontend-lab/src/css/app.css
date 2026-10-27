@@ -166,8 +166,6 @@ code{background:var(--bar);border-radius:5px;padding:1px 5px}
   .tbar .lbl{display:none}
   .tbar .btn{padding:0 10px;min-width:44px}
   .tbar.has .lbl{display:none}
-  .frow{grid-template-columns:44px minmax(0,1fr) 84px 36px}
-  .frow .hide-s,.fh.hide-s{display:none}
   .toasts{bottom:max(76px,env(safe-area-inset-bottom,0px))}
 }
 @media (max-width:520px){.sortsel,.sortord{display:none}}
@@ -256,7 +254,8 @@ a.ib{text-decoration:none}
 .frow .bar.cheio{--grad:var(--gC)}
 .frow .bar.cheio i{background:var(--gC)}
 .frow .bar i{background:var(--gB)}
-@media (max-width:760px){.frow.hasbar,.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.hasbar .bar,.frow.urow .bar{display:none}}
+@media (max-width:760px){.frow.hasbar{grid-template-columns:36px minmax(0,1fr) 56px 124px 84px 36px}.frow.hasbar .m{font-size:.78rem}}
+@media (max-width:520px){.frow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow .hide-s,.fh.hide-s{display:none}.frow.hasbar,.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.hasbar .bar,.frow.urow .bar{display:none}}
 .cur-row{outline:2px solid var(--acc);outline-offset:-2px}
 .marquee{position:absolute;z-index:20;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent);pointer-events:none;border-radius:3px}
 
