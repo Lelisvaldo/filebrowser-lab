@@ -60,9 +60,11 @@ const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0
 const fileInput = ref(null);
 const folderInput = ref(null);
 
-const canCreate = computed(() => canIn(source.value, "create"));
-const canModify = computed(() => canIn(source.value, "modify"));
-const canDelete = computed(() => canIn(source.value, "delete"));
+// Raiz de Nuvens e de Pendrives: só lista pontos de montagem (conexões de nuvem, pendrives); não se cria, move nem apaga nada aqui.
+const mountRoot = computed(() => ["Nuvens", "Pendrives"].includes(source.value) && !dirPath.value.split("/").filter(Boolean).length);
+const canCreate = computed(() => !mountRoot.value && canIn(source.value, "create"));
+const canModify = computed(() => !mountRoot.value && canIn(source.value, "modify"));
+const canDelete = computed(() => !mountRoot.value && canIn(source.value, "delete"));
 const canDownload = computed(() => canIn(source.value, "download"));
 const folderName = computed(() => (dirPath.value === "/" ? source.value : dirPath.value.split("/").filter(Boolean).pop()));
 
