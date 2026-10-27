@@ -33,6 +33,26 @@ const roots = computed(() => {
   return l;
 });
 
+// Tela inicial: maiores itens do primeiro nível de cada pasta raiz (carrega aos poucos).
+const tops = ref({});
+const startTotal = computed(() => roots.value.reduce((t, n) => t + ((app.sources[n] && app.sources[n].used) || 0), 0));
+const startPct = (n) => { const a = app.sources[n]; return a && a.total ? Math.round(pct(a.used, a.total)) : 0; };
+const hueVar = (n) => { const m = hueOf(n).match(/h-(\w+)/); return `var(--c-${m ? m[1] : "violet"})`; };
+async function loadTops() {
+  if (source.value) return;
+  await Promise.all(roots.value.filter((n) => !(n in tops.value)).map(async (n) => {
+    try {
+      const d = await filesApi.list(n, "/");
+      const l = d.items.map((i) => ({ name: i.name, size: Number(i.size) || 0 })).filter((i) => i.size > 0).sort((a, b) => b.size - a.size);
+      const top = l.slice(0, 4);
+      const rest = l.slice(4).reduce((t, i) => t + i.size, 0);
+      if (rest > 0) top.push({ name: "outros", size: rest });
+      tops.value = { ...tops.value, [n]: top };
+    } catch { tops.value = { ...tops.value, [n]: [] }; }
+  }));
+}
+watch(roots, () => { void loadTops(); }, { immediate: true });
+
 async function load() {
   items.value = null;
   sel.value = new Set();
@@ -141,24 +161,36 @@ const tiny = (b) => b.w * b.h > 25;
 <template>
   <div class="page">
     <div class="wrap wide cleanup">
-      <div class="phead">
-        <h1>Limpeza</h1>
-        <div v-if="source" class="crumbs">
-          <router-link to="/limpeza">Limpeza</router-link><span>/</span>
-          <router-link :to="'/limpeza/' + encodeURIComponent(source) + '/'">{{ source }}</router-link>
-          <template v-for="c in crumbList" :key="c.path"><span>/</span><router-link :to="base(c.path)">{{ c.name }}</router-link></template>
+      <div class="phead" :class="{ lhead: !source }">
+        <span v-if="!source" class="lh-ico"><Icon name="broom" /></span>
+        <div>
+          <h1>Limpeza</h1>
+          <div v-if="source" class="crumbs">
+            <router-link to="/limpeza">Limpeza</router-link><span>/</span>
+            <router-link :to="'/limpeza/' + encodeURIComponent(source) + '/'">{{ source }}</router-link>
+            <template v-for="c in crumbList" :key="c.path"><span>/</span><router-link :to="base(c.path)">{{ c.name }}</router-link></template>
+          </div>
+          <p v-else class="sub">Veja o que mais ocupa espaço e apague o que não precisa mais.</p>
         </div>
-        <p v-else class="sub">Veja o que mais ocupa espaço e apague o que não precisa mais. Escolha por onde começar.</p>
+      </div>
+
+      <div v-if="!source" class="lsum">
+        <div class="lsum-t"><b>{{ bytes(startTotal) }}</b> usados em {{ roots.length }} locais</div>
+        <div class="lstack"><i v-for="n in roots" :key="n" :style="{ flex: Math.max(1, (app.sources[n] && app.sources[n].used) || 0), background: hueVar(n) }"></i></div>
+        <div class="llegend"><span v-for="n in roots" :key="n" class="llg"><i :style="{ background: hueVar(n) }"></i>{{ n }} <b>{{ bytes((app.sources[n] && app.sources[n].used) || 0) }}</b></span></div>
       </div>
 
       <div v-if="!source" class="rootgrid">
-        <router-link v-for="n in roots" :key="n" class="rootcard" :to="'/limpeza/' + encodeURIComponent(n) + '/'">
-          <Icon :name="iconForSource(n)" :class="hueOf(n)" />
-          <span class="rn">{{ n }}</span>
-          <template v-if="app.sources[n] && app.sources[n].total">
-            <span class="bar"><i :style="{ width: pct(app.sources[n].used, app.sources[n].total) + '%' }"></i></span>
-            <span class="rs">{{ bytes(app.sources[n].used) }} de {{ bytes(app.sources[n].total) }}</span>
-          </template>
+        <router-link v-for="n in roots" :key="n" class="rootcard" :class="hueOf(n)" :to="'/limpeza/' + encodeURIComponent(n) + '/'">
+          <div class="rc-top">
+            <span class="rc-tile"><Icon :name="iconForSource(n)" /></span>
+            <div class="rc-name"><b>{{ n }}</b><small v-if="app.sources[n] && app.sources[n].total">{{ bytes(app.sources[n].used) }} de {{ bytes(app.sources[n].total) }}</small></div>
+            <span v-if="app.sources[n] && app.sources[n].total" class="rc-ring" :style="{ '--p': startPct(n) }"><span>{{ startPct(n) }}%</span></span>
+          </div>
+          <div v-if="!(n in tops)" class="rc-map rc-wait">Calculando…</div>
+          <div v-else-if="!tops[n].length" class="rc-map rc-wait">Nada por aqui</div>
+          <div v-else class="rc-map"><span v-for="(t, k) in tops[n]" :key="t.name" class="rc-blk" :style="{ flex: Math.max(t.size, tops[n][0].size * 0.09), background: `color-mix(in srgb, var(--h) ${Math.max(30, 74 - k * 11)}%, var(--card))` }"><b>{{ t.name }}</b><span>{{ bytes(t.size) }}</span></span></div>
+          <div class="rc-go"><Icon name="usage" /><span class="rc-gob"><Icon name="right" /></span></div>
         </router-link>
       </div>
 

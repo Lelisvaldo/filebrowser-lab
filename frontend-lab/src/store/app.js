@@ -74,7 +74,7 @@ export function toast(text, kind = "ok", ms = 4200) {
   setTimeout(() => { app.toasts = app.toasts.filter((x) => x.id !== t.id); }, ms);
 }
 
-export const toastError = (e) => toast((e && e.message) || String(e), "err", 6000);
+export const toastError = (e) => { if (e && e.status === 401) return; toast((e && e.message) || String(e), "err", 6000); };
 
 // ---- sessão ----
 let renewTimer = null;
