@@ -103,7 +103,7 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
 <template>
   <div class="page">
     <div class="wrap">
-      <div class="phead"><h1>Minha conta</h1><div class="crumbs"><span>{{ app.user.username }}</span></div></div>
+      <div class="phead"><div class="ph-t"><span class="ph-ico hue h-cyan"><Icon name="person" /></span><h1>Minha conta</h1></div><div class="crumbs"><span>{{ app.user.username }}</span></div></div>
       <div class="tabs icotabs" role="tablist"><button v-for="[id, l, ic] in tabs" :key="id" role="tab" :aria-selected="tab === id" :title="l" :aria-label="l" @click="router.push('/ajustes/' + id)"><Icon :name="ic" /><span class="tl">{{ l }}</span></button></div>
 
       <section v-if="tab === 'perfil'" class="card">

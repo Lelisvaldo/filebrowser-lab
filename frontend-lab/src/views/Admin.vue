@@ -125,7 +125,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
 <template>
   <div class="page">
     <div class="wrap wide">
-      <div class="phead"><h1>Administração</h1><div class="crumbs"><span>{{ cfg.version }}</span></div></div>
+      <div class="phead"><div class="ph-t"><span class="ph-ico hue h-violet"><Icon name="gear" /></span><h1>Administração</h1></div><div class="crumbs"><span>{{ cfg.version }}</span></div></div>
       <div class="tabs" role="tablist"><button v-for="[id, l] in tabs" :key="id" role="tab" :aria-selected="tab === id" @click="router.push('/admin/' + id)">{{ l }}</button></div>
 
       <section v-if="tab === 'usuarios'" class="card">

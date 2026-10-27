@@ -162,7 +162,7 @@ const tiny = (b) => b.w * b.h > 25;
   <div class="page">
     <div class="wrap wide cleanup">
       <div class="phead" :class="{ lhead: !source }">
-        <span v-if="!source" class="lh-ico"><Icon name="broom" /></span>
+        <span v-if="!source" class="ph-ico hue h-yellow"><Icon name="broom" /></span>
         <div>
           <h1>Limpeza</h1>
           <div v-if="source" class="crumbs">

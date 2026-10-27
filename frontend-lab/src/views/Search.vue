@@ -62,7 +62,7 @@ const where = (r) => r.source + parent(r.path).replace(/\/$/, "");
 <template>
   <div class="page">
     <div class="wrap wide">
-      <div class="phead"><h1>Busca</h1><div class="crumbs"><span>“{{ q }}”</span><span v-if="onlySource">em {{ onlySource }}</span><span v-else>em todas as pastas</span><span>· {{ results.length }} resultado{{ results.length === 1 ? "" : "s" }}</span></div></div>
+      <div class="phead"><div class="ph-t"><span class="ph-ico hue h-blue"><Icon name="search" /></span><h1>Busca</h1></div><div class="crumbs"><span>“{{ q }}”</span><span v-if="onlySource">em {{ onlySource }}</span><span v-else>em todas as pastas</span><span>· {{ results.length }} resultado{{ results.length === 1 ? "" : "s" }}</span></div></div>
       <div v-if="loading" class="vazio">Buscando…</div>
       <div v-else-if="q.length < 2" class="vazio">Digite ao menos 2 letras na busca.</div>
       <div v-else-if="!results.length" class="vazio">Nada encontrado para “{{ q }}”.</div>

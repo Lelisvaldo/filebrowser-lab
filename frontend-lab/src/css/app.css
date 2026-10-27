@@ -554,3 +554,10 @@ body.rail .tree,body.rail .tw-root{display:none}
 @media (max-width:600px){.rootgrid{grid-template-columns:1fr}}
 
 .tbar>.seg{margin-left:auto}
+
+/* Títulos de página com ícone colorido */
+.ph-t{display:flex;align-items:center;gap:12px;min-width:0}
+.ph-t h1{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-ico{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,var(--h) 18%,transparent);flex:none}
+.ph-ico .i{width:25px;height:25px;color:var(--h)}
+.phead:has(.ph-t){align-items:center}

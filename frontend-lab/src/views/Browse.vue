@@ -2,6 +2,7 @@
 import { ref, computed, watch, watchEffect, onMounted, onBeforeUnmount, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
+import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import ItemMenu from "@/components/ItemMenu.vue";
 import FileViewer from "@/components/FileViewer.vue";
 import * as filesApi from "@/api/files";
@@ -450,7 +451,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
   <div ref="pageEl" class="page browse" @mousedown="mqDown" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop="drop" @click="menu = null">
     <div class="wrap wide">
       <div class="phead">
-        <h1>{{ folderName }}</h1>
+        <div class="ph-t"><span class="ph-ico" :class="hueOf(source)"><Icon :name="iconForSource(source)" /></span><h1>{{ folderName }}</h1></div>
         <div class="crumbs">
           <router-link to="/">Início</router-link><span>/</span>
           <router-link :to="routeFor(source, '/')" :class="{ dropT: dropKey === 'c:/' }" @dragover="crumbOver('/', $event)" @dragleave="dropKey = ''" @drop="crumbDrop('/', $event)">{{ source }}</router-link>
