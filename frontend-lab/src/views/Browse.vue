@@ -496,7 +496,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
         <div class="frow fhead hasbar" role="row">
           <button class="chk" :aria-label="sel.size === items.length ? 'Desmarcar todos' : 'Selecionar todos'" @click="selectAll"><Icon :name="sel.size === items.length ? 'checkboxon' : 'checkbox'" /></button>
           <button class="fh" @click="sortBy('name')">Nome <Icon v-if="ui.sortBy === 'name'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
-          <span class="hide-s" title="Quanto cada item ocupa da pasta"><Icon name="usage" /></span>
+          <span title="Quanto cada item ocupa da pasta"><Icon name="usage" /></span>
           <button class="fh hide-s" @click="sortBy('modified')">Modificado <Icon v-if="ui.sortBy === 'modified'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <button class="fh r" @click="sortBy('size')">Tamanho <Icon v-if="ui.sortBy === 'size'" :name="ui.sortAsc ? 'up' : 'down'" /></button>
           <span></span>
@@ -506,7 +506,7 @@ const crumbList = computed(() => crumbs(dirPath.value));
           @click="rowClick(it, i, $event)" @keydown.enter="open(it)" @contextmenu="showMenu(it, $event)">
           <button class="chk" :aria-label="'Selecionar ' + it.name" @click.stop="toggle(it, i, $event)"><Icon :name="sel.has(it.path) ? 'checkboxon' : fIcon(it)" :class="sel.has(it.path) ? '' : fCls(it)" /></button>
           <span class="n" :title="it.name">{{ it.name }}</span>
-          <div class="bar hide-s" :class="{ cheio: usePct(it) > 0.25 }" :title="Math.round(usePct(it) * 100) + '% da pasta'"><i :style="{ width: ((it.size || 0) / maxSize) * 100 + '%' }"></i></div>
+          <div class="bar" :class="{ cheio: usePct(it) > 0.25 }" :title="Math.round(usePct(it) * 100) + '% da pasta'"><i :style="{ width: ((it.size || 0) / maxSize) * 100 + '%' }"></i></div>
           <span class="m hide-s">{{ date(it.modified) }}</span>
           <span class="s">{{ it.type === "directory" ? "—" : bytes(it.size) }}</span>
           <button class="ib more" aria-label="Mais ações" title="Mais ações" @click.stop="showMenu(it, $event)"><Icon name="more" /></button>

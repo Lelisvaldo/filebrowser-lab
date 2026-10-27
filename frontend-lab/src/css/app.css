@@ -255,7 +255,7 @@ a.ib{text-decoration:none}
 .frow .bar.cheio i{background:var(--gC)}
 .frow .bar i{background:var(--gB)}
 @media (max-width:760px){.frow.hasbar{grid-template-columns:36px minmax(0,1fr) 56px 124px 84px 36px}.frow.hasbar .m{font-size:.78rem}}
-@media (max-width:520px){.frow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow .hide-s,.fh.hide-s{display:none}.frow.hasbar,.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.hasbar .bar,.frow.urow .bar{display:none}}
+@media (max-width:520px){.frow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow .hide-s,.fh.hide-s{display:none}.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.urow .bar{display:none}.frow.hasbar{grid-template-columns:40px minmax(0,1fr) 44px 80px 34px;gap:6px}}
 .cur-row{outline:2px solid var(--acc);outline-offset:-2px}
 .marquee{position:absolute;z-index:20;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent);pointer-events:none;border-radius:3px}
 
@@ -440,7 +440,7 @@ body.rail .tree,body.rail .tw-root{display:none}
 .crumbs a.dropT{border-radius:6px;padding:0 4px}
 .nav.pin .ej{opacity:0}.nav.pin:hover .ej,.nav.pin:focus-within .ej{opacity:1}
 .flist.compact .frow{min-height:30px}
-.flist.compact .frow .bar,.flist.compact .fhead span.hide-s:nth-of-type(1){display:none}
+.flist.compact .frow .bar,.flist.compact .fhead span[title]{display:none}
 .flist.compact .frow .chk{width:28px;height:28px}
 .fgrid.gallery{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
 .fgrid.gallery .gthumb{aspect-ratio:1/1}
