@@ -561,3 +561,4 @@ body.rail .tree,body.rail .tw-root{display:none}
 .ph-ico{display:grid;place-items:center;width:46px;height:46px;border-radius:13px;background:color-mix(in srgb,var(--h) 18%,transparent);flex:none}
 .ph-ico .i{width:25px;height:25px;color:var(--h)}
 .phead:has(.ph-t){align-items:center}
+@media (max-width:700px){.tbar{gap:6px}.sortsel>.i{display:none}}
