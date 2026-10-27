@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestLabCloudFluxoOAuth(t *testing.T) {
@@ -110,4 +112,87 @@ func TestLabCloudMega(t *testing.T) {
 		t.Fatalf("conf do mega errada (senha deve estar ofuscada):\n%s", conf)
 	}
 	t.Logf("%s", conf)
+}
+
+func labCloudQuotaSetup(t *testing.T, expiry string) {
+	t.Helper()
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DIR", t.TempDir())
+	labCloudQuotaCache = map[string]struct {
+		at  time.Time
+		out labCloudQuotaOut
+	}{}
+	labCloudAccess = map[string]struct {
+		tok string
+		exp time.Time
+	}{}
+	st := labCloudState{Apps: map[string]labCloudApp{"onedrive": {ClientID: "cid", ClientSecret: "seg"}},
+		Conns: map[string]labCloudInfo{"onedrive": {Account: "x"}}}
+	if err := labCloudSave(st); err != nil {
+		t.Fatal(err)
+	}
+	conf := "[OneDrive]\ntype = onedrive\ntoken = {\"access_token\":\"VELHO\",\"token_type\":\"Bearer\",\"refresh_token\":\"RT\",\"expiry\":\"" + expiry + "\"}\n"
+	if err := os.WriteFile(filepath.Join(labCloudDir(), "rclone.conf"), []byte(conf), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func labCloudQuotaGet(t *testing.T) labCloudQuotaOut {
+	t.Helper()
+	w := httptest.NewRecorder()
+	if _, err := labCloudQuotaHandler(w, httptest.NewRequest("GET", "/lab/cloud/quota?force=1", nil), nil); err != nil {
+		t.Fatal(err)
+	}
+	var r struct{ Items []labCloudQuotaOut }
+	if err := json.Unmarshal(w.Body.Bytes(), &r); err != nil || len(r.Items) != 1 {
+		t.Fatalf("resposta inesperada: %s", w.Body.String())
+	}
+	return r.Items[0]
+}
+
+func TestLabCloudQuota(t *testing.T) {
+	refreshes := 0
+	deny := false
+	prov := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if strings.HasSuffix(r.URL.Path, "/token") {
+			refreshes++
+			if deny {
+				_, _ = w.Write([]byte(`{"error":"invalid_grant"}`))
+				return
+			}
+			_, _ = w.Write([]byte(`{"access_token":"NOVO","expires_in":3600}`))
+			return
+		}
+		if r.Header.Get("Authorization") != "Bearer NOVO" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		_, _ = w.Write([]byte(`{"quota":{"total":1099511627776,"used":101580132352}}`))
+	}))
+	t.Setenv("FILEBROWSER_LAB_CLOUD_ONEDRIVE_TOKEN", prov.URL+"/token")
+	t.Setenv("FILEBROWSER_LAB_CLOUD_ONEDRIVE_QUOTA", prov.URL+"/quota")
+
+	// token vencido no rclone.conf: renova antes de perguntar
+	labCloudQuotaSetup(t, "2020-01-01T00:00:00Z")
+	if o := labCloudQuotaGet(t); o.Err != "" || o.Used != 101580132352 || o.Total != 1099511627776 || refreshes != 1 {
+		t.Fatalf("token vencido: %+v, renovações=%d", o, refreshes)
+	}
+	// token que parece válido mas o provedor recusa (401): renova e tenta de novo
+	refreshes = 0
+	labCloudQuotaSetup(t, "2099-01-01T00:00:00Z")
+	if o := labCloudQuotaGet(t); o.Err != "" || o.Used == 0 || refreshes != 1 {
+		t.Fatalf("401: %+v, renovações=%d", o, refreshes)
+	}
+	// renovação recusada: pede para conectar de novo
+	deny = true
+	labCloudQuotaSetup(t, "2020-01-01T00:00:00Z")
+	if o := labCloudQuotaGet(t); !strings.Contains(o.Err, "conecte de novo") {
+		t.Fatalf("renovação recusada: %+v", o)
+	}
+	// rede caída: erro claro, sem travar nem derrubar a lista
+	prov.Close()
+	labCloudQuotaSetup(t, "2020-01-01T00:00:00Z")
+	if o := labCloudQuotaGet(t); !strings.Contains(o.Err, "sem conexão") {
+		t.Fatalf("rede caída: %+v", o)
+	}
 }

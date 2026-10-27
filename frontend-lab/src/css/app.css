@@ -585,3 +585,12 @@ svg.i.brand{color:var(--h)}
 .ico.brand{color:var(--h);background:color-mix(in srgb,var(--h) 18%,transparent)}
 .ico.brand .i{color:var(--h)}
 .ph-t.brand h1{color:color-mix(in srgb,var(--h) 62%,#fff)}
+
+.cq{gap:12px}
+.cq-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:12px}
+.cq-m{min-width:0;display:flex;flex-direction:column;gap:6px}
+.cq-n{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+.cq-n small{color:var(--sub)}
+.cq-n .cq-e{color:var(--bad,#d9534f)}
+.cq-b{height:7px}
+.cq-p{color:var(--sub);font-variant-numeric:tabular-nums}

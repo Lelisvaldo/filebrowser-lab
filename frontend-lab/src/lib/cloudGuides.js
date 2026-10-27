@@ -33,11 +33,11 @@ export const GUIDES = {
     steps: [
       { t: "Entre com a sua conta Google e **crie um projeto** novo (ex.: filebrowser-lab).", link: "https://console.cloud.google.com/projectcreate" },
       { t: "Em **APIs e serviços → Biblioteca**, procure **Google Drive API** e toque em **Ativar**.", link: "https://console.cloud.google.com/apis/library/drive.googleapis.com" },
-      { t: "Em **Tela de permissão OAuth** (ou Google Auth Platform), escolha **Externo**, dê um nome, ponha o seu email e salve. Em usuários de teste, adicione o seu email." },
-      { t: "Toque em **Publicar aplicativo**. Sem isso o Google apaga o seu login a cada 7 dias. Ao entrar, ele avisa que o app não foi verificado: toque em **Avançado → continuar**. O app é seu." },
-      { t: "Em **Credenciais → Criar credenciais → ID do cliente OAuth**, escolha **Aplicativo da Web**. Em **URIs de redirecionamento autorizados**, cole o endereço de retorno.", copy: [["Copiar endereço de retorno", "{callback}"]], link: "https://console.cloud.google.com/apis/credentials" },
+      { t: "Abra **Google Auth Platform** (menu ☰ → APIs e serviços → Tela de permissão OAuth). Se pedir para começar, em **Branding** ponha um nome (ex.: filebrowser-lab) e o seu email, e salve.", link: "https://console.cloud.google.com/auth/overview" },
+      { t: "Em **Público-alvo**, escolha **Externo** e, em **Usuários de teste**, adicione o seu email. Depois toque em **Publicar app**. Sem isso o Google apaga o seu login a cada 7 dias. Ao entrar, ele avisa que o app não foi verificado: toque em **Avançado → continuar**. O app é seu." },
+      { t: "Em **Clientes → Criar cliente**, escolha **Aplicativo da Web**. Em **URIs de redirecionamento autorizados**, cole o endereço abaixo. O Google só aceita domínio público ou localhost, por isso o retorno é http://localhost: no fim do login você copia o endereço que aparecer e cola aqui.", copy: [["Copiar endereço de retorno", "{callback}"]], link: "https://console.cloud.google.com/auth/clients" },
       { t: "Copie o **ID do cliente** e a **chave secreta** e cole nos campos abaixo." },
-      { t: "Toque em **Salvar**. O Google abre e pergunta se você autoriza: toque em **Continuar** e você volta para cá já conectado." },
+      { t: "Toque em **Salvar**. Abre o login do Google: autorize, copie o endereço da página que não abrir (começa com http://localhost) e cole no campo que aparece aqui." },
     ],
   },
 };

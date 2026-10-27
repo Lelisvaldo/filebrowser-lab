@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -35,13 +36,14 @@ type labCloudProv struct {
 	InfoURL          string
 	RcloneType       string
 	RcloneExtra      map[string]string
+	Paste            bool // o provedor não aceita o domínio local: o retorno é http://localhost e o usuário cola o endereço de volta
 }
 
 var labCloudProvs = []labCloudProv{
 	{ID: "onedrive", Name: "OneDrive", Folder: "OneDrive", Kind: "oauth", RcloneType: "onedrive",
 		AuthURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize", Token: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 		Scope: "Files.ReadWrite.All offline_access User.Read", InfoURL: "https://graph.microsoft.com/v1.0/me/drive"},
-	{ID: "drive", Name: "GoogleDrive", Folder: "GoogleDrive", Kind: "oauth", RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
+	{ID: "drive", Name: "GoogleDrive", Folder: "GoogleDrive", Kind: "oauth", Paste: true, RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
 		AuthURL: "https://accounts.google.com/o/oauth2/v2/auth", Token: "https://oauth2.googleapis.com/token",
 		Scope: "https://www.googleapis.com/auth/drive", Extra: url.Values{"access_type": {"offline"}, "prompt": {"consent"}},
 		InfoURL: "https://www.googleapis.com/drive/v3/about?fields=user"},
@@ -65,6 +67,15 @@ func (p *labCloudProv) override(field, def string) string {
 		return v
 	}
 	return def
+}
+
+const labCloudPasteRedirect = "http://localhost/api/lab/cloud/callback"
+
+func (p *labCloudProv) redirect(r *http.Request) string {
+	if p.Paste {
+		return labCloudPasteRedirect
+	}
+	return labCloudOrigin(r) + "/api/lab/cloud/callback"
 }
 
 func labCloudDir() string { return os.Getenv("FILEBROWSER_LAB_CLOUD_DIR") }
@@ -175,6 +186,10 @@ func labCloudWriteConf(st labCloudState) error {
 		sb.WriteString("\n")
 	}
 	if err := labCloudWrite("rclone.conf", []byte(sb.String())); err != nil {
+		return err
+	}
+	// o vigia só remonta quando este número muda (o token que o rclone renova sozinho não conta)
+	if err := labCloudWrite("geracao", []byte(strconv.FormatInt(time.Now().UnixNano(), 10))); err != nil {
 		return err
 	}
 	// um arquivo "escrita-<nome>" libera escrita; sem ele a nuvem fica só leitura
@@ -364,6 +379,8 @@ type labCloudItem struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Kind      string `json:"kind"`
+	Paste     bool   `json:"paste,omitempty"`
+	Callback  string `json:"callback"`
 	HasApp    bool   `json:"hasApp"`
 	Connected bool   `json:"connected"`
 	Account   string `json:"account,omitempty"`
@@ -391,7 +408,7 @@ func labCloudListHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 	for _, p := range labCloudProvs {
 		c, on := st.Conns[p.ID]
 		_, app := st.Apps[p.ID]
-		out = append(out, labCloudItem{ID: p.ID, Name: p.Name, Kind: p.Kind, HasApp: app || p.Kind == "senha",
+		out = append(out, labCloudItem{ID: p.ID, Name: p.Name, Kind: p.Kind, Paste: p.Paste, Callback: p.redirect(r), HasApp: app || p.Kind == "senha",
 			Connected: on, Account: c.Account, ReadOnly: !on || c.ReadOnly, Since: c.Connected})
 	}
 	return labJSON(w, map[string]any{"items": out, "callback": labCloudOrigin(r) + "/api/lab/cloud/callback"})
@@ -439,7 +456,7 @@ func labCloudStartHandler(w http.ResponseWriter, r *http.Request, d *Context) (i
 	if !ok {
 		return http.StatusPreconditionFailed, fmt.Errorf("cadastre primeiro o aplicativo do %s (botão da chave)", p.Name)
 	}
-	q := url.Values{"client_id": {app.ClientID}, "response_type": {"code"}, "redirect_uri": {labCloudOrigin(r) + "/api/lab/cloud/callback"},
+	q := url.Values{"client_id": {app.ClientID}, "response_type": {"code"}, "redirect_uri": {p.redirect(r)},
 		"state": {labCloudNewState(p.ID)}}
 	if p.Scope != "" {
 		q.Set("scope", p.Scope)
@@ -470,14 +487,22 @@ func labCloudCallbackHandler(w http.ResponseWriter, r *http.Request, d *Context)
 	if e := r.URL.Query().Get("error"); e != "" {
 		return done(false, "login cancelado ("+labCloudShort(e)+")")
 	}
+	if msg := labCloudFinish(r, id, r.URL.Query().Get("code")); msg != "" {
+		return done(false, msg)
+	}
+	return done(true, "")
+}
+
+// labCloudFinish troca o código pelo token e grava a conexão; devolve "" se deu certo, senão o motivo.
+func labCloudFinish(r *http.Request, id, code string) string {
 	p := labCloudProvByID(id)
 	labCloudMu.Lock()
 	defer labCloudMu.Unlock()
 	st := labCloudLoad()
 	app := st.Apps[id]
-	tok, err := labCloudExchange(p, app, r.URL.Query().Get("code"), labCloudOrigin(r)+"/api/lab/cloud/callback")
+	tok, err := labCloudExchange(p, app, code, p.redirect(r))
 	if err != nil {
-		return done(false, err.Error())
+		return err.Error()
 	}
 	account, extra := labCloudWho(p, tok.AccessToken)
 	exp := time.Now().Add(time.Duration(tok.ExpiresIn) * time.Second).UTC().Format(time.RFC3339)
@@ -499,13 +524,45 @@ func labCloudCallbackHandler(w http.ResponseWriter, r *http.Request, d *Context)
 		}
 	}
 	if err := labCloudSetSection(id, kv); err != nil {
-		return done(false, "não consegui guardar o token")
+		return "não consegui guardar o token"
 	}
 	st.Conns[id] = labCloudInfo{Account: account, ReadOnly: true, Connected: time.Now().Format(time.RFC3339)}
 	if err := labCloudSave(st); err != nil {
-		return done(false, "não consegui gravar a configuração")
+		return "não consegui gravar a configuração"
 	}
-	return done(true, "")
+	return ""
+}
+
+// POST /api/lab/cloud/colar   {url}  (provedores que só aceitam http://localhost: o usuário cola o endereço da página que não abriu)
+func labCloudPasteHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	if err := labCloudOn(); err != nil {
+		return http.StatusNotFound, err
+	}
+	var in struct {
+		URL string `json:"url"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 8192)).Decode(&in); err != nil {
+		return http.StatusBadRequest, err
+	}
+	u, err := url.Parse(strings.TrimSpace(in.URL))
+	if err != nil || u.Query().Get("state") == "" {
+		return http.StatusBadRequest, fmt.Errorf("cole o endereço inteiro da página que apareceu (começa com http://localhost)")
+	}
+	q := u.Query()
+	id, ok := labCloudTakeState(q.Get("state"))
+	if !ok {
+		return http.StatusBadRequest, fmt.Errorf("pedido de login vencido ou já usado; clique em Entrar de novo")
+	}
+	if e := q.Get("error"); e != "" {
+		return http.StatusBadRequest, fmt.Errorf("login cancelado (%s)", labCloudShort(e))
+	}
+	if p := labCloudProvByID(id); p == nil || !p.Paste || q.Get("code") == "" {
+		return http.StatusBadRequest, fmt.Errorf("endereço sem código de autorização")
+	}
+	if msg := labCloudFinish(r, id, q.Get("code")); msg != "" {
+		return http.StatusBadGateway, fmt.Errorf("%s", msg)
+	}
+	return labJSON(w, map[string]bool{"ok": true})
 }
 
 // POST /api/lab/cloud/senha?id=mega   {user, pass}

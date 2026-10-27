@@ -3,7 +3,9 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as filesApi from "@/api/files";
-import { app, page, hideStatus, toast, toastError, refreshSources, userSources, hasUsbSource, usbSourceName, canIn } from "@/store/app";
+import { app, page, hideStatus, toast, toastError, refreshSources, userSources, hasUsbSource, usbSourceName, canIn, isAdmin } from "@/store/app";
+import * as cloudApi from "@/api/cloud";
+import { brandById, CLOUD_SOURCE } from "@/lib/cloudBrands";
 import { askConfirm } from "@/store/dialogs";
 import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { iconForSource, hueOf } from "@/lib/sourceIcons";
@@ -52,6 +54,15 @@ async function loadTops() {
   }));
 }
 watch(roots, () => { void loadTops(); }, { immediate: true });
+
+// Espaço de cada conta de nuvem (só administrador; o servidor pergunta ao provedor)
+const quota = ref(null);
+async function loadQuota() {
+  if (source.value || !isAdmin() || !roots.value.includes(CLOUD_SOURCE)) return;
+  try { quota.value = (await cloudApi.quota()).items || []; } catch { quota.value = []; }
+}
+watch(roots, () => { void loadQuota(); }, { immediate: true });
+const qPct = (q) => (q.total ? Math.min(100, Math.round(pct(q.used, q.total))) : 0);
 
 async function load() {
   items.value = null;
@@ -194,7 +205,19 @@ const tiny = (b) => b.w * b.h > 25;
         </router-link>
       </div>
 
-      <template v-else>
+      <div v-if="!source && quota && quota.length" class="lsum cq">
+        <div class="lsum-t"><b>Contas de nuvem</b> · espaço no serviço</div>
+        <div v-for="q in quota" :key="q.id" :class="['cq-row', 'br-' + brandById(q.id).key]">
+          <span :class="['ico', 'sm', 'brand', 'br-' + brandById(q.id).key]"><Icon :name="brandById(q.id).icon" /></span>
+          <div class="cq-m">
+            <div class="cq-n"><b>{{ q.name }}</b><small v-if="q.err" class="cq-e">{{ q.err }}</small><small v-else-if="q.total">{{ bytes(q.used) }} de {{ bytes(q.total) }} · {{ bytes(q.total - q.used) }} livres</small><small v-else>{{ bytes(q.used) }} usados · sem limite informado</small></div>
+            <div v-if="q.total && !q.err" class="bar cq-b"><i :style="{ width: Math.max(1, qPct(q)) + '%', background: 'var(--h)' }"></i></div>
+          </div>
+          <span v-if="q.total && !q.err" class="cq-p">{{ qPct(q) }}%</span>
+        </div>
+      </div>
+
+      <template v-if="source">
         <div class="cusage">
           <div class="cu-top"><b>{{ bytes(total) }}</b> nesta pasta<template v-if="info.total"> · disco {{ bytes(info.used) }} de {{ bytes(info.total) }} ({{ pct(info.used, info.total) }}%)</template></div>
           <div v-if="info.total" class="bar"><i :style="{ width: Math.max(1, pct(info.used, info.total)) + '%' }"></i></div>

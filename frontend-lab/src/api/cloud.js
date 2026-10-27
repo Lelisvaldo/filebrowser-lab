@@ -8,3 +8,5 @@ export const passwordLogin = (id, user, pass) => send("lab/cloud/senha", "POST",
 export const setReadOnly = (id, readOnly) => send("lab/cloud/mode", "POST", undefined, { id, readOnly });
 export const disconnect = (id) => send("lab/cloud", "DELETE", undefined, { id });
 export const refresh = () => send("lab/cloud/refresh", "POST");
+export const pasteBack = (url) => send("lab/cloud/colar", "POST", { url });
+export const quota = () => request("lab/cloud/quota");

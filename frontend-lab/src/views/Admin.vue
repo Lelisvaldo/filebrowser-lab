@@ -125,15 +125,21 @@ const when = (s) => {
 const cloud = ref(null);
 const cloudForm = ref(null);
 const guide = computed(() => (cloudApp.value && !cloudApp.value.senha ? GUIDES[cloudApp.value.id] : null));
-async function copyText(t) { const v = t.replace("{callback}", cloud.value?.callback || ""); try { await navigator.clipboard.writeText(v); toast("Copiado."); } catch (_e) { await showInfo({ title: "Copie o texto", message: v, confirm: "Fechar" }); } }
+async function copyText(t) { const v = t.replace("{callback}", cbOf(cloudApp.value?.id)); try { await navigator.clipboard.writeText(v); toast("Copiado."); } catch (_e) { await showInfo({ title: "Copie o texto", message: v, confirm: "Fechar" }); } }
+const cbOf = (id) => cloud.value?.items?.find((x) => x.id === id)?.callback || cloud.value?.callback || "";
 const mdBold = (t) => t.split(/\*\*(.+?)\*\*/).map((x, i) => (i % 2 ? "<b>" + x + "</b>" : x.replace(/&/g, "&amp;").replace(/</g, "&lt;"))).join("");
 const cloudApp = ref(null); // { id, name, clientId, clientSecret } | { id, name, user, pass, senha: true }
 async function loadCloud() {
   try { cloud.value = await cloudApi.list(); } catch (e) { cloud.value = { items: [], callback: "" }; if (e.status !== 404) toastError(e); }
 }
+const cloudPaste = ref(null); // { id, name, url, text } — provedor que só aceita http://localhost: o usuário cola o endereço de volta
 async function connectCloud(it) {
   if (it.kind === "senha") { cloudApp.value = { id: it.id, name: it.name, user: "", pass: "", senha: true }; focusForm(); return; }
-  try { const r = await cloudApi.start(it.id); location.href = r.url; } catch (e) {
+  try {
+    const r = await cloudApi.start(it.id);
+    if (it.paste) { cloudPaste.value = { id: it.id, name: it.name, url: r.url, text: "" }; focusForm(); return; }
+    location.href = r.url;
+  } catch (e) {
     if (e.status === 412) { openApp(it); toast("Cadastre primeiro o aplicativo do " + it.name + "."); } else toastError(e);
   }
 }
@@ -152,6 +158,10 @@ async function saveCloudApp() {
     }
     cloudApp.value = null; await loadCloud();
   } catch (e) { toastError(e); }
+}
+async function sendPaste() {
+  const p = cloudPaste.value;
+  try { await cloudApi.pasteBack(p.text); cloudPaste.value = null; toast(p.name + " conectado."); await loadCloud(); } catch (e) { toastError(e); }
 }
 async function dropCloud(it) {
   if (!(await askConfirm({ title: "Desconectar " + it.name + "?", message: "O token é apagado do servidor. Seus arquivos na nuvem não são tocados.", confirm: "Desconectar", danger: true }))) return;
@@ -265,7 +275,18 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
             <button v-else :class="['btn', 'sm', { pri: it.hasApp }]" :aria-label="'Entrar no ' + it.name" title="Entrar" @click="connectCloud(it)"><Icon name="signin" /><span class="lbl">Entrar</span></button>
           </div>
         </div>
-        <form v-if="cloudApp" ref="cloudForm" class="form cl-form" @submit.prevent="saveCloudApp">
+        <form v-if="cloudPaste" ref="cloudForm" class="form cl-form" @submit.prevent="sendPaste">
+          <div class="cl-fhead"><span :class="['ico', 'sm', 'brand', 'br-' + brandById(cloudPaste.id).key]"><Icon :name="brandById(cloudPaste.id).icon" /></span><h2>Terminar o login no {{ cloudPaste.name }}</h2></div>
+          <div class="cl-guide">
+            <ol>
+              <li><span>Toque em <b>Abrir o login</b>, escolha a conta e toque em <b>Continuar</b> até o fim.</span><span class="cl-acts"><a class="btn pri sm" :href="cloudPaste.url" target="_blank" rel="noopener" aria-label="Abrir o login" title="Abrir o login"><Icon name="open" /><span class="lbl">Abrir o login</span></a></span></li>
+              <li><span>No final aparece <b>“Não foi possível acessar esse site”</b> (endereço começando com <code>http://localhost</code>). É normal: <b>copie o endereço inteiro</b> da barra do navegador e cole abaixo.</span></li>
+            </ol>
+          </div>
+          <label>Endereço copiado<input v-model="cloudPaste.text" autocomplete="off" placeholder="http://localhost/api/lab/cloud/callback?state=…&code=…" /></label>
+          <div class="dlg-b"><button type="button" class="btn" @click="cloudPaste = null"><Icon name="back" /><span>Cancelar</span></button><button class="btn pri" :disabled="!cloudPaste.text"><Icon name="check" /><span>Conectar</span></button></div>
+        </form>
+        <form v-else-if="cloudApp" ref="cloudForm" class="form cl-form" @submit.prevent="saveCloudApp">
           <div class="cl-fhead"><span :class="['ico', 'sm', 'brand', 'br-' + brandById(cloudApp.id).key]"><Icon :name="brandById(cloudApp.id).icon" /></span><h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2></div>
           <template v-if="cloudApp.senha">
             <label>Email<input v-model="cloudApp.user" autocomplete="off" /></label>
@@ -283,7 +304,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
                   </span>
                 </li>
               </ol>
-              <p class="meta">Endereço de retorno: <code>{{ cloud?.callback }}</code></p>
+              <p class="meta">Endereço de retorno: <code>{{ cbOf(cloudApp.id) }}</code></p>
             </div>
             <label>{{ guide?.idLabel || "ID do aplicativo" }}<input v-model="cloudApp.clientId" autocomplete="off" /></label>
             <label>{{ guide?.secretLabel || "Segredo" }}<input v-model="cloudApp.clientSecret" type="password" autocomplete="new-password" /></label>
