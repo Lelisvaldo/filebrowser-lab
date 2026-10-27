@@ -568,3 +568,7 @@ body.rail .tree,body.rail .tw-root{display:none}
 /* nuvens (Conectar serviços) */
 .cl-row .cl-chip{margin:0}
 @media (max-width:520px){.cl-row .cl-chip{display:none}.cl-row .btn .lbl{display:none}.cl-row .btn{padding:0 12px}}
+.cl-form{margin-top:20px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--hover);gap:12px}
+.cl-form .cl-fhead{display:flex;align-items:center;gap:10px}
+.cl-form .cl-fhead h2{margin:0;font-size:1.05rem}
+.cl-form .meta{margin:0}

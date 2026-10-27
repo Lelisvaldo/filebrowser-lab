@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as authApi from "@/api/auth";
@@ -121,18 +121,20 @@ const when = (s) => {
 
 // ---- conectar serviços (nuvens) ----
 const cloud = ref(null);
+const cloudForm = ref(null);
 const cloudApp = ref(null); // { id, name, clientId, clientSecret } | { id, name, user, pass, senha: true }
 const cloudHue = { onedrive: "blue", drive: "green", dropbox: "cyan", mega: "red" };
 async function loadCloud() {
   try { cloud.value = await cloudApi.list(); } catch (e) { cloud.value = { items: [], callback: "" }; if (e.status !== 404) toastError(e); }
 }
 async function connectCloud(it) {
-  if (it.kind === "senha") { cloudApp.value = { id: it.id, name: it.name, user: "", pass: "", senha: true }; return; }
+  if (it.kind === "senha") { cloudApp.value = { id: it.id, name: it.name, user: "", pass: "", senha: true }; focusForm(); return; }
   try { const r = await cloudApi.start(it.id); location.href = r.url; } catch (e) {
     if (e.status === 412) { openApp(it); toast("Cadastre primeiro o aplicativo do " + it.name + "."); } else toastError(e);
   }
 }
-function openApp(it) { cloudApp.value = { id: it.id, name: it.name, clientId: "", clientSecret: "" }; }
+function openApp(it) { cloudApp.value = { id: it.id, name: it.name, clientId: "", clientSecret: "" }; focusForm(); }
+function focusForm() { void nextTick(() => cloudForm.value?.scrollIntoView({ behavior: "smooth", block: "nearest" })); }
 async function saveCloudApp() {
   const a = cloudApp.value;
   try {
@@ -253,8 +255,8 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
             <button v-else :class="['btn', 'sm', { pri: it.hasApp }]" :aria-label="'Entrar no ' + it.name" title="Entrar" @click="connectCloud(it)"><Icon name="signin" /><span class="lbl">Entrar</span></button>
           </div>
         </div>
-        <form v-if="cloudApp" class="form" @submit.prevent="saveCloudApp">
-          <h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2>
+        <form v-if="cloudApp" ref="cloudForm" class="form cl-form" @submit.prevent="saveCloudApp">
+          <div class="cl-fhead"><span :class="['ico', 'sm', 'hue', 'h-' + cloudHue[cloudApp.id]]"><Icon :name="cloudApp.senha ? 'person' : 'key'" /></span><h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2></div>
           <template v-if="cloudApp.senha">
             <label>Email<input v-model="cloudApp.user" autocomplete="off" /></label>
             <label>Senha<input v-model="cloudApp.pass" type="password" autocomplete="new-password" /></label>
