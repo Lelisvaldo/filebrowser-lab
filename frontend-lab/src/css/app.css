@@ -470,3 +470,23 @@ body.rail .tree,body.rail .tw-root{display:none}
 .qr{width:200px;max-width:100%;background:#fff;padding:6px;border-radius:10px;margin:8px 0}
 .qr svg{display:block;width:100%;height:auto}
 .pk-sec{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+
+/* Compactados como pastas */
+.arc{position:relative;width:100%;height:100%;display:flex;flex-direction:column;background:var(--card);min-height:0}
+.arc-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.arc-crumbs{display:flex;align-items:center;gap:4px;min-width:0;flex-wrap:wrap}
+.arc-crumbs button{border:0;background:none;color:var(--txt);cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;font:inherit}
+.arc-crumbs button:hover{background:var(--hover)}.arc-crumbs span{color:var(--sub)}
+.arc-note{padding:6px 14px;color:var(--sub);font-size:.84rem;border-bottom:1px solid var(--line)}
+.arc-list{flex:1;min-height:0;overflow:auto}
+.arc-row{display:grid;grid-template-columns:44px minmax(0,1fr) 150px 96px 40px;gap:8px;align-items:center;min-height:var(--row,44px);padding:0 8px;border-bottom:1px solid var(--line);cursor:pointer}
+.arc-row:hover{background:var(--hover)}.arc-row.sel{background:var(--accbg)}
+.arc-row .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.arc-row .m,.arc-row .s{color:var(--sub);font-size:.85rem}.arc-row .s{text-align:right}
+.arc-row .chk{display:grid;place-items:center;width:36px;height:36px;border:0;background:none;color:var(--acc);cursor:pointer}
+@media (max-width:760px){.arc-row{grid-template-columns:44px minmax(0,1fr) 84px 36px}.arc-row .m{display:none}}
+.arc-prev{z-index:90}
+.arc-pbox{width:min(900px,100%);height:min(80vh,720px);padding:0;overflow:hidden}
+.arc-ptop{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.arc-ptop small{color:var(--sub)}
+.arc-img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
+.arc-pdf{flex:1;border:0;background:#fff}
+.arc-area{flex:1;min-height:0}

@@ -7,6 +7,7 @@ import CodeEditor from "./CodeEditor.vue";
 import DocxView from "./DocxView.vue";
 import SheetView from "./SheetView.vue";
 import Model3D from "./Model3D.vue";
+import ArchiveBrowser from "./ArchiveBrowser.vue";
 import { toVtt } from "@/lib/subtitles";
 import * as filesApi from "@/api/files";
 import { kindOf, isEditable, iconKey } from "@/lib/fileTypes";
@@ -157,6 +158,7 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <img v-if="kind === 'image'" :src="src" :alt="item.name" class="vw-img" />
       <video v-else-if="kind === 'video'" :key="src + tracks.length" :src="src" class="vw-video" controls autoplay playsinline crossorigin="use-credentials" @ended="onEnded"><track v-for="t in tracks" :key="t.url" kind="subtitles" :src="t.url" :label="t.label" :srclang="t.srclang" :default="t.def" /></video>
       <div v-else-if="kind === 'audio'" class="vw-audio"><div class="vw-ico"><Icon name="music" /></div><b>{{ item.name }}</b><audio :key="src" :src="src" controls autoplay @ended="onEnded"></audio></div>
+      <ArchiveBrowser v-else-if="kind === 'zip'" :key="item.path" :source="source" :item="item" :can-download="canDownload" />
       <DocxView v-else-if="kind === 'doc'" :url="src" />
       <SheetView v-else-if="kind === 'table'" :url="src" />
       <Model3D v-else-if="kind === 'model'" :url="src" :name="item.name" />

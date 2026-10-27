@@ -35,6 +35,10 @@ Feito para servidor doméstico: fácil de ler de relance, bom no celular e com a
 | Nome do servidor no menu | – | Mostra o nome (hostname) do servidor |
 | Envios | Sim | Sim, com **painel de transferências** (progresso real, velocidade, tempo restante) |
 | Idioma da interface | Vários | **Só português do Brasil** (por enquanto) |
+| Visualizador | Visualizador do Quantum | **Prévia de Word e planilhas, modelos 3D (STL/OBJ/GLB/PLY), legendas, fila de reprodução com próximo automático, editor do VS Code (Monaco) com cores** |
+| Compactados | Zip / extrair | **Abre zip, 7z, tar, rar, iso… como pastas** (7-Zip): navegar, ver, adicionar, renomear, apagar e editar dentro de zip/7z/tar; extrair itens; criar .zip/.7z/.tar |
+| Navegação | Links no menu | **Árvore de pastas** no menu, arrastar itens para mover, **ícone e cor por pasta**, atalhos fixados, modos compacto e galeria |
+| Compartilhar | Opções de link | Link com validade, senha, limite de downloads, tema e permissão de envio; editar o link depois; **QR code do 2FA e passkey (segundo fator)** |
 | Acompanhar o original | – | **Rotina de atualização**: traz uma versão nova do Quantum e reaplica o nosso remendo pequeno do backend, mantendo a interface intacta, com caminho de volta em um comando |
 
 ### Tudo que o Quantum já faz continua funcionando

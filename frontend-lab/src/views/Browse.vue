@@ -15,6 +15,7 @@ import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
 import { shareItem } from "@/lib/share";
 import { clip, setClip, clearClip } from "@/store/clipboard";
 import FolderStyle from "@/components/FolderStyle.vue";
+import * as arcApi from "@/api/archive";
 import { folderLook, isPinned, togglePin } from "@/lib/folderPrefs";
 import { reveal } from "@/lib/tree";
 import { startDrag, isLabDrag, dropInto } from "@/store/dnd";
@@ -169,10 +170,11 @@ async function doDelete(list) {
 
 async function doZip(list) {
   const base = list.length === 1 ? list[0].name.replace(/\.[^.]+$/, "") : folderName.value;
-  const name = await askText({ title: "Compactar em .zip", label: "Nome do arquivo", value: base + ".zip", confirm: "Compactar" });
+  const name = await askText({ title: "Compactar (.zip, .7z ou .tar)", label: "Nome do arquivo", value: base + ".zip", confirm: "Compactar" });
   if (!name) return;
   try {
-    await filesApi.archive(source.value, list.map((i) => i.path), join(dirPath.value, name.endsWith(".zip") ? name : name + ".zip", false));
+    if (/\.(7z|tar)$/i.test(name)) await arcApi.create({ source: source.value, dir: dirPath.value, name, items: list.map((i) => i.name) });
+    else await filesApi.archive(source.value, list.map((i) => i.path), join(dirPath.value, name.endsWith(".zip") ? name : name + ".zip", false));
     toast("Arquivo compactado.");
     clearSel();
     await load(true);
@@ -254,7 +256,7 @@ function menuFor(it) {
   if (canModify.value && one) e.push({ id: "rename", icon: "edit", label: "Renomear" });
   if (canCreate.value) e.push({ id: "copy", icon: "copy", label: "Copiar para…" });
   if (canModify.value) e.push({ id: "move", icon: "move", label: "Mover para…" });
-  if (canCreate.value) e.push({ id: "zip", icon: "zip", label: "Compactar (.zip)" });
+  if (canCreate.value) e.push({ id: "zip", icon: "zip", label: "Compactar…" });
   if (canCreate.value && one && isArchive(it)) e.push({ id: "unzip", icon: "zip", label: "Extrair aqui" });
   if (one) e.push({ id: "share", icon: "share", label: "Compartilhar" });
   if (one && it.type === "directory") { e.push({ sep: true }); e.push({ id: "style", icon: "star", label: "Personalizar pasta…" }); e.push({ id: "pin", icon: "link", label: isPinned(source.value, it.path) ? "Tirar do menu lateral" : "Fixar no menu lateral" }); }

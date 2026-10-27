@@ -35,6 +35,10 @@ Built for a home server: fast to read at a glance, good on a phone, and with the
 | Server name in the menu | – | Shows the server's host name |
 | Uploads | Yes | Yes, with a **transfer dock** (real progress, speed, ETA) |
 | UI language | Many | **Brazilian Portuguese only** (for now) |
+| Viewer | Quantum viewer | **Word and spreadsheet preview, 3D models (STL/OBJ/GLB/PLY), subtitles, play queue with auto-next, VS Code editor (Monaco) with syntax colors** |
+| Archives | Zip / unzip | **Open zip, 7z, tar, rar, iso… like folders** (7-Zip): browse, preview, add, rename, delete and edit inside zip/7z/tar; extract selected items; create .zip/.7z/.tar |
+| Navigation | Sidebar links | **Folder tree** in the sidebar, drag items onto folders to move, **custom icon and color per folder**, pinned shortcuts, compact and gallery views |
+| Sharing | Link options | Link with expiry, password, download limit, theme and upload permission; edit links later; **2FA QR code and passkey (second factor)** |
 | Following upstream | – | **Update routine**: brings a new Quantum release and re-applies our small backend patch, keeping the UI intact, with a one-command way back |
 
 ### Everything Quantum already does still works
