@@ -6,8 +6,9 @@ import * as authApi from "@/api/auth";
 import * as filesApi from "@/api/files";
 import * as adminApi from "@/api/admin";
 import * as cloudApi from "@/api/cloud";
+import { GUIDES } from "@/lib/cloudGuides";
 import { hideStatus, app, page, isAdmin, toast, toastError } from "@/store/app";
-import { askText, askConfirm } from "@/store/dialogs";
+import { askText, askConfirm, showInfo } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
 import { bytes, date, pct } from "@/lib/format";
 import { cfg } from "@/lib/config";
@@ -122,6 +123,9 @@ const when = (s) => {
 // ---- conectar serviços (nuvens) ----
 const cloud = ref(null);
 const cloudForm = ref(null);
+const guide = computed(() => (cloudApp.value && !cloudApp.value.senha ? GUIDES[cloudApp.value.id] : null));
+async function copyText(t) { const v = t.replace("{callback}", cloud.value?.callback || ""); try { await navigator.clipboard.writeText(v); toast("Copiado."); } catch (_e) { await showInfo({ title: "Copie o texto", message: v, confirm: "Fechar" }); } }
+const mdBold = (t) => t.split(/\*\*(.+?)\*\*/).map((x, i) => (i % 2 ? "<b>" + x + "</b>" : x.replace(/&/g, "&amp;").replace(/</g, "&lt;"))).join("");
 const cloudApp = ref(null); // { id, name, clientId, clientSecret } | { id, name, user, pass, senha: true }
 const cloudHue = { onedrive: "blue", drive: "green", dropbox: "cyan", mega: "red" };
 async function loadCloud() {
@@ -262,9 +266,21 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
             <label>Senha<input v-model="cloudApp.pass" type="password" autocomplete="new-password" /></label>
           </template>
           <template v-else>
-            <p class="meta">Endereço de retorno a cadastrar no provedor: <code>{{ cloud?.callback }}</code></p>
-            <label>ID do aplicativo<input v-model="cloudApp.clientId" autocomplete="off" /></label>
-            <label>Segredo<input v-model="cloudApp.clientSecret" type="password" autocomplete="new-password" /></label>
+            <div v-if="guide" class="cl-guide">
+              <b class="cl-gt"><Icon name="info" />Como cadastrar (uma vez só, uns 5 minutos)</b>
+              <ol>
+                <li v-for="(st, i) in guide.steps" :key="i">
+                  <span v-html="mdBold(st.t)"></span>
+                  <span class="cl-acts">
+                    <a v-if="st.link" class="btn sm" :href="st.link" target="_blank" rel="noopener" aria-label="Abrir página" title="Abrir página"><Icon name="open" /><span class="lbl">Abrir página</span></a>
+                    <button v-for="c in st.copy || []" :key="c[0]" type="button" class="btn sm" :title="c[0]" :aria-label="c[0]" @click="copyText(c[1])"><Icon name="copy" /><span class="lbl">{{ c[0] }}</span></button>
+                  </span>
+                </li>
+              </ol>
+              <p class="meta">Endereço de retorno: <code>{{ cloud?.callback }}</code></p>
+            </div>
+            <label>{{ guide?.idLabel || "ID do aplicativo" }}<input v-model="cloudApp.clientId" autocomplete="off" /></label>
+            <label>{{ guide?.secretLabel || "Segredo" }}<input v-model="cloudApp.clientSecret" type="password" autocomplete="new-password" /></label>
           </template>
           <div class="dlg-b"><button type="button" class="btn" @click="cloudApp = null"><Icon name="back" /><span>Cancelar</span></button><button class="btn pri"><Icon name="check" /><span>Salvar</span></button></div>
         </form>

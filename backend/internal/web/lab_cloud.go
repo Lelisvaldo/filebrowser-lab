@@ -69,11 +69,23 @@ func (p *labCloudProv) override(field, def string) string {
 
 func labCloudDir() string { return os.Getenv("FILEBROWSER_LAB_CLOUD_DIR") }
 
-func labCloudOrigin() string {
+// Endereço público do site: FILEBROWSER_LAB_CLOUD_ORIGIN, ou o do próprio pedido (atrás do proxy, usa X-Forwarded-*).
+func labCloudOrigin(r *http.Request) string {
 	if o := strings.TrimRight(os.Getenv("FILEBROWSER_LAB_CLOUD_ORIGIN"), "/"); o != "" {
 		return o
 	}
-	return "https://filebrowser.lab"
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+		if r.TLS != nil {
+			proto = "https"
+		}
+	}
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	return proto + "://" + host
 }
 
 // ---- arquivos de estado (tudo em 600, gravação atômica) ----
@@ -375,7 +387,7 @@ func labCloudListHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 		out = append(out, labCloudItem{ID: p.ID, Name: p.Name, Kind: p.Kind, HasApp: app || p.Kind == "senha",
 			Connected: on, Account: c.Account, ReadOnly: !on || c.ReadOnly, Since: c.Connected})
 	}
-	return labJSON(w, map[string]any{"items": out, "callback": labCloudOrigin() + "/api/lab/cloud/callback"})
+	return labJSON(w, map[string]any{"items": out, "callback": labCloudOrigin(r) + "/api/lab/cloud/callback"})
 }
 
 // PUT /api/lab/cloud/app?id=   {clientId, clientSecret}
@@ -420,7 +432,7 @@ func labCloudStartHandler(w http.ResponseWriter, r *http.Request, d *Context) (i
 	if !ok {
 		return http.StatusPreconditionFailed, fmt.Errorf("cadastre primeiro o aplicativo do %s (botão da chave)", p.Name)
 	}
-	q := url.Values{"client_id": {app.ClientID}, "response_type": {"code"}, "redirect_uri": {labCloudOrigin() + "/api/lab/cloud/callback"},
+	q := url.Values{"client_id": {app.ClientID}, "response_type": {"code"}, "redirect_uri": {labCloudOrigin(r) + "/api/lab/cloud/callback"},
 		"state": {labCloudNewState(p.ID)}}
 	if p.Scope != "" {
 		q.Set("scope", p.Scope)
@@ -456,7 +468,7 @@ func labCloudCallbackHandler(w http.ResponseWriter, r *http.Request, d *Context)
 	defer labCloudMu.Unlock()
 	st := labCloudLoad()
 	app := st.Apps[id]
-	tok, err := labCloudExchange(p, app, r.URL.Query().Get("code"), labCloudOrigin()+"/api/lab/cloud/callback")
+	tok, err := labCloudExchange(p, app, r.URL.Query().Get("code"), labCloudOrigin(r)+"/api/lab/cloud/callback")
 	if err != nil {
 		return done(false, err.Error())
 	}

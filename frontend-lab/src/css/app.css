@@ -572,3 +572,10 @@ body.rail .tree,body.rail .tw-root{display:none}
 .cl-form .cl-fhead{display:flex;align-items:center;gap:10px}
 .cl-form .cl-fhead h2{margin:0;font-size:1.05rem}
 .cl-form .meta{margin:0}
+.cl-guide{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-radius:10px;border:1px dashed var(--line);background:var(--card)}
+.cl-guide .cl-gt{display:flex;align-items:center;gap:8px}
+.cl-guide ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
+.cl-guide li{line-height:1.4;overflow-wrap:anywhere}
+.cl-guide .cl-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cl-guide .cl-acts .btn{text-decoration:none}
+.cl-guide .cl-acts .btn .lbl{display:inline}
