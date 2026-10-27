@@ -5,6 +5,7 @@ import Icon from "@/components/Icon.vue";
 import * as authApi from "@/api/auth";
 import * as filesApi from "@/api/files";
 import * as adminApi from "@/api/admin";
+import * as cloudApi from "@/api/cloud";
 import { hideStatus, app, page, isAdmin, toast, toastError } from "@/store/app";
 import { askText, askConfirm } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
@@ -14,7 +15,7 @@ import { cfg } from "@/lib/config";
 const route = useRoute();
 const router = useRouter();
 const tab = computed(() => route.params.tab || "usuarios");
-const tabs = [["usuarios", "Usuários"], ["acessos", "Regras de acesso"], ["sistema", "Sistema"], ["atividade", "Atividade"]];
+const tabs = [["usuarios", "Usuários"], ["acessos", "Regras de acesso"], ["sistema", "Sistema"], ["servicos", "Conectar serviços"], ["atividade", "Atividade"]];
 
 // ---- usuários ----
 const users = ref(null);
@@ -118,8 +119,45 @@ const when = (s) => {
   return /\d:\d\d/.test(d) ? d : d + " " + new Date(s * 1000).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
+// ---- conectar serviços (nuvens) ----
+const cloud = ref(null);
+const cloudApp = ref(null); // { id, name, clientId, clientSecret } | { id, name, user, pass, senha: true }
+const cloudHue = { onedrive: "blue", drive: "green", dropbox: "cyan", mega: "red" };
+async function loadCloud() {
+  try { cloud.value = await cloudApi.list(); } catch (e) { cloud.value = { items: [], callback: "" }; if (e.status !== 404) toastError(e); }
+}
+async function connectCloud(it) {
+  if (it.kind === "senha") { cloudApp.value = { id: it.id, name: it.name, user: "", pass: "", senha: true }; return; }
+  try { const r = await cloudApi.start(it.id); location.href = r.url; } catch (e) {
+    if (e.status === 412) { openApp(it); toast("Cadastre primeiro o aplicativo do " + it.name + "."); } else toastError(e);
+  }
+}
+function openApp(it) { cloudApp.value = { id: it.id, name: it.name, clientId: "", clientSecret: "" }; }
+async function saveCloudApp() {
+  const a = cloudApp.value;
+  try {
+    if (a.senha) { await cloudApi.passwordLogin(a.id, a.user, a.pass); toast(a.name + " conectado."); }
+    else { await cloudApi.saveApp(a.id, a.clientId, a.clientSecret); toast("Aplicativo guardado. Agora toque em entrar."); }
+    cloudApp.value = null; await loadCloud();
+  } catch (e) { toastError(e); }
+}
+async function dropCloud(it) {
+  if (!(await askConfirm({ title: "Desconectar " + it.name + "?", message: "O token é apagado do servidor. Seus arquivos na nuvem não são tocados.", confirm: "Desconectar", danger: true }))) return;
+  try { await cloudApi.disconnect(it.id); await loadCloud(); } catch (e) { toastError(e); }
+}
+async function toggleRO(it) {
+  if (it.readOnly && !(await askConfirm({ title: "Liberar escrita no " + it.name + "?", message: "Será possível enviar, mover e apagar arquivos na nuvem pelo filebrowser.", confirm: "Liberar", danger: true }))) return;
+  try { await cloudApi.setReadOnly(it.id, !it.readOnly); await loadCloud(); } catch (e) { toastError(e); }
+}
+function cloudReturn() {
+  const q = route.query;
+  if (!q.nuvem) return;
+  if (q.nuvem === "ok") toast("Nuvem conectada."); else toastError(new Error(String(q.msg || "não foi possível conectar")));
+  void router.replace("/admin/servicos");
+}
+
 onMounted(() => { hideStatus(); page.title = "Administração"; if (!isAdmin()) router.replace("/"); });
-watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); if (t === "acessos") void loadRule(); }, { immediate: true });
+watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade") void loadAct(); if (t === "acessos") void loadRule(); if (t === "servicos") { void loadCloud(); cloudReturn(); } }, { immediate: true });
 </script>
 
 <template>
@@ -197,6 +235,37 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
         <p class="meta">filebrowser-lab {{ cfg.version }} · commit {{ cfg.commitSHA }} · base Filebrowser Quantum</p>
         <p class="meta">Métodos de entrada: senha {{ cfg.passwordAvailable ? "ligado" : "desligado" }}, SSO {{ cfg.oidcAvailable ? "ligado" : "desligado" }}, proxy {{ cfg.proxyAvailable ? "ligado" : "desligado" }}, LDAP {{ cfg.ldapAvailable ? "ligado" : "desligado" }}.</p>
         <p class="meta">A configuração das pastas e dos métodos de entrada fica no arquivo <code>config.yaml</code> do servidor.</p>
+      </section>
+
+      <section v-else-if="tab === 'servicos'" class="card">
+        <div class="cardhead"><h2>Nuvens</h2><button class="ib" aria-label="Atualizar" title="Atualizar" @click="loadCloud"><Icon name="refresh" /></button></div>
+        <p class="meta">Cada nuvem aparece como uma pasta em <code>Nuvens</code> no menu lateral. Entre uma por vez; o token fica guardado só no servidor.</p>
+        <div v-if="cloud === null" class="vazio">Carregando…</div>
+        <div v-else-if="!cloud.items.length" class="vazio">As nuvens não estão ligadas neste servidor.</div>
+        <div v-else class="tbl">
+          <div v-for="it in cloud.items" :key="it.id" class="trow cl-row">
+            <span :class="['ico', 'hue', 'h-' + cloudHue[it.id]]"><Icon name="cloud" /></span>
+            <div class="main"><b>{{ it.name }}</b><small>{{ it.connected ? (it.account || "conta conectada") + (it.readOnly ? " · somente leitura" : " · leitura e escrita") : it.hasApp ? "Pronto para entrar" : "Aplicativo ainda não cadastrado" }}</small></div>
+            <span :class="['chip', 'cl-chip', { off: !it.connected }]">{{ it.connected ? "Conectada" : it.hasApp ? "Desconectada" : "Sem app" }}</span>
+            <button v-if="it.connected" class="ib" :aria-label="it.readOnly ? 'Liberar escrita' : 'Voltar a só leitura'" :title="it.readOnly ? 'Só leitura (toque para liberar escrita)' : 'Escrita liberada (toque para voltar a só leitura)'" @click="toggleRO(it)"><Icon :name="it.readOnly ? 'lock' : 'edit'" /></button>
+            <button v-if="it.kind === 'oauth'" class="ib" aria-label="Cadastrar aplicativo" title="Aplicativo do provedor (ID e segredo)" @click="openApp(it)"><Icon name="key" /></button>
+            <button v-if="it.connected" class="btn danger sm" :aria-label="'Desconectar ' + it.name" title="Desconectar" @click="dropCloud(it)"><Icon name="signout" /><span class="lbl">Desconectar</span></button>
+            <button v-else :class="['btn', 'sm', { pri: it.hasApp }]" :aria-label="'Entrar no ' + it.name" title="Entrar" @click="connectCloud(it)"><Icon name="signin" /><span class="lbl">Entrar</span></button>
+          </div>
+        </div>
+        <form v-if="cloudApp" class="form" @submit.prevent="saveCloudApp">
+          <h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2>
+          <template v-if="cloudApp.senha">
+            <label>Email<input v-model="cloudApp.user" autocomplete="off" /></label>
+            <label>Senha<input v-model="cloudApp.pass" type="password" autocomplete="new-password" /></label>
+          </template>
+          <template v-else>
+            <p class="meta">Endereço de retorno a cadastrar no provedor: <code>{{ cloud?.callback }}</code></p>
+            <label>ID do aplicativo<input v-model="cloudApp.clientId" autocomplete="off" /></label>
+            <label>Segredo<input v-model="cloudApp.clientSecret" type="password" autocomplete="new-password" /></label>
+          </template>
+          <div class="dlg-b"><button type="button" class="btn" @click="cloudApp = null"><Icon name="back" /><span>Cancelar</span></button><button class="btn pri"><Icon name="check" /><span>Salvar</span></button></div>
+        </form>
       </section>
 
       <section v-else class="card">

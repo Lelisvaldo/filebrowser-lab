@@ -565,3 +565,6 @@ body.rail .tree,body.rail .tw-root{display:none}
 
 .ph-t h1,.phead.lhead h1{color:var(--h)}
 .office-wrap .vw-pdf{flex:1;min-height:0}
+/* nuvens (Conectar serviços) */
+.cl-row .cl-chip{margin:0}
+@media (max-width:520px){.cl-row .cl-chip{display:none}.cl-row .btn .lbl{display:none}.cl-row .btn{padding:0 12px}}
