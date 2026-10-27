@@ -9,6 +9,8 @@ import { askText, askConfirm, showInfo } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
 import { date } from "@/lib/format";
 import { cfg } from "@/lib/config";
+import QrCode from "@/components/QrCode.vue";
+import { openShare } from "@/store/shareDlg";
 
 const route = useRoute();
 const router = useRouter();
@@ -28,6 +30,22 @@ async function changePassword() {
     toast("Senha alterada.");
     cur.value = n1.value = n2.value = "";
   } catch (e) { toastError(e); } finally { busy.value = false; }
+}
+
+// chaves de acesso (passkey)
+const pkOn = !!cfg.passkeyAvailable && authApi.passkeySupported();
+const pkPass = ref("");
+const pks = ref([]);
+async function pkLoad() { if (pkOn) { try { pks.value = await authApi.passkeyList(); } catch (_e) { pks.value = []; } } }
+onMounted(pkLoad);
+async function pkAdd() {
+  const name = await askText({ title: "Nova chave de acesso", label: "Nome (ex.: celular, notebook)", value: "Meu aparelho", confirm: "Continuar" });
+  if (!name) return;
+  try { await authApi.passkeyRegister(name, pkPass.value); toast("Chave de acesso cadastrada."); pkPass.value = ""; await pkLoad(); } catch (e) { toastError(e); }
+}
+async function pkDel(c) {
+  if (!(await askConfirm({ title: "Remover chave de acesso", message: `"${c.name}" deixará de funcionar.`, confirm: "Remover", danger: true }))) return;
+  try { await authApi.passkeyDelete(c.id, pkPass.value); toast("Removida."); await pkLoad(); } catch (e) { toastError(e); }
 }
 
 // 2FA
@@ -65,6 +83,7 @@ async function delLink(l) {
   if (!(await askConfirm({ title: "Remover link", message: "Quem tem o link perderá o acesso.", confirm: "Remover", danger: true }))) return;
   try { await filesApi.deleteShare(l.hash); await loadLinks(); } catch (e) { toastError(e); }
 }
+async function editLink(l) { await openShare(l.source, { name: String(l.path).split("/").filter(Boolean).pop() || l.source, path: l.path, type: l.isDir ? "directory" : "file" }, l); await loadLinks(); }
 async function copy(url) { try { await navigator.clipboard.writeText(url); toast("Link copiado."); } catch (_e) { await showInfo({ title: "Link", message: url, confirm: "Fechar" }); } }
 
 onMounted(() => { void loadKeys(); void loadLinks(); });
@@ -94,10 +113,20 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
           <button class="btn" :disabled="!otpPass" @click="otpStart"><Icon name="shield" /><span>{{ app.user.otpEnabled ? "Gerar novo código" : "Ativar" }}</span></button>
         </div>
         <div v-if="otpUrl" class="form" style="margin-top: 14px">
-          <p class="meta">Adicione esta chave no aplicativo autenticador (Google Authenticator, Aegis, etc.). Se ele aceitar link, abra:</p>
+          <p class="meta">Leia o QR code no aplicativo autenticador (Google Authenticator, Aegis, etc.). Se preferir, copie o link abaixo.</p>
+          <QrCode :text="otpUrl" />
           <textarea readonly rows="3" class="mono" :value="otpUrl" @focus="$event.target.select()"></textarea>
           <label>Código de 6 dígitos<input v-model="otpCode" inputmode="numeric" autocomplete="one-time-code" /></label>
           <button class="btn pri" :disabled="!otpCode" @click="otpFinish">Confirmar</button>
+        </div>
+        <div v-if="pkOn" class="pk-sec">
+        <h2>Chave de acesso (passkey)</h2>
+        <p class="meta">Segundo fator no login: biometria do aparelho ou chave de segurança, depois da senha.</p>
+        <div v-if="pks.length" class="tbl">
+          <div v-for="c in pks" :key="c.id" class="trow"><div class="main"><b>{{ c.name }}</b><small>criada {{ c.createdAt ? date(new Date(c.createdAt * 1000).toISOString()) : "" }}</small></div><button class="ib" title="Remover" aria-label="Remover chave" @click="pkDel(c)"><Icon name="trash" /></button></div>
+        </div>
+        <div class="form"><label v-if="pks.length">Sua senha (para alterar)<input v-model="pkPass" type="password" autocomplete="current-password" /></label>
+          <button class="btn" type="button" @click="pkAdd"><Icon name="key" /><span>Cadastrar chave de acesso</span></button></div>
         </div>
       </section>
 
@@ -122,6 +151,7 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
           <div v-for="l in links" :key="l.hash" class="trow">
             <div class="main"><b>{{ String(l.path).split("/").filter(Boolean).pop() || l.source }}</b><small>{{ l.source }} · {{ l.expire ? "expira " + date(new Date(l.expire * 1000).toISOString()) : "sem validade" }}</small></div>
             <button class="ib" title="Copiar link" aria-label="Copiar link" @click="copy(l.shareURL || origin + '/public/share/' + l.hash)"><Icon name="link" /></button>
+            <button class="ib" title="Editar opções" aria-label="Editar opções" @click="editLink(l)"><Icon name="edit" /></button>
             <button class="ib" title="Remover" aria-label="Remover" @click="delLink(l)"><Icon name="trash" /></button>
           </div>
         </div>

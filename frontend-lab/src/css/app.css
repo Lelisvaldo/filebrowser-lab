@@ -458,3 +458,15 @@ body.rail .tree,body.rail .tw-root{display:none}
 .fs-i.on,.fs-c.on{outline:2px solid var(--acc);outline-offset:1px}
 .fs-c{background:var(--h);border-color:transparent}.fs-c.fs-none{background:var(--card);border-color:var(--line);color:var(--sub)}
 .fs-act{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap}
+
+/* Compartilhar, QR e passkey */
+.sh-box{width:min(460px,100%);max-height:92vh;overflow:auto}
+.sh-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sh-row .fs-lbl{min-width:132px}
+.sh-row input[type=text],.sh-row input[type=password],.sh-row input[type=number],.sh-row select,.sh-url input{flex:1;min-width:0;min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--txt);padding:0 10px;font:inherit}
+.sh-row input[type=number]{max-width:96px;flex:none}
+.sh-url{display:flex;gap:6px}
+.sh-chk,.sh-chk2{display:flex;gap:6px;align-items:center;color:var(--sub);font-size:.9rem}
+.qr{width:200px;max-width:100%;background:#fff;padding:6px;border-radius:10px;margin:8px 0}
+.qr svg{display:block;width:100%;height:auto}
+.pk-sec{margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}

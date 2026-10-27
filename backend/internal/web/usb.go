@@ -169,3 +169,20 @@ func hostHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error
 	_ = json.NewEncoder(w).Encode(map[string]string{"name": name})
 	return 0, nil
 }
+
+// passkeysHandler lista as chaves de acesso do próprio usuário (a API de usuários não devolve esse campo).
+func passkeysHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	type item struct {
+		ID         string `json:"id"`
+		Name       string `json:"name"`
+		CreatedAt  int64  `json:"createdAt"`
+		LastUsedAt int64  `json:"lastUsedAt"`
+	}
+	out := []item{}
+	for _, c := range d.User.PasskeyCredentials {
+		out = append(out, item{ID: c.ID, Name: c.Name, CreatedAt: c.CreatedAt, LastUsedAt: c.LastUsedAt})
+	}
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_ = json.NewEncoder(w).Encode(out)
+	return 0, nil
+}

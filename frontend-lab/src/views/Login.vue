@@ -34,6 +34,10 @@ async function finish() {
   else error.value = "Entrou, mas não foi possível carregar a sessão.";
 }
 
+async function doPasskey() {
+  try { await authApi.passkeyLogin(user.value, pass.value); await finish(); } catch (_e) { error.value = "Não foi possível confirmar com a chave de acesso. Toque em tentar de novo."; }
+}
+
 async function submit() {
   error.value = "";
   if (!user.value || !pass.value) { error.value = "Informe usuário e senha."; return; }
@@ -51,6 +55,7 @@ async function submit() {
     await finish();
   } catch (e) {
     if (e.code === "change-password") { step.value = "change"; error.value = ""; }
+    else if (e.code === "passkey") { step.value = "passkey"; error.value = ""; await doPasskey(); }
     else if (e.code === "otp") { step.value = "otp"; error.value = otp.value ? "Código incorreto." : ""; }
     else if (e.status === 401 || e.status === 403) error.value = step.value === "otp" ? "Código incorreto." : "Usuário ou senha incorretos.";
     else error.value = e.message || "Não foi possível entrar.";
@@ -76,7 +81,7 @@ const toggleTheme = () => setUi({ theme: isDark() ? "light" : "dark" });
       <form class="lg-card" novalidate @submit.prevent="submit">
         <div class="lg-brand"><Logo :size="52" /></div>
         <h1>{{ step === "change" ? "Escolha uma nova senha" : "Entrar" }}</h1>
-        <p class="lg-sub">{{ step === "change" ? "Por segurança, troque a senha provisória agora." : step === "otp" ? "Digite o código do aplicativo autenticador." : "Acesse seus arquivos e pendrives." }}</p>
+        <p class="lg-sub">{{ step === "change" ? "Por segurança, troque a senha provisória agora." : step === "passkey" ? "Confirme com a sua chave de acesso (biometria, chave de segurança ou celular)." : step === "otp" ? "Digite o código do aplicativo autenticador." : "Acesse seus arquivos e pendrives." }}</p>
         <div v-if="error" class="lg-erro" role="alert"><Icon name="warning" /><span>{{ error }}</span></div>
         <label class="lg-campo"><Icon name="person" /><input ref="userInput" v-model="user" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="Usuário" aria-label="Usuário" :readonly="step !== 'login'" /></label>
         <label class="lg-campo"><Icon name="lock" /><input v-model="pass" :type="show ? 'text' : 'password'" autocomplete="current-password" :placeholder="step === 'change' ? 'Senha atual' : 'Senha'" aria-label="Senha" :readonly="step === 'otp'" />
@@ -86,7 +91,8 @@ const toggleTheme = () => setUi({ theme: isDark() ? "light" : "dark" });
           <label class="lg-campo"><Icon name="key" /><input v-model="next2" type="password" autocomplete="new-password" placeholder="Repita a nova senha" aria-label="Repita a nova senha" /></label>
         </template>
         <label v-if="step === 'otp'" class="lg-campo"><Icon name="shield" /><input v-model="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="Código de 6 dígitos" aria-label="Código de verificação" autofocus /></label>
-        <button class="lg-btn" type="submit" :disabled="busy">{{ busy ? "Aguarde…" : step === "change" ? "Salvar e entrar" : "Entrar" }}</button>
+        <button v-if="step === 'passkey'" class="lg-btn" type="button" :disabled="busy" @click="doPasskey">Usar a chave de acesso</button>
+        <button v-else class="lg-btn" type="submit" :disabled="busy">{{ busy ? "Aguarde…" : step === "change" ? "Salvar e entrar" : "Entrar" }}</button>
         <a v-if="oidc && step === 'login'" class="lg-alt" :href="baseURL + 'api/auth/oidc/login'">{{ cfg.oidcLoginButtonText || "Entrar com SSO" }}</a>
       </form>
       <div class="lg-rodape">{{ appName }} {{ cfg.version ? "· " + cfg.version : "" }} · base Filebrowser Quantum</div>

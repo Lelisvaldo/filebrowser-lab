@@ -50,6 +50,8 @@ export const viewToken = async (source, path) => {
 
 // Compartilhamentos
 export const shares = () => get("share/list");
+// editar opções: POST com o hash (o PATCH do servidor só troca o caminho)
+export const updateShare = (body) => send("share", "POST", body);
 export const createShare = (body) => send("share", "POST", body);
 export const deleteShare = (hash) => send("share", "DELETE", undefined, { hash }, { raw: true });
 export const shareFor = (source, path) => get("share", { source, path });

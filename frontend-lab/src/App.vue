@@ -11,6 +11,7 @@ import UsbPop from "@/components/UsbPop.vue";
 import UserPop from "@/components/UserPop.vue";
 import TransferDock from "@/components/TransferDock.vue";
 import FolderTree from "@/components/FolderTree.vue";
+import ShareDialog from "@/components/ShareDialog.vue";
 import { isOpen, toggleOpen } from "@/lib/tree";
 import { prefs, folderLook, togglePin } from "@/lib/folderPrefs";
 import { isLabDrag, dropInto } from "@/store/dnd";
@@ -218,6 +219,7 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
     </div>
     <SettingsDrawer v-if="ui.settingsOpen" />
   </template>
+  <ShareDialog />
   <DialogHost />
   <Toasts />
 </template>
