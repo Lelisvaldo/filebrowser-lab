@@ -66,7 +66,7 @@ func TestLabCloudFluxoOAuth(t *testing.T) {
 		t.Fatalf("login deveria dar certo: %s", w.Header().Get("Location"))
 	}
 	conf, _ := os.ReadFile(filepath.Join(dir, "rclone.conf"))
-	for _, want := range []string{"[onedrive]", "type = onedrive", "drive_id = drv1", "drive_type = personal", `"refresh_token":"RT"`} {
+	for _, want := range []string{"[OneDrive]", "type = onedrive", "drive_id = drv1", "drive_type = personal", `"refresh_token":"RT"`} {
 		if !strings.Contains(string(conf), want) {
 			t.Fatalf("rclone.conf sem %q:\n%s", want, conf)
 		}
@@ -74,7 +74,7 @@ func TestLabCloudFluxoOAuth(t *testing.T) {
 	if fi, _ := os.Stat(filepath.Join(dir, "rclone.conf")); fi.Mode().Perm() != 0o600 {
 		t.Fatalf("permissão do rclone.conf = %v", fi.Mode().Perm())
 	}
-	if _, err := os.Stat(filepath.Join(dir, "escrita-onedrive")); err == nil {
+	if _, err := os.Stat(filepath.Join(dir, "escrita-OneDrive")); err == nil {
 		t.Fatal("nuvem nova deveria ser só leitura")
 	}
 	// state é de uso único
@@ -86,13 +86,13 @@ func TestLabCloudFluxoOAuth(t *testing.T) {
 	// libera escrita e desconecta
 	w = httptest.NewRecorder()
 	_, _ = labCloudModeHandler(w, httptest.NewRequest("POST", "/m?id=onedrive&readOnly=false", nil), nil)
-	if _, err := os.Stat(filepath.Join(dir, "escrita-onedrive")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "escrita-OneDrive")); err != nil {
 		t.Fatal("escrita deveria estar liberada")
 	}
 	w = httptest.NewRecorder()
 	_, _ = labCloudDisconnectHandler(w, httptest.NewRequest("DELETE", "/lab/cloud?id=onedrive", nil), nil)
 	conf, _ = os.ReadFile(filepath.Join(dir, "rclone.conf"))
-	if strings.Contains(string(conf), "onedrive") {
+	if strings.Contains(string(conf), "OneDrive") {
 		t.Fatalf("desconectar deveria limpar o rclone.conf:\n%s", conf)
 	}
 }
@@ -106,7 +106,7 @@ func TestLabCloudMega(t *testing.T) {
 		t.Fatal(err)
 	}
 	conf, _ := os.ReadFile(filepath.Join(dir, "rclone.conf"))
-	if !strings.Contains(string(conf), "type = mega") || strings.Contains(string(conf), "s3nha") {
+	if !strings.Contains(string(conf), "[MEGA]") || strings.Contains(string(conf), "s3nha") {
 		t.Fatalf("conf do mega errada (senha deve estar ofuscada):\n%s", conf)
 	}
 	t.Logf("%s", conf)

@@ -27,28 +27,28 @@ import (
 )
 
 type labCloudProv struct {
-	ID, Name       string
-	Kind           string // "oauth" ou "senha"
-	AuthURL, Token string
-	Scope          string
-	Extra          url.Values // parâmetros extras do pedido de login
-	InfoURL        string
-	RcloneType     string
-	RcloneExtra    map[string]string
+	ID, Name, Folder string // Folder: nome da pasta em Nuvens e da seção do rclone.conf
+	Kind             string // "oauth" ou "senha"
+	AuthURL, Token   string
+	Scope            string
+	Extra            url.Values // parâmetros extras do pedido de login
+	InfoURL          string
+	RcloneType       string
+	RcloneExtra      map[string]string
 }
 
 var labCloudProvs = []labCloudProv{
-	{ID: "onedrive", Name: "OneDrive", Kind: "oauth", RcloneType: "onedrive",
+	{ID: "onedrive", Name: "OneDrive", Folder: "OneDrive", Kind: "oauth", RcloneType: "onedrive",
 		AuthURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize", Token: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 		Scope: "Files.ReadWrite.All offline_access User.Read", InfoURL: "https://graph.microsoft.com/v1.0/me/drive"},
-	{ID: "drive", Name: "Google Drive", Kind: "oauth", RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
+	{ID: "drive", Name: "Google Drive", Folder: "GoogleDrive", Kind: "oauth", RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
 		AuthURL: "https://accounts.google.com/o/oauth2/v2/auth", Token: "https://oauth2.googleapis.com/token",
 		Scope: "https://www.googleapis.com/auth/drive", Extra: url.Values{"access_type": {"offline"}, "prompt": {"consent"}},
 		InfoURL: "https://www.googleapis.com/drive/v3/about?fields=user"},
-	{ID: "dropbox", Name: "Dropbox", Kind: "oauth", RcloneType: "dropbox",
+	{ID: "dropbox", Name: "Dropbox", Folder: "Dropbox", Kind: "oauth", RcloneType: "dropbox",
 		AuthURL: "https://www.dropbox.com/oauth2/authorize", Token: "https://api.dropboxapi.com/oauth2/token",
 		Extra: url.Values{"token_access_type": {"offline"}}, InfoURL: "https://api.dropboxapi.com/2/users/get_current_account"},
-	{ID: "mega", Name: "MEGA", Kind: "senha", RcloneType: "mega"},
+	{ID: "mega", Name: "MEGA", Folder: "MEGA", Kind: "senha", RcloneType: "mega"},
 }
 
 func labCloudProvByID(id string) *labCloudProv {
@@ -90,7 +90,10 @@ func labCloudOrigin(r *http.Request) string {
 
 // ---- arquivos de estado (tudo em 600, gravação atômica) ----
 
-var labCloudMu sync.Mutex
+var (
+	labCloudMu   sync.Mutex
+	labCloudOnce sync.Once
+)
 
 type labCloudApp struct {
 	ClientID     string `json:"clientId"`
@@ -160,7 +163,7 @@ func labCloudWriteConf(st labCloudState) error {
 		if _, on := st.Conns[p.ID]; !on {
 			continue
 		}
-		sb.WriteString("[" + p.ID + "]\n")
+		sb.WriteString("[" + p.Folder + "]\n")
 		keys := make([]string, 0, len(kv))
 		for k := range kv {
 			keys = append(keys, k)
@@ -176,7 +179,10 @@ func labCloudWriteConf(st labCloudState) error {
 	}
 	// um arquivo "escrita-<nome>" libera escrita; sem ele a nuvem fica só leitura
 	for _, p := range labCloudProvs {
-		flag := filepath.Join(labCloudDir(), "escrita-"+p.ID)
+		flag := filepath.Join(labCloudDir(), "escrita-"+p.Folder)
+		if p.ID != p.Folder {
+			_ = os.Remove(filepath.Join(labCloudDir(), "escrita-"+p.ID)) // nome antigo, em minúsculas
+		}
 		if c, on := st.Conns[p.ID]; on && !c.ReadOnly {
 			_ = os.WriteFile(flag, nil, 0o600)
 		} else {
@@ -379,6 +385,7 @@ func labCloudListHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 	}
 	labCloudMu.Lock()
 	st := labCloudLoad()
+	labCloudOnce.Do(func() { _ = labCloudWriteConf(st) }) // nomes de pasta padronizados (MEGA, OneDrive, GoogleDrive, Dropbox)
 	labCloudMu.Unlock()
 	out := make([]labCloudItem, 0, len(labCloudProvs))
 	for _, p := range labCloudProvs {
