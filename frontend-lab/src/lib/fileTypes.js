@@ -10,8 +10,7 @@ const BY_EXT = {
   code: "js ts jsx tsx vue json yml yaml toml xml html css scss py go rs c h cpp java sh bash sql ini conf cfg env lua php rb",
   text: "txt md log csv nfo srt ass rtf",
   table: "xls xlsx xlsm ods tsv",
-  doc: "docx",
-  office: "doc dot docm dotx odt ott wpd wps xlt xlsb ots ppt pps pot pptx pptm ppsx potx odp otp",
+  office: "docx doc dot docm dotx odt ott wpd wps xlt xlsb ots ppt pps pot pptx pptm ppsx potx odp otp",
   model: "stl obj glb gltf ply",
 };
 
