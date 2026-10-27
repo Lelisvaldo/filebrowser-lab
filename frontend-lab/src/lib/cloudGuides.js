@@ -19,7 +19,7 @@ export const GUIDES = {
       { t: "Entre com a sua conta Microsoft em Entra → Aplicativos → Registros de aplicativo → Novo registro. Conta pessoal sem diretório: abra antes o portal.azure.com uma vez.", link: "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" },
       { t: "Dê um nome. Em tipos de conta, escolha “Contas em qualquer diretório organizacional e contas pessoais da Microsoft”." },
       { t: "Em URI de redirecionamento, escolha a plataforma “Web”, cole o endereço de retorno e toque em Registrar.", copy: [["Copiar endereço de retorno", "{callback}"]] },
-      { t: "Na página do aplicativo, copie o “ID do aplicativo (cliente)” e cole abaixo." },
+      { t: "A página do aplicativo mostra três IDs. Copie só o primeiro, **ID do aplicativo (cliente)**, e cole abaixo. Ignore o “ID do Objeto” e o “ID do diretório (locatário)”." },
       { t: "Em Certificados e segredos → Novo segredo do cliente, crie um e copie o campo **Valor** (ele só aparece uma vez) para o campo Segredo abaixo." },
       { t: "Em Permissões de API → Adicionar → Microsoft Graph → Permissões delegadas, marque as três abaixo.", copy: [["Copiar a lista", "Files.ReadWrite.All offline_access User.Read"]] },
     ],
