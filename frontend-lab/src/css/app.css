@@ -491,3 +491,6 @@ body.rail .tree,body.rail .tw-root{display:none}
 .arc-pdf{flex:1;border:0;background:#fff}
 .arc-area{flex:1;min-height:0}
 .inl{display:flex;gap:8px;align-items:stretch;margin-top:4px}.inl input{flex:1;min-width:0}.inl .btn{flex:none;white-space:nowrap}
+.pick-dest{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--accbg);border:1px solid var(--acc);color:var(--txt)}
+.pick-dest span{color:var(--sub)}.pick-dest b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick-up{color:var(--sub)}

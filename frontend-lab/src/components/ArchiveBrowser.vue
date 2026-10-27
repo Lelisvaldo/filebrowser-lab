@@ -87,7 +87,7 @@ async function onFiles(ev) {
   if (files.length) await run(() => arc.add(props.source, props.item.path, dir.value, files, pw.value), `${files.length} arquivo(s) adicionados.`);
 }
 async function extractTo(items) {
-  const dest = await pickFolder({ title: items ? "Extrair seleção para…" : "Extrair tudo para…", extra: { source: props.source, path: "/" } });
+  const dest = await pickFolder({ title: items ? "Extrair seleção para…" : "Extrair tudo para…", extra: { source: props.source, path: "/", verb: "Extrair" } });
   if (!dest) return;
   busy.value = true;
   try { await arc.extract({ source: props.source, path: props.item.path, toSource: dest.source, dest: dest.path, items: items || [], password: pw.value }); toast("Extraído."); void refreshSources(); } catch (e) { toastError(e); } finally { busy.value = false; }

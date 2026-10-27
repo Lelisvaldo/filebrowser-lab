@@ -22,5 +22,5 @@ export async function dropInto(e, destSource, destDir) {
     const failed = res?.failed?.length || 0;
     toast(failed ? `${failed} item(ns) não puderam ser movidos.` : list.length === 1 ? "Movido." : `${list.length} itens movidos.`, failed ? "err" : "ok");
     window.dispatchEvent(new CustomEvent("lab:refresh"));
-  } catch (err) { toastError(err); }
+  } catch (err) { let m = (err && err.message) || String(err); try { const j = JSON.parse(m); const f = j.failed && j.failed[0] && j.failed[0].message; if (f) m = /itself/i.test(f) ? "O item já está nessa pasta." : f; } catch (_e) { /* texto simples */ } toast(m, "err", 6000); }
 }

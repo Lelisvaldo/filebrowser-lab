@@ -46,6 +46,8 @@ watch(() => dialog.open, async (o) => {
   }
 });
 
+const destLabel = computed(() => [src.value, ...cur.value.split("/").filter(Boolean)].join(" / "));
+const parentOf = (p) => { const t = p.replace(/\/+$/, ""); const i = t.lastIndexOf("/"); return i <= 0 ? "/" : t.slice(0, i + 1); };
 function go(path) { cur.value = path; void loadDirs(); }
 function pickSource(s) { src.value = s; cur.value = "/"; void loadDirs(); }
 function ok() {
@@ -76,16 +78,18 @@ const cancel = () => closeDialog(dialog.kind === "confirm" || dialog.kind === "i
           <button type="button" @click="go('/')">{{ src }}</button>
           <template v-for="c in crumbs(cur)" :key="c.path"><span>/</span><button type="button" @click="go(c.path)">{{ c.name }}</button></template>
         </div>
+        <div class="pick-dest"><Icon name="folderopen" /><span>Destino:</span><b>{{ destLabel }}</b></div>
         <div class="pick-list">
+          <button v-if="cur !== '/'" type="button" class="pick-row pick-up" @click="go(parentOf(cur))"><Icon name="back" /><span>Voltar para a pasta de cima</span></button>
           <button v-for="d in dirs" :key="d.path" type="button" class="pick-row" @click="go(d.path)">
             <Icon name="folder" /><span>{{ d.name }}</span><Icon name="right" />
           </button>
-          <div v-if="!dirs.length && !loading" class="pick-empty">Nenhuma subpasta aqui.</div>
+          <div v-if="!dirs.length && !loading" class="pick-empty">Nenhuma subpasta aqui. Você pode usar esta pasta.</div>
         </div>
       </template>
       <div class="dlg-b">
         <button v-if="dialog.kind !== 'info'" type="button" class="btn" @click="cancel">Cancelar</button>
-        <button type="submit" class="btn pri" :class="{ danger: dialog.danger }" :ref="dialog.kind === 'confirm' || dialog.kind === 'info' ? 'input' : undefined">{{ dialog.kind === 'folder' ? 'Escolher esta pasta' : dialog.confirm }}</button>
+        <button type="submit" class="btn pri" :class="{ danger: dialog.danger }" :ref="dialog.kind === 'confirm' || dialog.kind === 'info' ? 'input' : undefined">{{ dialog.kind === 'folder' ? (dialog.extra?.verb || 'Escolher') + ' nesta pasta' : dialog.confirm }}</button>
       </div>
     </form>
   </div>

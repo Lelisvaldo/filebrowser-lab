@@ -140,18 +140,26 @@ async function doRename(it) {
   } catch (e) { toastError(e); }
 }
 
+// o servidor devolve um JSON técnico quando algo falha ao mover/copiar; mostra só o motivo, em português
+function moveErr(e) {
+  try { const j = JSON.parse(e.message); const m = (j.failed && j.failed[0] && j.failed[0].message) || ""; if (/itself/i.test(m)) return "O item já está nessa pasta."; if (/exist/i.test(m)) return "Já existe um item com esse nome no destino."; if (m) return m; } catch (_e) { /* texto simples */ }
+  return (e && e.message) || String(e);
+}
 async function doMoveCopy(list, action) {
-  const dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value } });
+  const dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value, verb: action === "move" ? "Mover" : "Copiar" } });
   if (!dest) return;
+  const same = dest.source === source.value && dest.path.replace(/\/?$/, "/") === dirPath.value.replace(/\/?$/, "/");
+  if (same && action === "move") { toast("Os itens já estão nesta pasta."); return; }
   try {
-    const res = await filesApi.moveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action);
+    // copiar para a mesma pasta cria "nome (1)"; nunca sobrescreve
+    const res = await filesApi.moveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: action === "copy" });
     const failed = res?.failed?.length || 0;
     if (failed) toast(`${failed} item(ns) não puderam ser ${action === "move" ? "movidos" : "copiados"}.`, "err");
     else toast(action === "move" ? "Movido." : "Copiado.");
     clearSel();
     await load(true);
     void refreshSources();
-  } catch (e) { toastError(e); }
+  } catch (e) { toast(moveErr(e), "err", 6000); }
 }
 
 async function doDelete(list) {
