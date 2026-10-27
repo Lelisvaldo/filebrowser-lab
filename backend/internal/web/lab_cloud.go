@@ -1,6 +1,6 @@
 package web
 
-// Nuvens (filebrowser-lab, HL-112): login pela interface (OAuth no navegador, ou usuário e senha no MEGA).
+// Nuvens (filebrowser-lab, HL-112): login pela interface (OAuth no navegador, ou usuário e senha no Mega).
 // O servidor guarda o token numa configuração de rclone; o container "rclone-mount" vigia esse arquivo e
 // monta cada nuvem em /mnt/cloud/<nome>. Só administradores. Ligada quando FILEBROWSER_LAB_CLOUD_DIR existe.
 //
@@ -41,14 +41,14 @@ var labCloudProvs = []labCloudProv{
 	{ID: "onedrive", Name: "OneDrive", Folder: "OneDrive", Kind: "oauth", RcloneType: "onedrive",
 		AuthURL: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize", Token: "https://login.microsoftonline.com/common/oauth2/v2.0/token",
 		Scope: "Files.ReadWrite.All offline_access User.Read", InfoURL: "https://graph.microsoft.com/v1.0/me/drive"},
-	{ID: "drive", Name: "Google Drive", Folder: "GoogleDrive", Kind: "oauth", RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
+	{ID: "drive", Name: "GoogleDrive", Folder: "GoogleDrive", Kind: "oauth", RcloneType: "drive", RcloneExtra: map[string]string{"scope": "drive"},
 		AuthURL: "https://accounts.google.com/o/oauth2/v2/auth", Token: "https://oauth2.googleapis.com/token",
 		Scope: "https://www.googleapis.com/auth/drive", Extra: url.Values{"access_type": {"offline"}, "prompt": {"consent"}},
 		InfoURL: "https://www.googleapis.com/drive/v3/about?fields=user"},
 	{ID: "dropbox", Name: "Dropbox", Folder: "Dropbox", Kind: "oauth", RcloneType: "dropbox",
 		AuthURL: "https://www.dropbox.com/oauth2/authorize", Token: "https://api.dropboxapi.com/oauth2/token",
 		Extra: url.Values{"token_access_type": {"offline"}}, InfoURL: "https://api.dropboxapi.com/2/users/get_current_account"},
-	{ID: "mega", Name: "MEGA", Folder: "MEGA", Kind: "senha", RcloneType: "mega"},
+	{ID: "mega", Name: "Mega", Folder: "Mega", Kind: "senha", RcloneType: "mega"},
 }
 
 func labCloudProvByID(id string) *labCloudProv {
@@ -249,7 +249,7 @@ func labCloudTakeState(s string) (string, bool) {
 	return v.prov, true
 }
 
-// ---- senha do rclone (ofuscação padrão, necessária no MEGA) ----
+// ---- senha do rclone (ofuscação padrão, necessária no Mega) ----
 
 var labCloudObscureKey = []byte{0x9c, 0x93, 0x5b, 0x48, 0x73, 0x0a, 0x55, 0x4d, 0x6b, 0xfd, 0x7c, 0x63, 0xc8, 0x86, 0xa9, 0x2b,
 	0xd3, 0x90, 0x19, 0x8e, 0xb8, 0x12, 0x8a, 0xfb, 0xf4, 0xde, 0x16, 0x2b, 0x8b, 0x95, 0xf6, 0x38}
@@ -385,7 +385,7 @@ func labCloudListHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 	}
 	labCloudMu.Lock()
 	st := labCloudLoad()
-	labCloudOnce.Do(func() { _ = labCloudWriteConf(st) }) // nomes de pasta padronizados (MEGA, OneDrive, GoogleDrive, Dropbox)
+	labCloudOnce.Do(func() { _ = labCloudWriteConf(st) }) // nomes de pasta padronizados (Mega, OneDrive, GoogleDrive, Dropbox)
 	labCloudMu.Unlock()
 	out := make([]labCloudItem, 0, len(labCloudProvs))
 	for _, p := range labCloudProvs {

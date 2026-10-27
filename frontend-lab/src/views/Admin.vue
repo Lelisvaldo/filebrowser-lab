@@ -7,6 +7,7 @@ import * as filesApi from "@/api/files";
 import * as adminApi from "@/api/admin";
 import * as cloudApi from "@/api/cloud";
 import { GUIDES } from "@/lib/cloudGuides";
+import { brandById } from "@/lib/cloudBrands";
 import { hideStatus, app, page, isAdmin, toast, toastError } from "@/store/app";
 import { askText, askConfirm, showInfo } from "@/store/dialogs";
 import { passwordHeaders } from "@/lib/confirmPassword";
@@ -127,7 +128,6 @@ const guide = computed(() => (cloudApp.value && !cloudApp.value.senha ? GUIDES[c
 async function copyText(t) { const v = t.replace("{callback}", cloud.value?.callback || ""); try { await navigator.clipboard.writeText(v); toast("Copiado."); } catch (_e) { await showInfo({ title: "Copie o texto", message: v, confirm: "Fechar" }); } }
 const mdBold = (t) => t.split(/\*\*(.+?)\*\*/).map((x, i) => (i % 2 ? "<b>" + x + "</b>" : x.replace(/&/g, "&amp;").replace(/</g, "&lt;"))).join("");
 const cloudApp = ref(null); // { id, name, clientId, clientSecret } | { id, name, user, pass, senha: true }
-const cloudHue = { onedrive: "blue", drive: "green", dropbox: "cyan", mega: "red" };
 async function loadCloud() {
   try { cloud.value = await cloudApi.list(); } catch (e) { cloud.value = { items: [], callback: "" }; if (e.status !== 404) toastError(e); }
 }
@@ -256,7 +256,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
         <div v-else-if="!cloud.items.length" class="vazio">As nuvens não estão ligadas neste servidor.</div>
         <div v-else class="tbl">
           <div v-for="it in cloud.items" :key="it.id" class="trow cl-row">
-            <span :class="['ico', 'hue', 'h-' + cloudHue[it.id]]"><Icon name="cloud" /></span>
+            <span :class="['ico', 'brand', 'br-' + brandById(it.id).key]"><Icon :name="brandById(it.id).icon" /></span>
             <div class="main"><b>{{ it.name }}</b><small>{{ it.connected ? (it.account || "conta conectada") + (it.readOnly ? " · somente leitura" : " · leitura e escrita") : it.hasApp ? "Pronto para entrar" : "Aplicativo ainda não cadastrado" }}</small></div>
             <span :class="['chip', 'cl-chip', { off: !it.connected }]">{{ it.connected ? "Conectada" : it.hasApp ? "Desconectada" : "Sem app" }}</span>
             <button v-if="it.connected" class="ib" :aria-label="it.readOnly ? 'Liberar escrita' : 'Voltar a só leitura'" :title="it.readOnly ? 'Só leitura (toque para liberar escrita)' : 'Escrita liberada (toque para voltar a só leitura)'" @click="toggleRO(it)"><Icon :name="it.readOnly ? 'lock' : 'edit'" /></button>
@@ -266,7 +266,7 @@ watch(tab, (t) => { if (t === "usuarios") void loadUsers(); if (t === "atividade
           </div>
         </div>
         <form v-if="cloudApp" ref="cloudForm" class="form cl-form" @submit.prevent="saveCloudApp">
-          <div class="cl-fhead"><span :class="['ico', 'sm', 'hue', 'h-' + cloudHue[cloudApp.id]]"><Icon :name="cloudApp.senha ? 'person' : 'key'" /></span><h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2></div>
+          <div class="cl-fhead"><span :class="['ico', 'sm', 'brand', 'br-' + brandById(cloudApp.id).key]"><Icon :name="brandById(cloudApp.id).icon" /></span><h2>{{ cloudApp.senha ? "Entrar no " + cloudApp.name : "Aplicativo do " + cloudApp.name }}</h2></div>
           <template v-if="cloudApp.senha">
             <label>Email<input v-model="cloudApp.user" autocomplete="off" /></label>
             <label>Senha<input v-model="cloudApp.pass" type="password" autocomplete="new-password" /></label>

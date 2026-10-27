@@ -7,6 +7,7 @@ import ItemMenu from "@/components/ItemMenu.vue";
 import FileViewer from "@/components/FileViewer.vue";
 import * as filesApi from "@/api/files";
 import * as cloudApi from "@/api/cloud";
+import { brandOf } from "@/lib/cloudBrands";
 import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, refreshSources } from "@/store/app";
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
 import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
@@ -464,13 +465,14 @@ const sortLabel = { name: "Nome", size: "Tamanho", modified: "Modificado" };
 function sortBy(k) { setUi(ui.sortBy === k ? { sortAsc: !ui.sortAsc } : { sortBy: k, sortAsc: true }); }
 const thumb = (it) => (it.hasPreview && ["image", "video"].includes(kindOf(it)) ? filesApi.previewUrl(source.value, it.path, it.modified) : "");
 const crumbList = computed(() => crumbs(dirPath.value));
+const headBrand = computed(() => brandOf(source.value, dirPath.value));
 </script>
 
 <template>
   <div ref="pageEl" class="page browse" @mousedown="mqDown" @dragenter="dragEnter" @dragleave="dragLeave" @dragover.prevent @drop="drop" @click="menu = null">
     <div class="wrap wide">
       <div class="phead">
-        <div class="ph-t" :class="hueOf(source)"><span class="ph-ico"><Icon :name="iconForSource(source)" /></span><h1>{{ folderName }}</h1></div>
+        <div class="ph-t" :class="headBrand ? 'brand br-' + headBrand.key : hueOf(source)"><span class="ph-ico"><Icon :name="headBrand ? headBrand.icon : iconForSource(source)" /></span><h1>{{ folderName }}</h1></div>
         <div class="crumbs">
           <router-link to="/">Início</router-link><span>/</span>
           <router-link :to="routeFor(source, '/')" :class="{ dropT: dropKey === 'c:/' }" @dragover="crumbOver('/', $event)" @dragleave="dropKey = ''" @drop="crumbDrop('/', $event)">{{ source }}</router-link>

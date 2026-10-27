@@ -106,7 +106,7 @@ func TestLabCloudMega(t *testing.T) {
 		t.Fatal(err)
 	}
 	conf, _ := os.ReadFile(filepath.Join(dir, "rclone.conf"))
-	if !strings.Contains(string(conf), "[MEGA]") || strings.Contains(string(conf), "s3nha") {
+	if !strings.Contains(string(conf), "[Mega]") || strings.Contains(string(conf), "s3nha") {
 		t.Fatalf("conf do mega errada (senha deve estar ofuscada):\n%s", conf)
 	}
 	t.Logf("%s", conf)

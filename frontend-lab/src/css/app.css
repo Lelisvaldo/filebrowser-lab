@@ -579,3 +579,9 @@ body.rail .tree,body.rail .tw-root{display:none}
 .cl-guide .cl-acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .cl-guide .cl-acts .btn{text-decoration:none}
 .cl-guide .cl-acts .btn .lbl{display:inline}
+/* marcas das nuvens: cor oficial em --h (o resto do tema já usa --h) */
+.br-mega{--h:#D9272E}.br-onedrive{--h:#0078D4}.br-googledrive{--h:#1FA463}.br-dropbox{--h:#0061FF}
+svg.i.brand{color:var(--h)}
+.ico.brand{color:var(--h);background:color-mix(in srgb,var(--h) 18%,transparent)}
+.ico.brand .i{color:var(--h)}
+.ph-t.brand h1{color:color-mix(in srgb,var(--h) 62%,#fff)}

@@ -1,6 +1,7 @@
 // Personalização de pastas (ícone e cor) e atalhos fixados no menu lateral. Fica só neste navegador.
 import { reactive } from "vue";
 import { hueOf } from "./sourceIcons";
+import { brandOf } from "./cloudBrands";
 
 const KEY = "lab.folders";
 let saved = {};
@@ -23,6 +24,8 @@ export function setStyle(source, path, st) {
 /** Ícone e classe de cor de uma pasta: o que o usuário escolheu, senão a cor da pasta raiz. */
 export function folderLook(source, path) {
   const s = prefs.styles[keyOf(source, path)];
+  const b = !s && brandOf(source, path);
+  if (b) return { icon: String(path).split("/").filter(Boolean).length === 1 ? b.icon : "folder", cls: "brand br-" + b.key, custom: false };
   return { icon: (s && s.icon) || "folder", cls: s && s.hue ? "hue h-" + s.hue : hueOf(source), custom: !!s };
 }
 
