@@ -360,7 +360,7 @@ main{position:relative}
 
 /* Limpeza: analisador de espaço (mapa + lista) */
 .cleanup .sub{color:var(--sub);margin:4px 0 0}
-.rootgrid{display:grid;grid-template-columns:1fr;gap:14px}
+.rootgrid{display:grid;grid-template-columns:1fr;gap:10px}
 .rootcard{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--txt);text-decoration:none}
 .rootcard:hover{background:var(--hover)}
 .rootcard .i{width:28px;height:28px}
@@ -537,16 +537,16 @@ body.rail .tree,body.rail .tw-root{display:none}
 .lstack i{display:block;min-width:3px}
 .llegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--sub)}
 .llg{display:inline-flex;align-items:center;gap:6px}.llg i{width:10px;height:10px;border-radius:3px;display:inline-block}.llg b{color:var(--txt);font-weight:500}
-.rootcard{gap:12px;padding:14px}
+.rootcard{gap:10px;padding:12px 14px}
 .rootcard .rc-top{display:flex;align-items:center;gap:12px}
 .rc-tile{display:grid;place-items:center;width:44px;height:44px;border-radius:12px;background:color-mix(in srgb,var(--h) 18%,transparent);flex:none}
 .rc-tile .i{width:24px;height:24px;color:var(--h)}
 .rc-name{display:flex;flex-direction:column;flex:1;min-width:0}.rc-name b{font-size:1rem}.rc-name small{color:var(--sub)}
 .rc-ring{width:50px;height:50px;border-radius:50%;background:conic-gradient(var(--h) calc(var(--p)*1%),var(--track) 0);display:grid;place-items:center;flex:none}
 .rc-ring span{width:38px;height:38px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:.75rem;font-weight:600}
-.rc-map{display:flex;gap:3px;height:84px}
+.rc-map{display:flex;gap:3px;height:58px}
 .rc-wait{align-items:center;justify-content:center;color:var(--sub);font-size:.85rem;border:1px dashed var(--line);border-radius:8px}
-.rc-blk{border-radius:7px;padding:7px 9px;display:flex;flex-direction:column;justify-content:flex-end;min-width:0;overflow:hidden;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.rc-blk{border-radius:7px;padding:5px 9px;display:flex;flex-direction:column;justify-content:flex-end;min-width:0;overflow:hidden;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
 .rc-blk b{font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc-blk span{font-size:.72rem;opacity:.9}
 .rc-go{display:flex;align-items:center;justify-content:space-between;color:var(--sub)}
 .rc-gob{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--hover);color:var(--txt)}

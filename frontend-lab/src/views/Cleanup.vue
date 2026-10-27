@@ -186,11 +186,11 @@ const tiny = (b) => b.w * b.h > 25;
             <span class="rc-tile"><Icon :name="iconForSource(n)" /></span>
             <div class="rc-name"><b>{{ n }}</b><small v-if="app.sources[n] && app.sources[n].total">{{ bytes(app.sources[n].used) }} de {{ bytes(app.sources[n].total) }}</small></div>
             <span v-if="app.sources[n] && app.sources[n].total" class="rc-ring" :style="{ '--p': startPct(n) }"><span>{{ startPct(n) }}%</span></span>
+            <span class="rc-gob"><Icon name="right" /></span>
           </div>
           <div v-if="!(n in tops)" class="rc-map rc-wait">Calculando…</div>
           <div v-else-if="!tops[n].length" class="rc-map rc-wait">Nada por aqui</div>
           <div v-else class="rc-map"><span v-for="(t, k) in tops[n]" :key="t.name" class="rc-blk" :style="{ flex: Math.max(t.size, tops[n][0].size * 0.09), background: `color-mix(in srgb, var(--h) ${Math.max(30, 74 - k * 11)}%, var(--card))` }"><b>{{ t.name }}</b><span>{{ bytes(t.size) }}</span></span></div>
-          <div class="rc-go"><Icon name="usage" /><span class="rc-gob"><Icon name="right" /></span></div>
         </router-link>
       </div>
 
