@@ -490,3 +490,4 @@ body.rail .tree,body.rail .tw-root{display:none}
 .arc-img{max-width:100%;max-height:100%;margin:auto;object-fit:contain}
 .arc-pdf{flex:1;border:0;background:#fff}
 .arc-area{flex:1;min-height:0}
+.inl{display:flex;gap:8px;align-items:stretch;margin-top:4px}.inl input{flex:1;min-width:0}.inl .btn{flex:none;white-space:nowrap}

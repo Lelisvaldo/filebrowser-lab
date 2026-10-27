@@ -49,9 +49,20 @@ async function pkDel(c) {
 }
 
 // 2FA
-const otpUrl = ref(""); const otpCode = ref(""); const otpPass = ref("");
+const otpUrl = ref(""); const otpCode = ref(""); const otpPass = ref(""); const otpBusy = ref(false);
+async function otpOff() {
+  if (!(await askConfirm({ title: "Desativar verificação em duas etapas", message: "O login voltará a pedir só a senha. Você pode ativar de novo quando quiser.", confirm: "Desativar", danger: true }))) return;
+  otpBusy.value = true;
+  try {
+    await authApi.updateUser(app.user.username, ["otpEnabled"], { otpEnabled: false }, { "X-Password": encodeURIComponent(otpPass.value) });
+    toast("Verificação em duas etapas desativada.");
+    otpUrl.value = otpCode.value = otpPass.value = "";
+    app.user = await authApi.me();
+  } catch (e) { toastError(e); } finally { otpBusy.value = false; }
+}
 async function otpStart() {
-  try { const r = await authApi.otpGenerate(app.user.username, otpPass.value); otpUrl.value = r.url; } catch (e) { toastError(e); }
+  otpBusy.value = true;
+  try { const r = await authApi.otpGenerate(app.user.username, otpPass.value); otpUrl.value = r.url; } catch (e) { toastError(e); } finally { otpBusy.value = false; }
 }
 async function otpFinish() {
   try {
@@ -108,17 +119,20 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
       <section v-else-if="tab === 'seguranca'" class="card">
         <h2>Verificação em duas etapas (aplicativo autenticador)</h2>
         <p class="meta">Situação: <b>{{ app.user.otpEnabled ? "ativada" : "desativada" }}</b>.</p>
-        <div class="form">
-          <label>Sua senha<input v-model="otpPass" type="password" autocomplete="current-password" /></label>
-          <button class="btn" :disabled="!otpPass" @click="otpStart"><Icon name="shield" /><span>{{ app.user.otpEnabled ? "Gerar novo código" : "Ativar" }}</span></button>
-        </div>
-        <div v-if="otpUrl" class="form" style="margin-top: 14px">
+        <form class="form" @submit.prevent="otpStart">
+          <label>Sua senha
+            <span class="inl"><input v-model="otpPass" type="password" autocomplete="current-password" /><button class="btn pri" type="submit" :disabled="!otpPass || otpBusy"><Icon name="shield" /><span>{{ app.user.otpEnabled ? "Gerar novo código" : "Ativar" }}</span></button></span>
+          </label>
+          <button v-if="app.user.otpEnabled" class="btn danger" type="button" :disabled="!otpPass || otpBusy" @click="otpOff"><Icon name="dismiss" /><span>Desativar verificação em duas etapas</span></button>
+        </form>
+        <form v-if="otpUrl" class="form" style="margin-top: 14px" @submit.prevent="otpFinish">
           <p class="meta">Leia o QR code no aplicativo autenticador (Google Authenticator, Aegis, etc.). Se preferir, copie o link abaixo.</p>
           <QrCode :text="otpUrl" />
           <textarea readonly rows="3" class="mono" :value="otpUrl" @focus="$event.target.select()"></textarea>
-          <label>Código de 6 dígitos<input v-model="otpCode" inputmode="numeric" autocomplete="one-time-code" /></label>
-          <button class="btn pri" :disabled="!otpCode" @click="otpFinish">Confirmar</button>
-        </div>
+          <label>Código de 6 dígitos
+            <span class="inl"><input v-model="otpCode" inputmode="numeric" autocomplete="one-time-code" /><button class="btn pri" type="submit" :disabled="!otpCode || otpBusy">Confirmar</button></span>
+          </label>
+        </form>
         <div v-if="pkOn" class="pk-sec">
         <h2>Chave de acesso (passkey)</h2>
         <p class="meta">Segundo fator no login: biometria do aparelho ou chave de segurança, depois da senha.</p>
