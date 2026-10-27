@@ -9,7 +9,9 @@ const BY_EXT = {
   zip: "zip rar 7z tar gz bz2 xz tgz zst iso",
   code: "js ts jsx tsx vue json yml yaml toml xml html css scss py go rs c h cpp java sh bash sql ini conf cfg env lua php rb",
   text: "txt md log csv nfo srt ass rtf",
-  table: "xls xlsx ods csv tsv",
+  table: "xls xlsx xlsm ods tsv",
+  doc: "docx",
+  model: "stl obj glb gltf ply",
 };
 
 const MAP = {};
@@ -26,11 +28,11 @@ export function kindOf(item) {
   return MAP[ext(item.name)] || (t.startsWith("text/") ? "text" : "file");
 }
 
-const ICON = { folder: "folder", image: "image", video: "video", audio: "music", pdf: "pdf", zip: "zip", code: "code", text: "text", table: "table", file: "file" };
-const HUE = { folder: "orange", image: "magenta", video: "violet", audio: "pink", pdf: "red", zip: "yellow", code: "cyan", text: "blue", table: "green" };
+const ICON = { doc: "text", model: "file", folder: "folder", image: "image", video: "video", audio: "music", pdf: "pdf", zip: "zip", code: "code", text: "text", table: "table", file: "file" };
+const HUE = { doc: "blue", model: "orange", folder: "orange", image: "magenta", video: "violet", audio: "pink", pdf: "red", zip: "yellow", code: "cyan", text: "blue", table: "green" };
 /** Classe de cor do ícone por tipo de arquivo; pastas herdam a cor da pasta raiz (source). */
 export const hueClass = (kind, source) => (kind === "folder" && source ? hueOf(source) : HUE[kind] ? "hue h-" + HUE[kind] : "");
 export const iconKey = (kind) => ICON[kind] || "file";
 
-export const canView = (kind) => ["image", "video", "audio", "pdf", "code", "text"].includes(kind);
+export const canView = (kind) => ["image", "video", "audio", "pdf", "code", "text", "table", "doc", "model"].includes(kind);
 export const isEditable = (kind) => kind === "code" || kind === "text";

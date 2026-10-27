@@ -18,6 +18,8 @@ export async function list(source, path) {
 }
 
 export const info = (source, path, content = false) => get("resources", { source, path, content: content ? "true" : undefined });
+export const mediaMeta = (source, path) => get("resources", { source, path, metadata: "true" });
+export const subtitleUrl = (source, path, name, embedded) => apiPath("media/subtitles", { source, path, name, embedded: embedded ? "true" : "false" });
 export const sources = () => get("settings/sources");
 export const mkdir = (source, path) => send("resources", "POST", undefined, { source, path, isDir: "true", override: "false" }, { raw: true });
 export const writeText = (source, path, text) => send("resources", "PUT", text, { source, path }, { raw: true });
