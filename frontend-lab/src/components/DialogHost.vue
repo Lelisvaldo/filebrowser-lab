@@ -46,7 +46,7 @@ watch(() => dialog.open, async (o) => {
   }
 });
 
-const destLabel = computed(() => [src.value, ...cur.value.split("/").filter(Boolean)].join(" / "));
+const trail = computed(() => [{ name: src.value, path: "/" }, ...crumbs(cur.value)]);
 const parentOf = (p) => { const t = p.replace(/\/+$/, ""); const i = t.lastIndexOf("/"); return i <= 0 ? "/" : t.slice(0, i + 1); };
 function go(path) { cur.value = path; void loadDirs(); }
 function pickSource(s) { src.value = s; cur.value = "/"; void loadDirs(); }
@@ -74,11 +74,8 @@ const cancel = () => closeDialog(dialog.kind === "confirm" || dialog.kind === "i
         <div class="pick-src">
           <button v-for="s in sourceNames" :key="s" type="button" class="chipb" :aria-pressed="s === src" @click="pickSource(s)">{{ s }}</button>
         </div>
-        <div class="pick-path">
-          <button type="button" @click="go('/')">{{ src }}</button>
-          <template v-for="c in crumbs(cur)" :key="c.path"><span>/</span><button type="button" @click="go(c.path)">{{ c.name }}</button></template>
-        </div>
-        <div class="pick-dest"><Icon name="folderopen" /><span>Destino:</span><b>{{ destLabel }}</b></div>
+        <div class="pick-dest"><Icon name="folderopen" /><span>Destino:</span>
+          <span class="pd-c"><template v-for="(c, i) in trail" :key="c.path"><span v-if="i">/</span><b v-if="i === trail.length - 1">{{ c.name }}</b><button v-else type="button" @click="go(c.path)">{{ c.name }}</button></template></span></div>
         <div class="pick-list">
           <button v-if="cur !== '/'" type="button" class="pick-row pick-up" @click="go(parentOf(cur))"><Icon name="back" /><span>Voltar para a pasta de cima</span></button>
           <button v-for="d in dirs" :key="d.path" type="button" class="pick-row" @click="go(d.path)">

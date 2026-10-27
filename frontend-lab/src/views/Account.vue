@@ -16,7 +16,7 @@ const route = useRoute();
 const router = useRouter();
 const origin = window.location.origin;
 const tab = computed(() => route.params.tab || "perfil");
-const tabs = [["perfil", "Perfil"], ["seguranca", "Segurança"], ["chaves", "Chaves de API"], ["links", "Links compartilhados"]];
+const tabs = [["perfil", "Perfil", "person"], ["seguranca", "Segurança", "shield"], ["chaves", "Chaves de API", "key"], ["links", "Links compartilhados", "link"]];
 onMounted(() => { hideStatus(); page.title = "Minha conta"; });
 
 // senha
@@ -104,7 +104,7 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
   <div class="page">
     <div class="wrap">
       <div class="phead"><h1>Minha conta</h1><div class="crumbs"><span>{{ app.user.username }}</span></div></div>
-      <div class="tabs" role="tablist"><button v-for="[id, l] in tabs" :key="id" role="tab" :aria-selected="tab === id" @click="router.push('/ajustes/' + id)">{{ l }}</button></div>
+      <div class="tabs icotabs" role="tablist"><button v-for="[id, l, ic] in tabs" :key="id" role="tab" :aria-selected="tab === id" :title="l" :aria-label="l" @click="router.push('/ajustes/' + id)"><Icon :name="ic" /><span class="tl">{{ l }}</span></button></div>
 
       <section v-if="tab === 'perfil'" class="card">
         <h2>Trocar senha</h2>
@@ -116,22 +116,20 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
         </form>
       </section>
 
-      <section v-else-if="tab === 'seguranca'" class="card">
-        <h2>Verificação em duas etapas (aplicativo autenticador)</h2>
-        <p class="meta">Situação: <b>{{ app.user.otpEnabled ? "ativada" : "desativada" }}</b>.</p>
-        <form class="form" @submit.prevent="otpStart">
-          <label>Sua senha
-            <span class="inl"><input v-model="otpPass" type="password" autocomplete="current-password" /><button class="btn pri" type="submit" :disabled="!otpPass || otpBusy"><Icon name="shield" /><span>{{ app.user.otpEnabled ? "Gerar novo código" : "Ativar" }}</span></button></span>
-          </label>
-          <button v-if="app.user.otpEnabled" class="btn danger" type="button" :disabled="!otpPass || otpBusy" @click="otpOff"><Icon name="dismiss" /><span>Desativar verificação em duas etapas</span></button>
+      <section v-else-if="tab === 'seguranca'" class="card segcard">
+        <div class="ch"><span class="chi"><Icon name="shield" /></span><div class="cht"><b>Verificação em duas etapas</b><small>Aplicativo autenticador</small></div><span class="stchip" :class="app.user.otpEnabled ? 'ok' : 'off'"><Icon :name="app.user.otpEnabled ? 'tick' : 'dismiss'" />{{ app.user.otpEnabled ? "Ativada" : "Desativada" }}</span></div>
+        <form class="sec-form" @submit.prevent="otpStart">
+          <div class="pwf"><Icon name="lock" /><input v-model="otpPass" type="password" autocomplete="current-password" placeholder="Sua senha" aria-label="Sua senha" /></div>
+          <div class="acts">
+            <button class="btn pri" type="submit" :disabled="!otpPass || otpBusy"><Icon name="shield" /><span>{{ app.user.otpEnabled ? "Gerar novo código" : "Ativar" }}</span></button>
+            <button v-if="app.user.otpEnabled" class="btn danger sq" type="button" title="Desativar verificação em duas etapas" aria-label="Desativar verificação em duas etapas" :disabled="!otpPass || otpBusy" @click="otpOff"><Icon name="dismiss" /></button>
+          </div>
         </form>
-        <form v-if="otpUrl" class="form" style="margin-top: 14px" @submit.prevent="otpFinish">
-          <p class="meta">Leia o QR code no aplicativo autenticador (Google Authenticator, Aegis, etc.). Se preferir, copie o link abaixo.</p>
+        <form v-if="otpUrl" class="qrbox" @submit.prevent="otpFinish">
           <QrCode :text="otpUrl" />
-          <textarea readonly rows="3" class="mono" :value="otpUrl" @focus="$event.target.select()"></textarea>
-          <label>Código de 6 dígitos
-            <span class="inl"><input v-model="otpCode" inputmode="numeric" autocomplete="one-time-code" /><button class="btn pri" type="submit" :disabled="!otpCode || otpBusy">Confirmar</button></span>
-          </label>
+          <p class="hint c">Leia o QR code no aplicativo autenticador (Google Authenticator, Aegis…).</p>
+          <div class="pwf codef"><Icon name="key" /><input v-model="otpCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Código de 6 dígitos" aria-label="Código de 6 dígitos" /><button class="btn pri sq" type="submit" title="Confirmar" aria-label="Confirmar" :disabled="!otpCode || otpBusy"><Icon name="tick" /></button></div>
+          <div class="acts c"><button class="btn sq" type="button" title="Copiar o link do código" aria-label="Copiar o link do código" @click="copy(otpUrl)"><Icon name="copy" /></button><button class="btn sq" type="button" title="Cancelar" aria-label="Cancelar" @click="otpUrl = otpCode = ''"><Icon name="dismiss" /></button></div>
         </form>
         <div v-if="pkOn" class="pk-sec">
         <h2>Chave de acesso (passkey)</h2>

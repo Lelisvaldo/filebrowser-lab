@@ -146,9 +146,18 @@ function moveErr(e) {
   return (e && e.message) || String(e);
 }
 async function doMoveCopy(list, action) {
-  const dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value, verb: action === "move" ? "Mover" : "Copiar" } });
-  if (!dest) return;
-  const same = dest.source === source.value && dest.path.replace(/\/?$/, "/") === dirPath.value.replace(/\/?$/, "/");
+  let dest, same;
+  for (;;) {
+    dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value, verb: action === "move" ? "Mover" : "Copiar" } });
+    if (!dest) return;
+    same = dest.source === source.value && dest.path.replace(/\/?$/, "/") === dirPath.value.replace(/\/?$/, "/");
+    if (same && action === "copy") {
+      // copiar na pasta de origem cria "nome (1)": avisa para dar chance de escolher outra pasta
+      const ok = await askConfirm({ title: "Copiar na mesma pasta", message: "Vai ser criada uma cópia com novo nome nesta mesma pasta. Se não era essa a ideia, volte e escolha outra pasta.", confirm: "Criar cópia" });
+      if (!ok) continue;
+    }
+    break;
+  }
   if (same && action === "move") { toast("Os itens já estão nesta pasta."); return; }
   try {
     // copiar para a mesma pasta cria "nome (1)"; nunca sobrescreve

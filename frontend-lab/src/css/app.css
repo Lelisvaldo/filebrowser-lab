@@ -494,3 +494,33 @@ body.rail .tree,body.rail .tw-root{display:none}
 .pick-dest{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:var(--accbg);border:1px solid var(--acc);color:var(--txt)}
 .pick-dest span{color:var(--sub)}.pick-dest b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pick-up{color:var(--sub)}
+
+/* Minha conta > Segurança (layout novo) */
+.tabs.icotabs button{display:inline-flex;align-items:center;gap:7px}
+.tabs.icotabs button .i{width:18px;height:18px}
+@media (max-width:760px){.tabs.icotabs button:not([aria-selected="true"]) .tl{display:none}.tabs.icotabs button{padding:10px 12px}}
+.card.segcard{display:flex;flex-direction:column;gap:14px}
+.ch{display:flex;align-items:center;gap:12px}
+.chi{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--hover);color:var(--acc);flex:none}
+.chi .i{width:22px;height:22px}
+.cht{display:flex;flex-direction:column;min-width:0;flex:1}.cht small{color:var(--sub)}
+.stchip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:.85rem;flex:none}
+.stchip .i{width:14px;height:14px}
+.stchip.ok{background:var(--okbg,rgba(61,220,151,.14));color:var(--c-green)}
+.stchip.off{background:var(--hover);color:var(--sub)}
+.sec-form{display:flex;flex-direction:column;gap:12px}
+.pwf{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:0 12px;min-height:46px}
+.pwf .i{color:var(--sub);width:18px;height:18px;flex:none}
+.pwf input{flex:1;min-width:0;background:none;border:0;outline:0;color:var(--txt);font:inherit}
+.acts{display:flex;gap:10px}.acts.c{justify-content:center}
+.acts .btn{min-height:44px}.acts .btn.pri{flex:1}
+.btn.sq{width:46px;min-width:46px;padding:0;flex:none;display:inline-grid;place-items:center}
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:12px}
+.qrbox .hint{margin:0;color:var(--sub);font-size:.88rem;text-align:center}
+.qrbox .codef{width:100%;max-width:320px}.qrbox .codef input{text-align:center;letter-spacing:.15em;font-size:1.1rem}
+.qrbox .codef .btn.sq{width:38px;min-width:38px;min-height:34px;margin-right:-6px}
+.pd-c{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
+.pd-c button{border:0;background:none;color:var(--acc);cursor:pointer;padding:2px 4px;font:inherit;border-radius:6px}
+.pd-c button:hover{background:var(--hover)}
+.pd-c>span{color:var(--sub)}
+.pick-dest b{white-space:normal}
