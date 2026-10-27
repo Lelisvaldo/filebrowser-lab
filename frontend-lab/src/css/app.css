@@ -394,3 +394,7 @@ main{position:relative}
 .tm .tn{font-size:1.15rem;font-weight:700;line-height:1.2;padding-right:30px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;white-space:normal}
 .tm .ts{font-size:.95rem;opacity:.95}
 .tm .tc{width:28px;height:28px}.tm .tc .i{width:17px;height:17px}
+.tm.v{padding:38px 0 8px;align-items:center}
+.tm .tv{writing-mode:vertical-rl;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-height:100%;line-height:1.25}
+.tm.v .tc{top:5px;right:auto;left:50%;transform:translateX(-50%)}
+.tm.v.noic{padding-top:8px}

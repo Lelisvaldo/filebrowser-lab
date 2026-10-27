@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as filesApi from "@/api/files";
@@ -114,6 +114,26 @@ const blockStyle = (b) => {
     background: `color-mix(in srgb, ${tint} ${b.it.rest ? 40 : 62}%, #1b1530)`,
   };
 };
+const tmapEl = ref(null);
+const box = ref({ w: 0, h: 0 });
+let ro = null;
+const measure = () => { const e = tmapEl.value; if (e) box.value = { w: e.clientWidth, h: e.clientHeight }; };
+watch(tmapEl, (e) => { if (ro) ro.disconnect(); if (e && typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(e); } measure(); });
+onBeforeUnmount(() => ro && ro.disconnect());
+// Como o texto cabe no bloco: "h" na horizontal, "v" na vertical (diminui a fonte se preciso), "-" não cabe (só o tooltip).
+function lay(b) {
+  const pw = (b.w / W) * box.value.w, ph = (b.h / H) * box.value.h;
+  if (!box.value.w) return { k: "h", fs: 18, ic: true, size: b.w * b.h > 140 };
+  const ic = pw >= 30 && ph >= 30;
+  if (pw >= 100 && ph >= 46) return { k: "h", fs: 18, ic, size: pw >= 130 && ph >= 70 };
+  if (pw >= 26 && ph >= 40) {
+    const icv = pw >= 30 && ph >= 110;
+    const avail = ph - (icv ? 44 : 14);
+    const fs = Math.max(9, Math.min(16, (pw - 12) / 1.4, avail / (b.it.name.length * 0.62)));
+    return { k: "v", fs, ic: icv, size: (b.it.name.length + 12) * fs * 0.6 <= avail };
+  }
+  return { k: "-", ic };
+}
 const label = (b) => b.w * b.h > 60;
 const tiny = (b) => b.w * b.h > 25;
 </script>
@@ -161,15 +181,16 @@ const tiny = (b) => b.w * b.h > 25;
         <div v-if="items === null" class="vazio">Calculando…</div>
         <div v-else-if="!items.length" class="vazio vi"><Icon name="folder" /><span>Esta pasta está vazia.</span></div>
 
-        <div v-else-if="mode === 'map'" class="tmap">
-          <div v-for="b in blocks" :key="b.it.path || 'rest'" class="tm" :class="{ sel: sel.has(b.it.path), rest: b.it.rest }" :style="blockStyle(b)"
+        <div v-else-if="mode === 'map'" ref="tmapEl" class="tmap">
+          <div v-for="b in blocks" :key="b.it.path || 'rest'" class="tm" :class="[{ sel: sel.has(b.it.path), rest: b.it.rest }, lay(b).k === 'v' ? (lay(b).ic ? 'v' : 'v noic') : '']" :style="blockStyle(b)"
             :title="b.it.name + ' · ' + bytes(b.it.size) + ' · ' + pctTxt(b.it)"
             :tabindex="b.it.rest ? -1 : 0" @click="!b.it.rest && tap(b.it)" @keydown.enter="!b.it.rest && tap(b.it)">
-            <template v-if="tiny(b)">
-              <span v-if="!b.it.rest" class="tc" role="button" :aria-label="'Selecionar ' + b.it.name" @click.stop="toggle(b.it)"><Icon :name="sel.has(b.it.path) ? 'check' : b.it.dir ? 'folder' : iconKey(kindOf(b.it))" /></span>
-              <span v-if="label(b)" class="tn">{{ b.it.name }}</span>
-              <span v-if="b.w * b.h > 140" class="ts">{{ bytes(b.it.size) }} · {{ pctTxt(b.it) }}</span>
+            <span v-if="lay(b).ic && !b.it.rest" class="tc" role="button" :aria-label="'Selecionar ' + b.it.name" @click.stop="toggle(b.it)"><Icon :name="sel.has(b.it.path) ? 'check' : b.it.dir ? 'folder' : iconKey(kindOf(b.it))" /></span>
+            <template v-if="lay(b).k === 'h'">
+              <span class="tn">{{ b.it.name }}</span>
+              <span v-if="lay(b).size" class="ts">{{ bytes(b.it.size) }} · {{ pctTxt(b.it) }}</span>
             </template>
+            <span v-else-if="lay(b).k === 'v'" class="tv" :style="{ fontSize: lay(b).fs + 'px' }"><b>{{ b.it.name }}</b><template v-if="lay(b).size"> · {{ bytes(b.it.size) }} · {{ pctTxt(b.it) }}</template></span>
           </div>
         </div>
 
