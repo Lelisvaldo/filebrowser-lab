@@ -10,13 +10,14 @@ import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, ref
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
 import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
 import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
-import { crumbs, join, parent, routeFor } from "@/lib/paths";
+import { crumbs, ext, join, parent, routeFor } from "@/lib/paths";
 import { bytes, date } from "@/lib/format";
 import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
 import { shareItem } from "@/lib/share";
 import { clip, setClip, clearClip } from "@/store/clipboard";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
+import * as officeApi from "@/api/office";
 import { folderLook, isPinned, togglePin } from "@/lib/folderPrefs";
 import { startDrag, isLabDrag, dropInto } from "@/store/dnd";
 
@@ -275,6 +276,7 @@ function menuFor(it) {
   if (canModify.value) e.push({ id: "move", icon: "move", label: "Mover para…" });
   if (canCreate.value) e.push({ id: "zip", icon: "zip", label: "Compactar…" });
   if (canCreate.value && one && isArchive(it)) e.push({ id: "unzip", icon: "zip", label: "Extrair aqui" });
+  if (canCreate.value && one && it.type !== "directory") for (const to of officeApi.convertTargets(ext(it.name))) e.push({ id: "conv:" + to, icon: "transfer", label: "Converter para " + to.toUpperCase() });
   if (one) e.push({ id: "share", icon: "share", label: "Compartilhar" });
   if (one && it.type === "directory") { e.push({ sep: true }); e.push({ id: "style", icon: "star", label: "Personalizar pasta…" }); e.push({ id: "pin", icon: "link", label: isPinned(source.value, it.path) ? "Tirar do menu lateral" : "Fixar no menu lateral" }); }
   if (canDelete.value) { e.push({ sep: true }); e.push({ id: "delete", icon: "trash", label: t.length > 1 ? `Apagar ${t.length} itens` : "Apagar", danger: true }); }
@@ -294,6 +296,15 @@ function moreMenu(ev) {
   const clean = entries.filter((e, i, a) => !(e.sep && (i === 0 || i === a.length - 1 || a[i - 1].sep)));
   menu.value = { it: selected.value[0], x: r.left, y: r.bottom + 4, entries: clean };
 }
+async function doConvert(it, to) {
+  toast("Convertendo " + it.name + " para " + to.toUpperCase() + "…");
+  try {
+    const r = await officeApi.convert(source.value, it.path, to);
+    toast("Cópia criada: " + r.name);
+    window.dispatchEvent(new Event("lab:refresh"));
+    void load();
+  } catch (e) { toastError(e); }
+}
 function menuPick(id) {
   const it = menu.value.it;
   const list = targets(it);
@@ -305,6 +316,7 @@ function menuPick(id) {
   else if (id === "move") void doMoveCopy(list, "move");
   else if (id === "zip") void doZip(list);
   else if (id === "unzip") void doUnzip(it);
+  else if (id.startsWith("conv:")) void doConvert(it, id.slice(5));
   else if (id === "share") void shareItem(source.value, it);
   else if (id === "style") styleFor.value = it;
   else if (id === "pin") { togglePin(source.value, it.path, it.name); toast(isPinned(source.value, it.path) ? "Fixada no menu lateral." : "Removida do menu lateral."); }

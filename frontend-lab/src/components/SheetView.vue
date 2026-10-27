@@ -2,6 +2,7 @@
 // Prévia de planilhas (xlsx, xls, ods, tsv) no navegador: mostra as abas e até 2000 linhas por aba.
 import { ref, watch, onMounted } from "vue";
 const props = defineProps({ url: String });
+const emit = defineEmits(["fail"]);
 const LIM = 2000, COLS = 60;
 const sheets = ref([]);
 const cur = ref(0);
@@ -19,7 +20,7 @@ async function load() {
       return { name: n, rows: rows.slice(0, LIM).map((r) => r.slice(0, COLS)) };
     });
     cur.value = 0; state.value = "ok";
-  } catch (e) { state.value = "err"; }
+  } catch (e) { state.value = "err"; emit("fail"); }
 }
 onMounted(load);
 watch(() => props.url, load);

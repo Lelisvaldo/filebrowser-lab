@@ -29,6 +29,10 @@ ENV FILEBROWSER_DATABASE_PATH="/home/filebrowser/data/database.sqlite"
 ENV FILEBROWSER_CONFIG="/home/filebrowser/data/config.yaml"
 ENV PATH="$PATH:/home/filebrowser"
 RUN apk --no-cache add ca-certificates mailcap tzdata curl 7zip
+# LibreOffice (sem interface): abre e converte Office de qualquer geração (HL-119). Só roda quando alguém abre um documento.
+RUN apk --no-cache add libreoffice-writer libreoffice-calc libreoffice-impress ttf-liberation ttf-dejavu fontconfig \
+ && for p in $(apk info | grep -E '^(llvm[0-9]+-libs|mesa|mesa-gl|mesa-gbm|mesa-dri-gallium|qt6-qtdeclarative|qt6-qtbase-x11|gtk4\.0|gtk\+3\.0|gst-plugins-bad|flite|x265-libs|aom-libs|libsvtav1enc)$'); do \
+      apk info -L "$p" | grep '\.so' | sed 's#^#/#' | xargs -r rm -f; done
 RUN adduser -D -s /bin/true -u 1000 filebrowser
 USER filebrowser
 WORKDIR /home/filebrowser
@@ -42,6 +46,7 @@ COPY --from=nbuild --chown=filebrowser:1000 [ "/build/backend/internal/web/dist/
 RUN [ "filebrowser", "version" ]
 RUN [ "ffmpeg", "-version" ]
 RUN [ "ffprobe", "-version" ]
+RUN printf '{\\rtf1 ola}' > /tmp/t.rtf && HOME=/tmp soffice --headless --norestore "-env:UserInstallation=file:///tmp/p" --convert-to pdf --outdir /tmp /tmp/t.rtf >/dev/null 2>&1 && test -s /tmp/t.pdf && rm -rf /tmp/t.* /tmp/p
 # exposing default port for auto discovery.
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \

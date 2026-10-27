@@ -11,6 +11,7 @@ const BY_EXT = {
   text: "txt md log csv nfo srt ass rtf",
   table: "xls xlsx xlsm ods tsv",
   doc: "docx",
+  office: "doc dot docm dotx odt ott wpd wps xlt xlsb ots ppt pps pot pptx pptm ppsx potx odp otp",
   model: "stl obj glb gltf ply",
 };
 
@@ -28,11 +29,11 @@ export function kindOf(item) {
   return MAP[ext(item.name)] || (t.startsWith("text/") ? "text" : "file");
 }
 
-const ICON = { doc: "text", model: "file", folder: "folder", image: "image", video: "video", audio: "music", pdf: "pdf", zip: "zip", code: "code", text: "text", table: "table", file: "file" };
-const HUE = { doc: "blue", model: "orange", folder: "orange", image: "magenta", video: "violet", audio: "pink", pdf: "red", zip: "yellow", code: "cyan", text: "blue", table: "green" };
+const ICON = { doc: "text", office: "text", model: "file", folder: "folder", image: "image", video: "video", audio: "music", pdf: "pdf", zip: "zip", code: "code", text: "text", table: "table", file: "file" };
+const HUE = { doc: "blue", office: "blue", model: "orange", folder: "orange", image: "magenta", video: "violet", audio: "pink", pdf: "red", zip: "yellow", code: "cyan", text: "blue", table: "green" };
 /** Classe de cor do ícone por tipo de arquivo; pastas herdam a cor da pasta raiz (source). */
 export const hueClass = (kind, source) => (kind === "folder" && source ? hueOf(source) : HUE[kind] ? "hue h-" + HUE[kind] : "");
 export const iconKey = (kind) => ICON[kind] || "file";
 
-export const canView = (kind) => ["image", "video", "audio", "pdf", "code", "text", "table", "doc", "model"].includes(kind);
+export const canView = (kind) => ["image", "video", "audio", "pdf", "code", "text", "table", "doc", "office", "model"].includes(kind);
 export const isEditable = (kind) => kind === "code" || kind === "text";

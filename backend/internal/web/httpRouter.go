@@ -30,6 +30,8 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	api.HandleFunc("POST /lab/archive/add", withUser(labArchiveAddHandler))
 	api.HandleFunc("POST /lab/archive/create", withUser(labArchiveCreateHandler))
 	api.HandleFunc("POST /lab/archive/extract", withUser(labArchiveExtractHandler))
+	api.HandleFunc("GET /lab/office/pdf", withUser(labOfficePDFHandler))
+	api.HandleFunc("POST /lab/office/convert", withUser(labOfficeConvertHandler))
 	api.HandleFunc("GET /usb", withUser(usbListHandler))
 	api.HandleFunc("POST /usb/{uuid}/eject", withUser(usbEjectHandler))
 

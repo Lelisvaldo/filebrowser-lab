@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 import Icon from "./Icon.vue";
 import CodeEditor from "./CodeEditor.vue";
 import DocxView from "./DocxView.vue";
+import OfficeView from "./OfficeView.vue";
 import SheetView from "./SheetView.vue";
 import Model3D from "./Model3D.vue";
 import ArchiveBrowser from "./ArchiveBrowser.vue";
@@ -25,6 +26,8 @@ const props = defineProps({
 const emit = defineEmits(["close", "go", "saved", "delete", "share"]);
 
 const kind = computed(() => kindOf(props.item));
+const officeAlt = ref(false);
+watch(() => props.item.path, () => { officeAlt.value = false; });
 const token = computed(() => props.item.viewToken || "");
 const mediaList = computed(() => (props.siblings || []).filter((s) => ["image", "video", "audio"].includes(kindOf(s))));
 const idx = computed(() => mediaList.value.findIndex((s) => s.path === props.item.path));
@@ -159,8 +162,9 @@ onBeforeUnmount(() => document.removeEventListener("keydown", onKey));
       <video v-else-if="kind === 'video'" :key="src + tracks.length" :src="src" class="vw-video" controls autoplay playsinline crossorigin="use-credentials" @ended="onEnded"><track v-for="t in tracks" :key="t.url" kind="subtitles" :src="t.url" :label="t.label" :srclang="t.srclang" :default="t.def" /></video>
       <div v-else-if="kind === 'audio'" class="vw-audio"><div class="vw-ico"><Icon name="music" /></div><b>{{ item.name }}</b><audio :key="src" :src="src" controls autoplay @ended="onEnded"></audio></div>
       <ArchiveBrowser v-else-if="kind === 'zip'" :key="item.path" :source="source" :item="item" :can-download="canDownload" />
-      <DocxView v-else-if="kind === 'doc'" :url="src" />
-      <SheetView v-else-if="kind === 'table'" :url="src" />
+      <OfficeView v-else-if="kind === 'office' || officeAlt" :key="item.path" :source="source" :path="item.path" :name="item.name" />
+      <DocxView v-else-if="kind === 'doc'" :url="src" @fail="officeAlt = true" />
+      <SheetView v-else-if="kind === 'table'" :url="src" @fail="officeAlt = true" />
       <Model3D v-else-if="kind === 'model'" :url="src" :name="item.name" />
       <iframe v-else-if="kind === 'pdf'" :src="src" class="vw-pdf" :title="item.name"></iframe>
       <div v-else-if="isEditable(kind) && !tooBig" class="vw-text">

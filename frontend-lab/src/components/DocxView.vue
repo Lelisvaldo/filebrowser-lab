@@ -2,6 +2,7 @@
 // Prévia de documentos do Word (.docx) feita no próprio navegador.
 import { ref, watch, onMounted } from "vue";
 const props = defineProps({ url: String });
+const emit = defineEmits(["fail"]);
 const box = ref(null);
 const state = ref("loading");
 async function render() {
@@ -13,7 +14,7 @@ async function render() {
     box.value.innerHTML = "";
     await lib.renderAsync(blob, box.value, null, { inWrapper: true, ignoreWidth: false, ignoreHeight: true, breakPages: true, useBase64URL: true });
     state.value = "ok";
-  } catch (e) { state.value = "err"; }
+  } catch (e) { state.value = "err"; emit("fail"); }
 }
 onMounted(render);
 watch(() => props.url, render);

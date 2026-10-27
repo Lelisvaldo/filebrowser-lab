@@ -402,7 +402,7 @@ main{position:relative}
 .vw-body{position:relative}
 .code-ed{flex:1;min-width:0;height:100%}
 .code-host{width:100%;height:100%}
-.docx-wrap,.sheet-wrap{width:100%;height:100%;overflow:auto;background:var(--card);display:flex;flex-direction:column}
+.docx-wrap,.sheet-wrap,.office-wrap{width:100%;height:100%;overflow:auto;background:var(--card);display:flex;flex-direction:column}
 .docx-box{padding:12px;background:#d8d8e0}
 .docx-box .docx-wrapper{background:transparent!important;padding:0!important}
 .sheet-tabs{display:flex;gap:4px;padding:6px 10px;border-bottom:1px solid var(--line);overflow-x:auto;flex:none}
@@ -564,3 +564,4 @@ body.rail .tree,body.rail .tw-root{display:none}
 @media (max-width:700px){.tbar{gap:6px}.sortsel>.sd{display:none}.sortsel{position:relative;justify-content:center;width:44px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--txt)}.sortsel>.sm{display:block;width:22px;height:22px}.sortsel select{position:absolute;inset:0;width:100%;height:100%;opacity:0}}
 
 .ph-t h1,.phead.lhead h1{color:var(--h)}
+.office-wrap .vw-pdf{flex:1;min-height:0}
