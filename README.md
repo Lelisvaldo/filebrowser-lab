@@ -20,6 +20,10 @@
 
 :pushpin: [v2.0.0 is now in beta!](https://filebrowserquantum.com/en/docs/getting-started/v2/about/)
 
+## Fork do home lab
+
+Este repositório (branch `lab`) é um fork com interface própria, lixeira, mover/copiar sem sobrescrita, pendrives e nuvens. Veja [docs/LAB.md](docs/LAB.md).
+
 ## About
 
 FileBrowser Quantum provides an easy way to access and manage your files from the web. It has a modern responsive interface that has many advanced features to manage users, access, sharing, and file preview and editing.
