@@ -38,12 +38,13 @@ export async function trackedMoveCopy(items, action, opts) {
   const first = items[0] || {};
   const nome = (p) => String(p || "").replace(/\/+$/, "").split("/").pop();
   const dest = (first.toSource || "") + (first.to ? String(first.to).replace(/[^/]*\/?$/, "") : "");
-  const t = {
+  const raw = {
     id: ++seq, kind: action === "move" ? "move" : "copy", name: items.length === 1 ? nome(first.from) : items.length + " itens",
     source: first.fromSource || "", dir: dest, path: "", size: 0, loaded: 0, base: 0, status: "running", error: "", speed: 0,
     label: (action === "move" ? "Movendo" : "Copiando") + " para " + dest,
   };
-  transfers.items.push(t);
+  transfers.items.push(raw);
+  const t = transfers.items[transfers.items.length - 1]; // proxy reativo: só ele atualiza a tela
   try {
     const res = await filesApi.moveCopy(items, action, opts);
     const failed = res?.failed?.length || 0;
