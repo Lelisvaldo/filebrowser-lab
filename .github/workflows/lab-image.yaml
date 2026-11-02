@@ -1,0 +1,53 @@
+name: lab-image
+
+# Publica a imagem do filebrowser-lab no GitHub Container Registry (ghcr.io/lelisvaldo/filebrowser-lab).
+# Dispara ao criar uma tag "lab-<versão>" (ex.: lab-2.0.2-lab88) ou manualmente.
+# A tag NÃO começa com "v": os fluxos herdados do Quantum (tag.yaml etc.) miram o projeto original e não devem rodar aqui.
+on:
+  push:
+    tags:
+      - "lab-*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versão da imagem (ex.: 2.0.2-lab88)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/lelisvaldo/filebrowser-lab
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Versão
+        id: v
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then V="${{ inputs.version }}"; else V="${GITHUB_REF_NAME#lab-}"; fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: _docker/Dockerfile.lab
+          platforms: linux/amd64
+          push: true
+          build-args: |
+            VERSION=${{ steps.v.outputs.version }}
+            REVISION=${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.v.outputs.version }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

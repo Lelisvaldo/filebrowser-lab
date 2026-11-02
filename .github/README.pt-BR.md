@@ -77,6 +77,13 @@ Os recursos do backend continuam: várias fontes, busca indexada, tamanho de pas
 ## Como rodar
 
 ```bash
+# usa a imagem publicada (linux/amd64)
+docker run -d -p 8080:80 -v ./data:/home/filebrowser/data -v /caminho/dos/arquivos:/srv/files ghcr.io/lelisvaldo/filebrowser-lab:latest
+```
+
+Ou compile você mesmo:
+
+```bash
 # compila a imagem (usa a interface nova no lugar da do Quantum)
 docker build -f _docker/Dockerfile.lab -t filebrowser-lab:dev .
 
@@ -85,6 +92,10 @@ docker run -d -p 8080:80 -v ./data:/home/filebrowser/data -v /caminho/dos/arquiv
 ```
 
 Desenvolvimento da interface: [frontend-lab/README.md](../frontend-lab/README.md).
+
+### Lixeira e nuvens (opcional)
+
+Lixeira: `FILEBROWSER_LAB_TRASH_DAYS` (padrão 30), `FILEBROWSER_LAB_TRASH_OFF` (fontes sem lixeira, padrão `Pendrives,Nuvens`), `FILEBROWSER_LAB_TRASH=off`. Nuvens: veja [docs/NUVENS.md](../docs/NUVENS.md). Tudo que o fork acrescenta está em [docs/LAB.md](../docs/LAB.md).
 
 ### Pendrives (opcional)
 

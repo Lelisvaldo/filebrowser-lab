@@ -77,6 +77,13 @@ Backend features all still work: multiple sources, indexed search, folder sizes,
 ## Run it
 
 ```bash
+# use the published image (linux/amd64)
+docker run -d -p 8080:80 -v ./data:/home/filebrowser/data -v /path/to/files:/srv/files ghcr.io/lelisvaldo/filebrowser-lab:latest
+```
+
+Or build it yourself:
+
+```bash
 # build the image (compiles the new UI instead of the Quantum one)
 docker build -f _docker/Dockerfile.lab -t filebrowser-lab:dev .
 
@@ -85,6 +92,10 @@ docker run -d -p 8080:80 -v ./data:/home/filebrowser/data -v /path/to/files:/srv
 ```
 
 UI development: see [frontend-lab/README.md](../frontend-lab/README.md).
+
+### Trash and clouds (optional)
+
+Trash: `FILEBROWSER_LAB_TRASH_DAYS` (default 30), `FILEBROWSER_LAB_TRASH_OFF` (sources without a trash, default `Pendrives,Nuvens`), `FILEBROWSER_LAB_TRASH=off`. Clouds: see [docs/CLOUDS.md](../docs/CLOUDS.md). Everything the fork adds is described in [docs/LAB.md](../docs/LAB.md).
 
 ### USB drives (optional)
 
