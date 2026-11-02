@@ -26,8 +26,21 @@ a.chip{text-decoration:none}
 .busca .sbtn{display:none}
 
 /* avisos */
-.toasts{position:fixed;z-index:90;left:50%;bottom:max(16px,env(safe-area-inset-bottom,0px));transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;width:min(480px,calc(100vw - 24px));pointer-events:none}
-.toasts .toast{margin:0;box-shadow:0 8px 28px #0005;pointer-events:auto}
+.toasts{position:fixed;z-index:90;top:calc(var(--top) + 10px);right:max(12px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:8px;width:min(360px,calc(100vw - 24px));pointer-events:none;transition:top .2s}
+.toasts.side{top:50%;transform:translateY(-50%)}
+.toasts .toast{--tc:#27ae60;--tb:#0f3d2b;position:relative;overflow:hidden;margin:0;background:var(--tb);color:#fff;border-left:5px solid var(--tc);border-radius:10px;padding:11px 10px 15px 12px;line-height:1.35;box-shadow:0 8px 28px #0006;pointer-events:auto;animation:toast-in .25s ease-out}
+.toasts .toast.k-info{--tc:#ffb02e;--tb:#4a3208}
+.toasts .toast.k-err{--tc:#ff5a5f;--tb:#5a1620}
+.toasts .toast>.i{flex:none;width:20px;height:20px;color:var(--tc)}
+.toasts .toast>span{flex:1;min-width:0}
+.toasts .tx{flex:none;display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:6px;background:transparent;color:#fff;opacity:.7;cursor:pointer}
+.toasts .tx:hover{opacity:1;background:#fff2}
+.toasts .tx .i{width:14px;height:14px}
+.toasts .tcount{position:absolute;left:0;bottom:0;height:4px;width:100%;background:var(--tc);transform-origin:left;animation:toast-bar linear forwards}
+.toasts .toast:hover .tcount{animation-play-state:paused}
+@keyframes toast-bar{to{transform:scaleX(0)}}
+@keyframes toast-in{from{opacity:0;transform:translateX(30px)}}
+@media (prefers-reduced-motion:reduce){.toasts .toast{animation:none}}
 
 /* diálogos */
 .dlg-scrim{position:fixed;inset:0;z-index:80;background:#0008;display:grid;place-items:center;padding:16px}
@@ -166,7 +179,8 @@ code{background:var(--bar);border-radius:5px;padding:1px 5px}
   .tbar .lbl{display:none}
   .tbar .btn{padding:0 10px;min-width:44px}
   .tbar.has .lbl{display:none}
-  .toasts{bottom:max(76px,env(safe-area-inset-bottom,0px))}
+  .toasts{right:50%;transform:translateX(50%)}
+  .toasts.side{transform:translate(50%,-50%)}
 }
 @media (max-width:520px){.sortsel,.sortord{display:none}}
 

@@ -55,7 +55,7 @@ export async function trackedMoveCopy(items, action, opts) {
       const want = items.find((i) => i.from === o.fromPath);
       return want && base(want.to) !== base(o.toPath) ? base(o.toPath) : "";
     }).filter(Boolean);
-    if (renamed.length) toast("Já existia um item com esse nome no destino: salvo como " + renamed.join(", ") + ".", "ok", 8000);
+    if (renamed.length) toast("Já existia um item com esse nome no destino: salvo como " + renamed.join(", ") + ".", "info");
     if (failed) { t.status = "error"; t.error = moveReason(res.failed[0]?.message) || failed + " item(ns) falharam"; }
     else { t.status = "done"; t.label = (action === "move" ? "Movido" : "Copiado") + " para " + dest + (renamed.length ? " · salvo como " + renamed.join(", ") : ""); setTimeout(() => { t.hidden = true; }, 8000); }
     return res;

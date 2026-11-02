@@ -68,13 +68,19 @@ export function setUi(patch) {
 export const isDark = () =>
   ui.theme === "dark" || (ui.theme === "auto" && window.matchMedia("(prefers-color-scheme:dark)").matches);
 
-export function toast(text, kind = "ok", ms = 4200) {
-  const t = { id: Math.random().toString(36).slice(2), text, kind };
-  app.toasts.push(t);
-  setTimeout(() => { app.toasts = app.toasts.filter((x) => x.id !== t.id); }, ms);
+const TOAST_MS = { ok: 3000, info: 5000, err: 7000 };
+const TOAST_MAX = 3;
+
+// kind: "ok" (verde), "info" (âmbar, aviso) ou "err" (vermelho). O tempo vem do tipo; a barrinha mostra a contagem.
+export function toast(text, kind = "ok") {
+  const k = TOAST_MS[kind] ? kind : "ok";
+  app.toasts.push({ id: Math.random().toString(36).slice(2), text, kind: k, ms: TOAST_MS[k] });
+  if (app.toasts.length > TOAST_MAX) app.toasts.splice(0, app.toasts.length - TOAST_MAX);
 }
 
-export const toastError = (e) => { if (e && e.status === 401) return; toast((e && e.message) || String(e), "err", 6000); };
+export const closeToast = (id) => { app.toasts = app.toasts.filter((x) => x.id !== id); };
+
+export const toastError = (e) => { if (e && e.status === 401) return; toast((e && e.message) || String(e), "err"); };
 
 // ---- sessão ----
 let renewTimer = null;

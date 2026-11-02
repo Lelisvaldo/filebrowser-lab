@@ -167,7 +167,7 @@ async function doMoveCopy(list, action) {
     }
     break;
   }
-  if (same && action === "move") { toast("Os itens já estão nesta pasta."); return; }
+  if (same && action === "move") { toast("Os itens já estão nesta pasta.", "info"); return; }
   try {
     // nome repetido no destino vira "nome (2)"; nunca sobrescreve
     const res = await trackedMoveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: true });
@@ -360,7 +360,7 @@ async function paste() {
   const dir = dirPath.value.replace(/\/?$/, "/");
   // recortar e colar na mesma pasta não muda nada: avisa em vez de fingir que moveu
   const list = action === "move" ? clip.items.filter((i) => !(clip.source === source.value && parent(i.path) === dir)) : clip.items;
-  if (!list.length) { toast("Os itens já estão nesta pasta."); clearClip(); return; }
+  if (!list.length) { toast("Os itens já estão nesta pasta.", "info"); clearClip(); return; }
   const skipped = clip.items.length - list.length;
   try {
     const res = await trackedMoveCopy(list.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
