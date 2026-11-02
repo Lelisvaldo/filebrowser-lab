@@ -594,3 +594,16 @@ svg.i.brand{color:var(--h)}
 .cq-n .cq-e{color:var(--bad,#d9534f)}
 .cq-b{height:7px}
 .cq-p{color:var(--sub);font-variant-numeric:tabular-nums}
+
+/* Lixeira: item fixo no rodapé do menu lateral */
+.foot .nav.lixo{margin-bottom:2px}
+.foot .nav.lixo .cnt{flex:none;min-width:22px;padding:1px 7px;border-radius:99px;background:var(--bar);color:var(--sub);font-size:.74rem;font-weight:700;text-align:center}
+body.rail .foot .nav.lixo{justify-content:center}
+body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
+.tr-ico{display:grid;place-items:center;width:34px;height:34px;flex:none;border-radius:8px;background:var(--bar)}
+.tr-ico .ico{width:20px;height:20px}
+.tr-when{flex:none;text-align:right;color:var(--sub);font-size:.8rem;min-width:96px}
+.tr-sec{margin:18px 0 6px;display:flex;align-items:center;gap:8px}
+.tr-sec h2{margin:0;font-size:1.05rem}
+.tr-note{color:var(--sub);font-size:.85rem;margin:2px 0 8px}
+.tr-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}

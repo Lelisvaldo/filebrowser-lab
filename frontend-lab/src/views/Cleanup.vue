@@ -10,6 +10,8 @@ import { askConfirm } from "@/store/dialogs";
 import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { iconForSource, hueOf } from "@/lib/sourceIcons";
 import { bytes, pct } from "@/lib/format";
+import { refreshTrash } from "@/store/trash";
+import { deleteNotice } from "@/lib/trashInfo";
 import { crumbs, routeFor } from "@/lib/paths";
 
 const route = useRoute();
@@ -101,11 +103,13 @@ async function apagar() {
   const l = selItems.value;
   if (!l.length) return;
   const msg = l.length === 1 ? `"${l[0].name}" será apagado.` : `${l.length} itens serão apagados.`;
-  const ok = await askConfirm({ title: "Apagar", message: msg + ` Libera ${bytes(selSize.value)}. Isso não pode ser desfeito.`, confirm: "Apagar", danger: true });
+  const nt = deleteNotice(source.value, l[0].path);
+  const ok = await askConfirm({ title: nt.permanent ? "Apagar" : "Mover para a lixeira", message: msg + " " + nt.text + ` (${bytes(selSize.value)})`, confirm: "Apagar", danger: nt.permanent });
   if (!ok) return;
   try {
     await filesApi.remove(l.map((i) => ({ source: source.value, path: i.path })));
-    toast("Apagado.");
+    toast(nt.permanent ? "Apagado." : "Apagado. Está na Lixeira.");
+    void refreshTrash();
     await load();
     void refreshSources();
   } catch (e) { toastError(e); }

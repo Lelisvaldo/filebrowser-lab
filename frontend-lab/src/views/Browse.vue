@@ -17,6 +17,8 @@ import { bytes, date } from "@/lib/format";
 import { filesFromDrop, filesFromInput } from "@/lib/useDrop";
 import { shareItem } from "@/lib/share";
 import { clip, setClip, clearClip } from "@/store/clipboard";
+import { refreshTrash } from "@/store/trash";
+import { deleteNotice } from "@/lib/trashInfo";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -178,11 +180,13 @@ async function doMoveCopy(list, action) {
 
 async function doDelete(list) {
   const msg = list.length === 1 ? `"${list[0].name}" será apagado.` : `${list.length} itens serão apagados.`;
-  const ok = await askConfirm({ title: "Apagar", message: msg + " Não existe lixeira: o arquivo some de vez e não dá para recuperar.", confirm: "Apagar", danger: true });
+  const nt = deleteNotice(source.value, list[0].path);
+  const ok = await askConfirm({ title: nt.permanent ? "Apagar" : "Mover para a lixeira", message: msg + " " + nt.text, confirm: nt.permanent ? "Apagar" : "Apagar", danger: nt.permanent });
   if (!ok) return;
   try {
     await filesApi.remove(list.map((i) => ({ source: source.value, path: i.path })));
-    toast("Apagado.");
+    toast(nt.permanent ? "Apagado." : "Apagado. Está na Lixeira.");
+    void refreshTrash();
     clearSel();
     if (isFile.value) closeViewer();
     await load(true);

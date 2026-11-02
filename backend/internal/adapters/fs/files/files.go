@@ -645,7 +645,25 @@ func extractVideoMetadata(ctx context.Context, item *iteminfo.ExtendedItemInfo, 
 	return nil
 }
 
+// DeleteFiles apaga item de uma fonte; nas fontes com lixeira (HL-129) ele vai para a lixeira.
 func DeleteFiles(source, absPath string, isDir bool) error {
+	return DeleteFilesBy(source, absPath, isDir, "")
+}
+
+// removeOrTrash: lixeira nas fontes que têm (e nunca de dentro da própria lixeira), apagar de vez nas outras.
+func removeOrTrash(index *indexing.Index, source, absPath string, isDir bool, actor string) error {
+	if LabTrashEnabled(source) && !inLabTrash(index.Path, absPath) {
+		rel := index.MakeIndexPath(absPath, isDir).String()
+		if actor == "" {
+			actor = "sistema"
+		}
+		_, err := TrashMove(index.Path, source, rel, absPath, isDir, actor)
+		return err
+	}
+	return os.RemoveAll(absPath)
+}
+
+func DeleteFilesBy(source, absPath string, isDir bool, actor string) error {
 	index := indexing.GetIndex(source)
 	if index == nil {
 		return fmt.Errorf("could not get index: %v ", source)
@@ -660,7 +678,7 @@ func DeleteFiles(source, absPath string, isDir bool) error {
 		indexPath := index.MakeIndexPath(absPath, isDir).String()
 
 		// Perform the physical deletion
-		err := os.RemoveAll(absPath)
+		err := removeOrTrash(index, source, absPath, isDir, actor)
 		if err != nil {
 			return err
 		}
@@ -685,7 +703,7 @@ func DeleteFiles(source, absPath string, isDir bool) error {
 	}
 
 	// Indexing disabled, just delete the file
-	return os.RemoveAll(absPath)
+	return removeOrTrash(index, source, absPath, isDir, actor)
 }
 
 func RefreshIndex(source string, path string, isDir bool, recursive bool) error {

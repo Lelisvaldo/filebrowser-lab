@@ -272,7 +272,7 @@ func resourceDeleteHandler(w http.ResponseWriter, r *http.Request, d *Context) (
 	// delete thumbnails
 	preview.DelThumbs(r.Context(), *fileInfo)
 
-	err = files.DeleteFiles(source, fileInfo.RealPath, fileInfo.Type == "directory")
+	err = files.DeleteFilesBy(source, fileInfo.RealPath, fileInfo.Type == "directory", d.User.Username)
 	if err != nil {
 		return ErrToStatus(err), err
 	}
@@ -294,7 +294,7 @@ func publicDeleteHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 	if err != nil {
 		return http.StatusNotFound, fmt.Errorf("resource not available")
 	}
-	err = files.DeleteFiles(d.Share.SourcePath, fileInfo.RealPath, fileInfo.Type == "directory")
+	err = files.DeleteFilesBy(d.Share.SourcePath, fileInfo.RealPath, fileInfo.Type == "directory", "link compartilhado")
 	if err != nil {
 		logger.Errorf("public delete handler: error deleting resource with error %v", err)
 		return http.StatusInternalServerError, fmt.Errorf("an error occured while deleting the resource")
@@ -459,7 +459,7 @@ func ResourceBulkDeleteHandler(w http.ResponseWriter, r *http.Request, d *Contex
 			}
 
 			// Delete the file/directory
-			err = files.DeleteFiles(sourceName, fileInfo.RealPath, fileInfo.Type == "directory")
+			err = files.DeleteFilesBy(sourceName, fileInfo.RealPath, fileInfo.Type == "directory", "link compartilhado")
 			if err != nil {
 				logger.Errorf("resource bulk delete handler: error deleting file/directory: %v", err)
 				response.Failed = append(response.Failed, BulkDeleteItem{
@@ -536,7 +536,7 @@ func ResourceBulkDeleteHandler(w http.ResponseWriter, r *http.Request, d *Contex
 				})
 				continue
 			}
-			err = files.DeleteFiles(item.Source, fileInfo.RealPath, fileInfo.Type == "directory")
+			err = files.DeleteFilesBy(item.Source, fileInfo.RealPath, fileInfo.Type == "directory", d.User.Username)
 			if err != nil {
 				response.Failed = append(response.Failed, BulkDeleteItem{
 					Source:  item.Source,

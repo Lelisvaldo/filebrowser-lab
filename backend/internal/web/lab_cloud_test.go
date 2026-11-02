@@ -289,3 +289,69 @@ func TestLabCloudAutoRun(t *testing.T) {
 		t.Fatalf("estado sem o computador: %+v", got)
 	}
 }
+
+// Lixeira do Drive: lista, restaura (PATCH trashed=false) e apaga de vez (DELETE) pela API do Drive.
+func TestLabCloudDriveTrash(t *testing.T) {
+	var calls []string
+	var patchBody string
+	prov := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls = append(calls, r.Method+" "+r.URL.Path)
+		switch r.Method {
+		case http.MethodGet:
+			if !strings.Contains(r.URL.Query().Get("q"), "trashed=true") {
+				t.Errorf("consulta sem trashed=true: %q", r.URL.Query().Get("q"))
+			}
+			_, _ = w.Write([]byte(`{"files":[{"id":"1abcdefghij","name":"velho.mkv","mimeType":"video/x-matroska","size":"1234","trashedTime":"2026-11-01T10:00:00Z"},{"id":"2abcdefghij","name":"Pasta","mimeType":"application/vnd.google-apps.folder"}]}`))
+		case http.MethodPatch:
+			b := make([]byte, 100)
+			n, _ := r.Body.Read(b)
+			patchBody = string(b[:n])
+			_, _ = w.Write([]byte(`{}`))
+		default:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}))
+	defer prov.Close()
+	dir := t.TempDir()
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DIR", dir)
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DRIVE_FILES", prov.URL+"/drive/v3/files")
+	exp := time.Now().Add(time.Hour).UTC().Format(time.RFC3339)
+	tok := `{"access_token":"AT","token_type":"Bearer","refresh_token":"RT","expiry":"` + exp + `"}`
+	_ = labCloudSetSection("drive", map[string]string{"type": "drive", "token": tok})
+	st := labCloudState{Apps: map[string]labCloudApp{}, Conns: map[string]labCloudInfo{"drive": {ReadOnly: true}}}
+	if err := labCloudSave(st); err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+	if _, err := labCloudTrashListHandler(w, httptest.NewRequest("GET", "/lab/cloud/trash", nil), nil); err != nil {
+		t.Fatal(err)
+	}
+	var lst struct {
+		Items []labCloudTrashItem `json:"items"`
+	}
+	_ = json.Unmarshal(w.Body.Bytes(), &lst)
+	if len(lst.Items) != 2 || lst.Items[0].Size != 1234 || !lst.Items[1].IsDir {
+		t.Fatalf("lista errada: %s", w.Body.String())
+	}
+
+	w = httptest.NewRecorder()
+	_, err := labCloudTrashRestoreHandler(w, httptest.NewRequest("POST", "/r", strings.NewReader(`{"ids":["1abcdefghij"]}`)), nil)
+	if err != nil || !strings.Contains(patchBody, `"trashed":false`) || !strings.Contains(w.Body.String(), `"restored":1`) {
+		t.Fatalf("restaurar: %v %q %s", err, patchBody, w.Body.String())
+	}
+	w = httptest.NewRecorder()
+	_, err = labCloudTrashPurgeHandler(w, httptest.NewRequest("POST", "/p", strings.NewReader(`{"ids":["2abcdefghij"]}`)), nil)
+	if err != nil || !strings.Contains(w.Body.String(), `"purged":1`) {
+		t.Fatalf("apagar: %v %s", err, w.Body.String())
+	}
+	w = httptest.NewRecorder()
+	_, _ = labCloudTrashPurgeHandler(w, httptest.NewRequest("POST", "/p", strings.NewReader(`{"all":true}`)), nil)
+	if calls[len(calls)-1] != "DELETE /drive/v3/files/trash" {
+		t.Fatalf("esvaziar deveria chamar DELETE .../trash, chamou %v", calls)
+	}
+	// id fora do padrão é recusado
+	if st, _ := labCloudTrashRestoreHandler(httptest.NewRecorder(), httptest.NewRequest("POST", "/r", strings.NewReader(`{"ids":["../x"]}`)), nil); st != http.StatusBadRequest {
+		t.Fatalf("id inválido deveria dar 400, deu %d", st)
+	}
+}

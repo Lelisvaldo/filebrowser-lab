@@ -1063,6 +1063,11 @@ func (idx *Index) GetRealPathScoped(boundIndexPath string, relativePath ...strin
 }
 
 func (idx *Index) getRealPathInternal(boundIndexPath string, enforceScope bool, relativePath ...string) (string, bool, error) {
+	for _, p := range relativePath {
+		if IsLabTrashPath(p) {
+			return "", false, fmt.Errorf("lixeira: %w", os.ErrNotExist) // só a tela Lixeira mexe nela
+		}
+	}
 	parts := make([]string, 0, len(relativePath)+1)
 	parts = append(parts, idx.Path)
 	for _, p := range relativePath {
@@ -1321,6 +1326,16 @@ func (idx *Index) SyncFolderSizesToDB() error {
 	return nil
 }
 
+// IsLabTrashPath diz se o caminho passa pela pasta .lixeira (lixeira do filebrowser-lab).
+func IsLabTrashPath(p string) bool {
+	for _, seg := range strings.Split(strings.ReplaceAll(p, `\`, "/"), "/") {
+		if seg == ".lixeira" {
+			return true
+		}
+	}
+	return false
+}
+
 func IsHidden(realPath string) bool {
 	if filepath.Base(realPath)[0] == '.' {
 		return true
@@ -1379,6 +1394,9 @@ func setFilePreviewFlags(fileInfo *iteminfo.ItemInfo, realPath string) {
 // IsViewable checks if a path is viewable (allows FS access)
 // Only checks the item itself, not parent paths
 func (idx *Index) IsViewable(isDir bool, indexPath string, isSymlink bool, isHidden bool) bool {
+	if indexPath != "/" && filepath.Base(strings.TrimRight(indexPath, "/")) == ".lixeira" {
+		return false // lixeira do filebrowser-lab: só a tela Lixeira mexe nela
+	}
 	if indexPath == "/" || idx.Config.ResolvedRules.NoRules {
 		return true
 	}
@@ -1466,6 +1484,9 @@ func (idx *Index) IsViewableWithParentCheck(isDir bool, indexPath string, isSyml
 func (idx *Index) ShouldSkip(isDir bool, adjustedPath string, isHidden bool, isSymlink bool, isRoutineScan bool) bool {
 	if idx.Config.ResolvedRules.IndexingDisabled {
 		return true
+	}
+	if adjustedPath != "/" && filepath.Base(strings.TrimRight(adjustedPath, "/")) == ".lixeira" {
+		return true // lixeira do filebrowser-lab
 	}
 	rules := idx.Config.ResolvedRules
 	if adjustedPath == "/" || rules.NoRules {

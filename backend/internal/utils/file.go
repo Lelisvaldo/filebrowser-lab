@@ -82,6 +82,9 @@ func SanitizePath(inputPath string) (string, error) {
 		if segment == ".." {
 			return "", fmt.Errorf("invalid path: path traversal detected")
 		}
+		if segment == ".lixeira" {
+			return "", fmt.Errorf("invalid path: lixeira")
+		}
 	}
 
 	if clean == "." {

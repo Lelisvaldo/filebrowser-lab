@@ -8,6 +8,7 @@ const routes = [
   { path: "/", name: "home", component: () => import("@/views/Overview.vue") },
   { path: "/f/:source/:rest(.*)?", name: "browse", component: () => import("@/views/Browse.vue") },
   { path: "/limpeza/:source?/:rest(.*)?", name: "cleanup", component: () => import("@/views/Cleanup.vue") },
+  { path: "/lixeira", name: "trash", component: () => import("@/views/Trash.vue") },
   { path: "/busca", name: "search", component: () => import("@/views/Search.vue") },
   { path: "/ajustes/:tab?", name: "account", component: () => import("@/views/Account.vue") },
   { path: "/admin/:tab?", name: "admin", component: () => import("@/views/Admin.vue") },

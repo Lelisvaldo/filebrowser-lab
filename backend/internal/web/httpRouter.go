@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gtsteffaniak/filebrowser/backend/internal/adapters/fs/files"
 	"github.com/gtsteffaniak/filebrowser/backend/pkg/settings"
 )
 
@@ -42,6 +43,13 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	api.HandleFunc("POST /lab/cloud/mode", withAdmin(labCloudModeHandler))
 	api.HandleFunc("POST /lab/cloud/computadores", withAdmin(labCloudComputersHandler))
 	labCloudAutoStart()
+	api.HandleFunc("GET /lab/trash", withUser(labTrashListHandler))
+	api.HandleFunc("POST /lab/trash/restore", withUser(labTrashRestoreHandler))
+	api.HandleFunc("POST /lab/trash/purge", withUser(labTrashPurgeHandler))
+	api.HandleFunc("GET /lab/cloud/trash", withAdmin(labCloudTrashListHandler))
+	api.HandleFunc("POST /lab/cloud/trash/restore", withAdmin(labCloudTrashRestoreHandler))
+	api.HandleFunc("POST /lab/cloud/trash/purge", withAdmin(labCloudTrashPurgeHandler))
+	files.StartTrashJanitor()
 	api.HandleFunc("GET /lab/cloud/callback", withoutUser(labCloudCallbackHandler))
 	api.HandleFunc("POST /lab/cloud/refresh", withUser(labCloudRefreshHandler))
 	api.HandleFunc("GET /usb", withUser(usbListHandler))
