@@ -178,7 +178,7 @@ async function doMoveCopy(list, action) {
 
 async function doDelete(list) {
   const msg = list.length === 1 ? `"${list[0].name}" será apagado.` : `${list.length} itens serão apagados.`;
-  const ok = await askConfirm({ title: "Apagar", message: msg + " Isso não pode ser desfeito.", confirm: "Apagar", danger: true });
+  const ok = await askConfirm({ title: "Apagar", message: msg + " Não existe lixeira: o arquivo some de vez e não dá para recuperar.", confirm: "Apagar", danger: true });
   if (!ok) return;
   try {
     await filesApi.remove(list.map((i) => ({ source: source.value, path: i.path })));
@@ -351,10 +351,15 @@ function moveCursor(to, e) {
 async function paste() {
   if (!clip.items.length || !canCreate.value) return;
   const action = clip.mode === "cut" ? "move" : "copy";
+  const dir = dirPath.value.replace(/\/?$/, "/");
+  // recortar e colar na mesma pasta não muda nada: avisa em vez de fingir que moveu
+  const list = action === "move" ? clip.items.filter((i) => !(clip.source === source.value && parent(i.path) === dir)) : clip.items;
+  if (!list.length) { toast("Os itens já estão nesta pasta."); clearClip(); return; }
+  const skipped = clip.items.length - list.length;
   try {
-    const res = await trackedMoveCopy(clip.items.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
+    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
     const failed = res?.failed?.length || 0;
-    toast(failed ? `${failed} item(ns) não puderam ser colados.` : action === "move" ? "Movido." : "Copiado.", failed ? "err" : "ok");
+    toast(failed ? `${failed} item(ns) não puderam ser colados.` : (action === "move" ? "Movido." : "Copiado.") + (skipped ? ` ${skipped} já estava(m) nesta pasta.` : ""), failed ? "err" : "ok");
     if (action === "move") clearClip();
     await load(true);
     void refreshSources();

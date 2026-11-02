@@ -8,11 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
+	"time"
 )
 
 type labCloudPasta struct {
@@ -132,6 +135,70 @@ func labCloudFindComputers(p *labCloudProv, app labCloudApp) ([]labCloudPasta, e
 	return out, nil
 }
 
+// procura os computadores e atualiza st (sem gravar); devolve se mudou. Chamar com labCloudMu travado.
+func labCloudSyncComputers(p *labCloudProv, st *labCloudState) (bool, []labCloudPasta, error) {
+	comps, err := labCloudFindComputers(p, st.Apps[p.ID])
+	if err != nil {
+		return false, nil, err
+	}
+	if fmt.Sprint(comps) == fmt.Sprint(st.Pastas[p.ID]) {
+		return false, comps, nil
+	}
+	if st.Pastas == nil {
+		st.Pastas = map[string][]labCloudPasta{}
+	}
+	if len(comps) == 0 {
+		delete(st.Pastas, p.ID)
+	} else {
+		st.Pastas[p.ID] = comps
+	}
+	return true, comps, nil
+}
+
+// Busca automática: 30 s depois de iniciar e a cada 6 horas, sem precisar abrir a tela (só se o Drive estiver conectado).
+var labCloudAutoOnce sync.Once
+
+func labCloudAutoStart() {
+	labCloudAutoOnce.Do(func() {
+		if labCloudDir() == "" {
+			return
+		}
+		go func() {
+			time.Sleep(30 * time.Second)
+			for {
+				labCloudAutoRun()
+				time.Sleep(6 * time.Hour)
+			}
+		}()
+	})
+}
+
+func labCloudAutoRun() {
+	labCloudMu.Lock()
+	defer labCloudMu.Unlock()
+	st := labCloudLoad()
+	labCloudOnce.Do(func() { _ = labCloudWriteConf(st) }) // formato novo do rclone.conf já na partida
+	for i := range labCloudProvs {
+		p := &labCloudProvs[i]
+		if p.RcloneType != "drive" {
+			continue
+		}
+		if _, on := st.Conns[p.ID]; !on {
+			continue
+		}
+		changed, _, err := labCloudSyncComputers(p, &st)
+		if err != nil {
+			log.Printf("nuvens: computadores do %s: %v", p.Name, err)
+			continue
+		}
+		if changed {
+			if err := labCloudSave(st); err != nil {
+				log.Printf("nuvens: gravar computadores do %s: %v", p.Name, err)
+			}
+		}
+	}
+}
+
 // POST /api/lab/cloud/computadores?id=drive: procura os computadores e atualiza a pasta GoogleDrive (só remonta se mudou)
 func labCloudComputersHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
 	if err := labCloudOn(); err != nil {
@@ -148,20 +215,11 @@ func labCloudComputersHandler(w http.ResponseWriter, r *http.Request, d *Context
 	if _, on := st.Conns[id]; !on {
 		return http.StatusPreconditionFailed, fmt.Errorf("conecte o %s antes", p.Name)
 	}
-	comps, err := labCloudFindComputers(p, st.Apps[id])
+	changed, comps, err := labCloudSyncComputers(p, &st)
 	if err != nil {
 		return http.StatusBadGateway, err
 	}
-	changed := fmt.Sprint(comps) != fmt.Sprint(st.Pastas[id])
 	if changed {
-		if st.Pastas == nil {
-			st.Pastas = map[string][]labCloudPasta{}
-		}
-		if len(comps) == 0 {
-			delete(st.Pastas, id)
-		} else {
-			st.Pastas[id] = comps
-		}
 		if err := labCloudSave(st); err != nil {
 			return http.StatusInternalServerError, err
 		}

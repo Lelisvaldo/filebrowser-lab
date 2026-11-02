@@ -258,3 +258,34 @@ func TestLabCloudDriveComputers(t *testing.T) {
 		t.Fatalf("sem computadores o conf deveria ter só Meu Drive:\n%s", conf)
 	}
 }
+
+// A busca automática (sem a tela) grava os computadores e o rclone.conf no formato novo.
+func TestLabCloudAutoRun(t *testing.T) {
+	prov := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`{"files":[{"id":"1imhT3abcdefghijk","name":"PSD"},{"id":"2otherFolderIdxyz","name":"Fotos","parents":["1imhT3abcdefghijk"]}]}`))
+	}))
+	defer prov.Close()
+	dir := t.TempDir()
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DIR", dir)
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DRIVE_FILES", prov.URL)
+	exp := time.Now().Add(time.Hour).UTC().Format(time.RFC3339)
+	tok := `{"access_token":"AT","token_type":"Bearer","refresh_token":"RT","expiry":"` + exp + `"}`
+	_ = labCloudSetSection("drive", map[string]string{"type": "drive", "token": tok})
+	st := labCloudState{Apps: map[string]labCloudApp{}, Conns: map[string]labCloudInfo{"drive": {ReadOnly: true}}}
+	if err := labCloudSave(st); err != nil {
+		t.Fatal(err)
+	}
+	// o login já está no conf (como o rclone o deixa); a rotina lê o token de lá
+	conf, _ := os.ReadFile(filepath.Join(dir, "rclone.conf"))
+	if !strings.Contains(string(conf), "[_GoogleDrive]") {
+		t.Fatalf("conf inicial sem a seção oculta:\n%s", conf)
+	}
+	labCloudAutoRun()
+	conf, _ = os.ReadFile(filepath.Join(dir, "rclone.conf"))
+	if !strings.Contains(string(conf), "\"PSD=_GoogleDrive_1imhT3ab:\"") || !strings.Contains(string(conf), "\"Computadores=_GoogleDrive_computadores:\"") {
+		t.Fatalf("a busca automática não gravou o computador:\n%s", conf)
+	}
+	if got := labCloudLoad().Pastas["drive"]; len(got) != 1 || got[0].Name != "PSD" {
+		t.Fatalf("estado sem o computador: %+v", got)
+	}
+}
