@@ -33,6 +33,32 @@ export function noteDownload(name, size) {
   trim();
 }
 
+// Mover/copiar dentro do servidor: o PATCH é uma chamada só (sem bytes), então a fila mostra "em andamento" até terminar.
+export async function trackedMoveCopy(items, action, opts) {
+  const first = items[0] || {};
+  const nome = (p) => String(p || "").replace(/\/+$/, "").split("/").pop();
+  const dest = (first.toSource || "") + (first.to ? String(first.to).replace(/[^/]*\/?$/, "") : "");
+  const t = {
+    id: ++seq, kind: action === "move" ? "move" : "copy", name: items.length === 1 ? nome(first.from) : items.length + " itens",
+    source: first.fromSource || "", dir: dest, path: "", size: 0, loaded: 0, base: 0, status: "running", error: "", speed: 0,
+    label: (action === "move" ? "Movendo" : "Copiando") + " para " + dest,
+  };
+  transfers.items.push(t);
+  try {
+    const res = await filesApi.moveCopy(items, action, opts);
+    const failed = res?.failed?.length || 0;
+    if (failed) { t.status = "error"; t.error = failed + " item(ns) falharam"; }
+    else { t.status = "done"; t.label = (action === "move" ? "Movido" : "Copiado") + " para " + dest; setTimeout(() => { t.hidden = true; }, 8000); }
+    return res;
+  } catch (e) {
+    t.status = "error";
+    t.error = "Falhou";
+    throw e;
+  } finally {
+    trim();
+  }
+}
+
 function trim() {
   const done = transfers.items.filter((t) => ["done", "error", "canceled"].includes(t.status));
   if (done.length > 30) {
@@ -41,9 +67,9 @@ function trim() {
   }
 }
 
-export const visible = () => transfers.items.filter((t) => !t.hidden && t.status !== "canceled" && t.kind === "up");
+export const visible = () => transfers.items.filter((t) => !t.hidden && t.status !== "canceled" && (t.kind === "up" || t.kind === "move" || t.kind === "copy"));
 export const active = () => transfers.items.filter((t) => ["queued", "running", "paused"].includes(t.status));
-export const running = () => transfers.items.filter((t) => t.status === "running");
+export const running = () => transfers.items.filter((t) => t.status === "running" && t.kind === "up");
 
 function pump() {
   const room = MAX_PARALLEL - running().length;

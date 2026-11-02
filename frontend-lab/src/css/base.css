@@ -227,7 +227,7 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .pop header{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:700;display:flex;align-items:center;gap:8px}
 .pop .tlist{padding:10px;overflow-y:auto}
 /* tela de entrada */
-.login{display:grid;position:fixed;inset:0;z-index:60;background:var(--pagebg);overflow-y:auto;place-items:center;padding-block:max(24px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.login{display:grid;position:fixed;inset:0;z-index:60;background:var(--pagebg);overflow:hidden;place-items:center;padding-block:max(8px,min(24px,2.5vh),env(safe-area-inset-top,0px)) max(8px,min(24px,2.5vh),env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .lg-bg{position:absolute;right:-120px;bottom:-140px;width:min(720px,120vw);height:auto;opacity:.5;pointer-events:none}
 .lg-tema{position:fixed;top:max(12px,env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px))}
 .lg-wrap{position:relative;width:min(100%,400px);display:flex;flex-direction:column;gap:14px}
@@ -246,6 +246,10 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .lg-btn:hover{filter:brightness(1.08)}
 .lg-nota{margin:2px 0 0;font-size:.78rem;color:var(--sub);text-align:center}
 .lg-rodape{text-align:center;font-size:.78rem;color:var(--sub)}
+/* login sem barras de rolagem: o cartão encolhe conforme a altura da janela */
+@media (max-height:760px){.lg-wrap{gap:8px}.lg-card{padding:18px 20px 16px;gap:9px}.lg-card h1{font-size:1.25rem;margin:2px 0 0}.lg-campo,.lg-btn{min-height:42px}.lg-sub{margin:0}}
+@media (max-height:600px){.lg-brand,.lg-sub,.lg-rodape{display:none}.lg-card{padding:14px 18px;gap:8px}.lg-card h1{font-size:1.1rem}.lg-campo,.lg-btn{min-height:38px}.lg-campo input{padding:8px 0}}
+@media (max-height:340px){.login{overflow-y:auto}}
 .conta{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
 .conta .ico{width:40px;height:40px;border-radius:99px}
 .conta .l{flex:1;min-width:0}.conta .l b{display:block;font-weight:600}.conta .l span{font-size:.85rem;color:var(--sub)}

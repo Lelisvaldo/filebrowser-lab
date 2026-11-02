@@ -10,7 +10,7 @@ import * as cloudApi from "@/api/cloud";
 import { brandOf } from "@/lib/cloudBrands";
 import { app, ui, setUi, page, status, hideStatus, canIn, toast, toastError, refreshSources } from "@/store/app";
 import { askText, askConfirm, pickFolder } from "@/store/dialogs";
-import { enqueueUploads, onTransferDone, noteDownload } from "@/store/transfers";
+import { enqueueUploads, onTransferDone, noteDownload, trackedMoveCopy } from "@/store/transfers";
 import { kindOf, iconKey, hueClass } from "@/lib/fileTypes";
 import { crumbs, ext, join, parent, routeFor } from "@/lib/paths";
 import { bytes, date } from "@/lib/format";
@@ -166,7 +166,7 @@ async function doMoveCopy(list, action) {
   if (same && action === "move") { toast("Os itens já estão nesta pasta."); return; }
   try {
     // copiar para a mesma pasta cria "nome (1)"; nunca sobrescreve
-    const res = await filesApi.moveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: action === "copy" });
+    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: action === "copy" });
     const failed = res?.failed?.length || 0;
     if (failed) toast(`${failed} item(ns) não puderam ser ${action === "move" ? "movidos" : "copiados"}.`, "err");
     else toast(action === "move" ? "Movido." : "Copiado.");
@@ -352,7 +352,7 @@ async function paste() {
   if (!clip.items.length || !canCreate.value) return;
   const action = clip.mode === "cut" ? "move" : "copy";
   try {
-    const res = await filesApi.moveCopy(clip.items.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
+    const res = await trackedMoveCopy(clip.items.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
     const failed = res?.failed?.length || 0;
     toast(failed ? `${failed} item(ns) não puderam ser colados.` : action === "move" ? "Movido." : "Copiado.", failed ? "err" : "ok");
     if (action === "move") clearClip();
