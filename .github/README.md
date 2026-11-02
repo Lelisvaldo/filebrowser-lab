@@ -39,11 +39,15 @@ Built for a home server: fast to read at a glance, good on a phone, and with the
 | Archives | Zip / unzip | **Open zip, 7z, tar, rar, iso… like folders** (7-Zip): browse, preview, add, rename, delete and edit inside zip/7z/tar; extract selected items; create .zip/.7z/.tar |
 | Navigation | Sidebar links | **Folder tree** in the sidebar, drag items onto folders to move, **custom icon and color per folder**, pinned shortcuts, compact and gallery views |
 | Sharing | Link options | Link with expiry, password, download limit, theme and upload permission; edit links later; **2FA QR code and passkey (second factor)** |
+| Delete | Permanent | **Trash** for 30 days: restore or delete for good; each user sees only what they deleted, admins see everything. USB drives delete directly (warned first); cloud services use their own trash (Google Drive's is listed in the Trash screen) |
+| Move / copy | Overwrites on conflict | **Never overwrites silently**: a repeated name becomes `name (2)`, the "Move to…" picker marks files that already exist, and moves and copies show up in the transfer dock |
+| Notifications | – | **Stacked toasts** colored by type (green, amber, red) with a countdown bar; they move out of the way of open panels |
+| Clouds | – | **Google Drive, OneDrive, Dropbox and Mega** mounted as folders through rclone (read-only until an admin enables writing); Google Drive shows "My Drive" and "Computers" |
 | Following upstream | – | **Update routine**: brings a new Quantum release and re-applies our small backend patch, keeping the UI intact, with a one-command way back |
 
 ### Everything Quantum already does still works
 
-Backend features are untouched: multiple sources, indexed search, folder sizes, thumbnails and previews, sharing links, users and access rules, activity log, API keys and Swagger, WebDAV, OIDC / LDAP / password + 2FA. The new interface exposes browsing, search, upload/download, copy/move, zip/unzip, viewer and text editor, share links, users, access rules, activity, account and API keys. Anything not yet surfaced in the new UI is still available through the backend config and API.
+Backend features all still work: multiple sources, indexed search, folder sizes, thumbnails and previews, sharing links, users and access rules, activity log, API keys and Swagger, WebDAV, OIDC / LDAP / password + 2FA. The new interface exposes browsing, search, upload/download, copy/move, zip/unzip, viewer and text editor, share links, users, access rules, activity, account and API keys. Anything not yet surfaced in the new UI is still available through the backend config and API.
 
 ## Screenshots
 
@@ -60,6 +64,13 @@ Backend features are untouched: multiple sources, indexed search, folder sizes, 
   <img width="190" alt="Mobile listing" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/mobile-browse.png">
   <img width="190" alt="Mobile cleaner" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/mobile-cleanup.png">
 </p>
+
+<p align="center">
+  <img width="420" alt="Trash" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/trash.png">
+  <img width="420" alt="Notifications and name conflict" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/toasts.png">
+</p>
+
+▶ [Watch the 30-second demo (mp4)](../docs/img/demo.mp4)
 
 *Screenshots use sample data.*
 

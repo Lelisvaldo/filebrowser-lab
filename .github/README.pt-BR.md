@@ -39,11 +39,15 @@ Feito para servidor doméstico: fácil de ler de relance, bom no celular e com a
 | Compactados | Zip / extrair | **Abre zip, 7z, tar, rar, iso… como pastas** (7-Zip): navegar, ver, adicionar, renomear, apagar e editar dentro de zip/7z/tar; extrair itens; criar .zip/.7z/.tar |
 | Navegação | Links no menu | **Árvore de pastas** no menu, arrastar itens para mover, **ícone e cor por pasta**, atalhos fixados, modos compacto e galeria |
 | Compartilhar | Opções de link | Link com validade, senha, limite de downloads, tema e permissão de envio; editar o link depois; **QR code do 2FA e passkey (segundo fator)** |
+| Apagar | Definitivo | **Lixeira** de 30 dias: restaurar ou apagar de vez; cada usuário vê só o que apagou e o admin vê tudo. Pendrives apagam direto (com aviso); as nuvens usam a lixeira do próprio serviço (a do Google Drive aparece na tela Lixeira) |
+| Mover / copiar | Sobrescreve em conflito | **Nunca sobrescreve em silêncio**: nome repetido vira `nome (2)`, o seletor "Mover para…" marca os arquivos que já existem, e mover/copiar aparecem no painel de transferências |
+| Avisos | – | **Avisos empilhados** com cor por tipo (verde, âmbar, vermelho) e barra de contagem; saem da frente dos painéis abertos |
+| Nuvens | – | **Google Drive, OneDrive, Dropbox e Mega** montados como pastas via rclone (somente leitura até um administrador liberar a escrita); o Google Drive mostra "Meu Drive" e "Computadores" |
 | Acompanhar o original | – | **Rotina de atualização**: traz uma versão nova do Quantum e reaplica o nosso remendo pequeno do backend, mantendo a interface intacta, com caminho de volta em um comando |
 
 ### Tudo que o Quantum já faz continua funcionando
 
-O backend não foi alterado: várias fontes, busca indexada, tamanho de pastas, miniaturas e prévias, links de compartilhamento, usuários e regras de acesso, registro de atividade, chaves de API e Swagger, WebDAV, OIDC / LDAP / senha + 2FA. A interface nova cobre navegar, buscar, enviar/baixar, copiar/mover, compactar/extrair, visualizador e editor de texto, links de compartilhamento, usuários, regras de acesso, atividade, conta e chaves de API. O que ainda não aparece na interface nova continua disponível pela configuração e pela API do backend.
+Os recursos do backend continuam: várias fontes, busca indexada, tamanho de pastas, miniaturas e prévias, links de compartilhamento, usuários e regras de acesso, registro de atividade, chaves de API e Swagger, WebDAV, OIDC / LDAP / senha + 2FA. A interface nova cobre navegar, buscar, enviar/baixar, copiar/mover, compactar/extrair, visualizador e editor de texto, links de compartilhamento, usuários, regras de acesso, atividade, conta e chaves de API. O que ainda não aparece na interface nova continua disponível pela configuração e pela API do backend.
 
 ## Capturas de tela
 
@@ -60,6 +64,13 @@ O backend não foi alterado: várias fontes, busca indexada, tamanho de pastas, 
   <img width="190" alt="Lista no celular" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/mobile-browse.png">
   <img width="190" alt="Limpeza no celular" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/mobile-cleanup.png">
 </p>
+
+<p align="center">
+  <img width="420" alt="Lixeira" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/trash.png">
+  <img width="420" alt="Avisos e conflito de nome" src="https://raw.githubusercontent.com/Lelisvaldo/filebrowser-lab/lab/docs/img/toasts.png">
+</p>
+
+▶ [Veja a demonstração de 30 segundos (mp4)](../docs/img/demo.mp4)
 
 *As capturas usam dados de exemplo.*
 
