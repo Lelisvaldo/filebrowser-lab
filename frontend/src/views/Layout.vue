@@ -20,7 +20,6 @@
   </div>
   <Search v-if="showSearch" />
   <Notifications />
-  <LabSettings />
   <Toast :toasts="toasts" />
   <StatusBar :class="{ moveWithSidebar: moveWithSidebar.shouldMove }" />
   <ContextMenu v-bind="contextMenuProps"></ContextMenu>
@@ -49,7 +48,6 @@ import { generateRandomCode } from "@/utils/auth";
 import { globalVars } from "@/utils/constants";
 import { syncDocumentTheme, syncEventTheme } from "@/utils/theme";
 import Search from "@/components/Search.vue";
-import LabSettings from "@/components/LabSettings.vue";
 
 export default {
   name: "layout",
@@ -67,7 +65,6 @@ export default {
     PopupPreview,
     Shelf,
     Search,
-    LabSettings,
   },
   data() {
     return {

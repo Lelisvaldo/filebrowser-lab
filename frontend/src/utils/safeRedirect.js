@@ -17,7 +17,7 @@ function hasUnsafeControlChars(str) {
  * @param {string} defaultPath
  * @returns {string}
  */
-export function sanitizePostLoginRedirect(redirect, defaultPath = '/') {
+export function sanitizePostLoginRedirect(redirect, defaultPath = '/files/') {
   if (redirect === '' || redirect === undefined || redirect === null) {
     return defaultPath;
   }
