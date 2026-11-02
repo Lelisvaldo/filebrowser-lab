@@ -19,6 +19,7 @@ import { shareItem } from "@/lib/share";
 import { clip, setClip, clearClip } from "@/store/clipboard";
 import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
+import { moveReason } from "@/lib/moveReason";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -149,13 +150,14 @@ async function doRename(it) {
 
 // o servidor devolve um JSON técnico quando algo falha ao mover/copiar; mostra só o motivo, em português
 function moveErr(e) {
-  try { const j = JSON.parse(e.message); const m = (j.failed && j.failed[0] && j.failed[0].message) || ""; if (/itself/i.test(m)) return "O item já está nessa pasta."; if (/exist/i.test(m)) return "Já existe um item com esse nome no destino."; if (m) return m; } catch (_e) { /* texto simples */ }
-  return (e && e.message) || String(e);
+  let m = "";
+  try { const j = JSON.parse(e.message); m = (j.failed && j.failed[0] && j.failed[0].message) || ""; } catch (_e) { m = (e && e.message) || ""; }
+  return moveReason(m) || String(e);
 }
 async function doMoveCopy(list, action) {
   let dest, same;
   for (;;) {
-    dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value, verb: action === "move" ? "Mover" : "Copiar" } });
+    dest = await pickFolder({ title: action === "move" ? "Mover para…" : "Copiar para…", extra: { source: source.value, path: dirPath.value, verb: action === "move" ? "Mover" : "Copiar", names: list.map((i) => ({ name: i.name, dir: i.type === "directory" })) } });
     if (!dest) return;
     same = dest.source === source.value && dest.path.replace(/\/?$/, "/") === dirPath.value.replace(/\/?$/, "/");
     if (same && action === "copy") {
@@ -170,7 +172,7 @@ async function doMoveCopy(list, action) {
     // nome repetido no destino vira "nome (2)"; nunca sobrescreve
     const res = await trackedMoveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: true });
     const failed = res?.failed?.length || 0;
-    if (failed) toast(`${failed} item(ns) não puderam ser ${action === "move" ? "movidos" : "copiados"}.`, "err");
+    if (failed) toast(`${failed} item(ns) não puderam ser ${action === "move" ? "movidos" : "copiados"}: ${moveReason(res.failed[0]?.message)}`, "err", 8000);
     else toast(action === "move" ? "Movido." : "Copiado.");
     clearSel();
     await load(true);
@@ -363,7 +365,7 @@ async function paste() {
   try {
     const res = await trackedMoveCopy(list.map((i) => ({ fromSource: clip.source, from: i.path, toSource: source.value, to: join(dirPath.value, i.name, i.type === "directory") })), action, { rename: true });
     const failed = res?.failed?.length || 0;
-    toast(failed ? `${failed} item(ns) não puderam ser colados.` : (action === "move" ? "Movido." : "Copiado.") + (skipped ? ` ${skipped} já estava(m) nesta pasta.` : ""), failed ? "err" : "ok");
+    toast(failed ? `${failed} item(ns) não puderam ser colados: ${moveReason(res.failed[0]?.message)}` : (action === "move" ? "Movido." : "Copiado.") + (skipped ? ` ${skipped} já estava(m) nesta pasta.` : ""), failed ? "err" : "ok");
     if (action === "move") clearClip();
     await load(true);
     void refreshSources();

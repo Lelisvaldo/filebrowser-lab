@@ -3,6 +3,7 @@ import { reactive } from "vue";
 import { apiPath, request } from "@/api/client";
 import * as filesApi from "@/api/files";
 import { app, toast, toastError } from "./app";
+import { moveReason } from "@/lib/moveReason";
 
 export const transfers = reactive({ items: [] });
 
@@ -55,14 +56,14 @@ export async function trackedMoveCopy(items, action, opts) {
       return want && base(want.to) !== base(o.toPath) ? base(o.toPath) : "";
     }).filter(Boolean);
     if (renamed.length) toast("Já existia um item com esse nome no destino: salvo como " + renamed.join(", ") + ".", "ok", 8000);
-    if (failed) { t.status = "error"; t.error = failed + " item(ns) falharam"; }
+    if (failed) { t.status = "error"; t.error = moveReason(res.failed[0]?.message) || failed + " item(ns) falharam"; }
     else { t.status = "done"; t.label = (action === "move" ? "Movido" : "Copiado") + " para " + dest + (renamed.length ? " · salvo como " + renamed.join(", ") : ""); setTimeout(() => { t.hidden = true; }, 8000); }
     return res;
   } catch (e) {
     t.status = "error";
     let motivo = "";
     try { motivo = JSON.parse(e.message)?.failed?.[0]?.message || ""; } catch (_e) { motivo = String(e.message || ""); }
-    t.error = /exist/i.test(motivo) ? "Já existe um item com esse nome no destino" : /itself/i.test(motivo) ? "O item já está nessa pasta" : "Falhou";
+    t.error = moveReason(motivo) || "Falhou";
     throw e;
   } finally {
     trim();

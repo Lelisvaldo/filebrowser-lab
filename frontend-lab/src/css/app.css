@@ -607,3 +607,12 @@ body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
 .tr-sec h2{margin:0;font-size:1.05rem}
 .tr-note{color:var(--sub);font-size:.85rem;margin:2px 0 8px}
 .tr-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+
+/* seletor de destino: arquivos que já existem na pasta escolhida */
+.pick-file{cursor:default;color:var(--sub);opacity:.85}
+.pick-file .ico{opacity:.7}
+.pick-row em{flex:none;margin-left:auto;margin-right:6px;padding:1px 8px;border-radius:99px;background:var(--warnbg);color:var(--warn);font-size:.72rem;font-style:normal;font-weight:700}
+.pick-row.clash{background:var(--warnbg);color:var(--txt);opacity:1}
+.pick-warn{display:flex;gap:10px;align-items:flex-start;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--warnbg);color:var(--warn);font-size:.88rem}
+.pick-warn b{color:inherit}
+.pick-warn .ico{flex:none;margin-top:2px}
