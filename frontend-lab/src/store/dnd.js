@@ -18,7 +18,7 @@ export async function dropInto(e, destSource, destDir) {
   const list = (d.items || []).filter((i) => !(d.source === destSource && (join(dest, i.name, false).replace(/\/$/, "") === i.path.replace(/\/$/, "") || (i.dir && dest.startsWith(i.path.endsWith("/") ? i.path : i.path + "/")))));
   if (!list.length) return;
   try {
-    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: d.source, from: i.path, toSource: destSource, to: join(dest, i.name, i.dir) })), "move");
+    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: d.source, from: i.path, toSource: destSource, to: join(dest, i.name, i.dir) })), "move", { rename: true });
     const failed = res?.failed?.length || 0;
     toast(failed ? `${failed} item(ns) não puderam ser movidos.` : list.length === 1 ? "Movido." : `${list.length} itens movidos.`, failed ? "err" : "ok");
     window.dispatchEvent(new CustomEvent("lab:refresh"));

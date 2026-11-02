@@ -144,7 +144,7 @@ async function doRename(it) {
     toast("Renomeado.");
     clearSel();
     await load(true);
-  } catch (e) { toastError(e); }
+  } catch (e) { toast(moveErr(e), "err", 6000); }
 }
 
 // o servidor devolve um JSON técnico quando algo falha ao mover/copiar; mostra só o motivo, em português
@@ -167,8 +167,8 @@ async function doMoveCopy(list, action) {
   }
   if (same && action === "move") { toast("Os itens já estão nesta pasta."); return; }
   try {
-    // copiar para a mesma pasta cria "nome (1)"; nunca sobrescreve
-    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: action === "copy" });
+    // nome repetido no destino vira "nome (2)"; nunca sobrescreve
+    const res = await trackedMoveCopy(list.map((i) => ({ fromSource: source.value, from: i.path, toSource: dest.source, to: join(dest.path, i.name, i.type === "directory") })), action, { rename: true });
     const failed = res?.failed?.length || 0;
     if (failed) toast(`${failed} item(ns) não puderam ser ${action === "move" ? "movidos" : "copiados"}.`, "err");
     else toast(action === "move" ? "Movido." : "Copiado.");

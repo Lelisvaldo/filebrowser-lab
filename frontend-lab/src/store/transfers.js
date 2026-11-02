@@ -48,12 +48,21 @@ export async function trackedMoveCopy(items, action, opts) {
   try {
     const res = await filesApi.moveCopy(items, action, opts);
     const failed = res?.failed?.length || 0;
+    // o servidor numera "nome (2)" quando o destino já tem um item com o mesmo nome: avisa qual ficou
+    const base = (p) => String(p || "").replace(/\/+$/, "").split("/").pop();
+    const renamed = (res?.succeeded || []).map((o) => {
+      const want = items.find((i) => i.from === o.fromPath);
+      return want && base(want.to) !== base(o.toPath) ? base(o.toPath) : "";
+    }).filter(Boolean);
+    if (renamed.length) toast("Já existia um item com esse nome no destino: salvo como " + renamed.join(", ") + ".", "ok", 8000);
     if (failed) { t.status = "error"; t.error = failed + " item(ns) falharam"; }
-    else { t.status = "done"; t.label = (action === "move" ? "Movido" : "Copiado") + " para " + dest; setTimeout(() => { t.hidden = true; }, 8000); }
+    else { t.status = "done"; t.label = (action === "move" ? "Movido" : "Copiado") + " para " + dest + (renamed.length ? " · salvo como " + renamed.join(", ") : ""); setTimeout(() => { t.hidden = true; }, 8000); }
     return res;
   } catch (e) {
     t.status = "error";
-    t.error = "Falhou";
+    let motivo = "";
+    try { motivo = JSON.parse(e.message)?.failed?.[0]?.message || ""; } catch (_e) { motivo = String(e.message || ""); }
+    t.error = /exist/i.test(motivo) ? "Já existe um item com esse nome no destino" : /itself/i.test(motivo) ? "O item já está nessa pasta" : "Falhou";
     throw e;
   } finally {
     trim();

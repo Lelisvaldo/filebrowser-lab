@@ -1415,9 +1415,27 @@ func ResourcePatchHandler(w http.ResponseWriter, r *http.Request, d *Context) (i
 		}
 		realDest := parentDir + "/" + filepath.Base(cleanToPath)
 
-		// Auto-rename if requested
-		if req.Rename {
-			realDest = addVersionSuffix(realDest)
+		// filebrowser-lab: nunca sobrescreve em silêncio. Se o destino já existe: renomeia para "nome (2)" quando
+		// pedido (rename) ou recusa ("destination already exists"), a não ser que overwrite tenha sido pedido.
+		if filepath.Clean(realSrc) != filepath.Clean(realDest) {
+			if _, statErr := os.Lstat(realDest); statErr == nil {
+				if req.Rename {
+					realDest = addVersionSuffix(realDest)
+					trailing := strings.HasSuffix(clientToPath, "/")
+					clientToPath = path.Join(path.Dir(strings.TrimSuffix(clientToPath, "/")), filepath.Base(realDest))
+					if trailing {
+						clientToPath += "/"
+					}
+				} else if !req.Overwrite {
+					item.Message = "destination already exists"
+					if d.Share.Hash != "" {
+						response.Failed = append(response.Failed, MoveCopyItem{Message: item.Message})
+						continue
+					}
+					response.Failed = append(response.Failed, moveCopyWithClientPaths(item, clientFromPath, clientToPath))
+					continue
+				}
+			}
 		}
 
 		// Validate move/rename operation to prevent circular references
@@ -1569,7 +1587,7 @@ func publicPatchHandler(w http.ResponseWriter, r *http.Request, d *Context) (int
 }
 
 func addVersionSuffix(source string) string {
-	counter := 1
+	counter := 2 // o que já existe é o 1; o novo vira "nome (2)"
 	dir, name := path.Split(source)
 	ext := filepath.Ext(name)
 	base := strings.TrimSuffix(name, ext)
@@ -1577,7 +1595,7 @@ func addVersionSuffix(source string) string {
 		if _, err := os.Stat(source); err != nil {
 			break
 		}
-		renamed := fmt.Sprintf("%s(%d)%s", base, counter, ext)
+		renamed := fmt.Sprintf("%s (%d)%s", base, counter, ext)
 		source = path.Join(dir, renamed)
 		counter++
 	}

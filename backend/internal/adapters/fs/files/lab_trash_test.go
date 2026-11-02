@@ -34,10 +34,10 @@ func TestLabTrashFlow(t *testing.T) {
 	// restaurar com o nome já ocupado ganha " (1)"
 	_ = os.WriteFile(f, []byte("novo"), 0o644)
 	final, err := TrashRestore(root, "Media", it.ID)
-	if err != nil || final != "/Filmes/Sub/a (1).txt" {
+	if err != nil || final != "/Filmes/Sub/a (2).txt" {
 		t.Fatalf("restaurar: %q %v", final, err)
 	}
-	if b, _ := os.ReadFile(filepath.Join(root, "Filmes", "Sub", "a (1).txt")); string(b) != "conteudo" {
+	if b, _ := os.ReadFile(filepath.Join(root, "Filmes", "Sub", "a (2).txt")); string(b) != "conteudo" {
 		t.Fatal("conteúdo restaurado errado")
 	}
 	if len(TrashList(root, "Media")) != 0 {
@@ -55,7 +55,7 @@ func TestLabTrashFlow(t *testing.T) {
 	if err != nil || final != "/Filmes/Sub" {
 		t.Fatalf("restaurar pasta: %q %v", final, err)
 	}
-	if _, err := os.Stat(filepath.Join(root, "Filmes", "Sub", "a (1).txt")); err != nil {
+	if _, err := os.Stat(filepath.Join(root, "Filmes", "Sub", "a (2).txt")); err != nil {
 		t.Fatal("o conteúdo da pasta deveria voltar")
 	}
 

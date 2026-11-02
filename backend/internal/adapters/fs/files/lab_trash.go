@@ -177,7 +177,7 @@ func TrashRestore(root, source, id string) (string, error) {
 		return "", err
 	}
 	final := target
-	for i := 1; ; i++ {
+	for i := 2; ; i++ {
 		if _, err := os.Lstat(final); os.IsNotExist(err) {
 			break
 		}
