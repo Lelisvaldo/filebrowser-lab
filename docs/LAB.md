@@ -11,6 +11,7 @@ Fork do FileBrowser Quantum (v2.0.2-stable). A interface própria fica em `front
 | Sem sobrescrita silenciosa | Mover/copiar para um nome que já existe cria `nome (2).ext`, e a tela avisa. Mover para a mesma pasta é recusado com aviso |
 | Mover/Copiar para… | O seletor mostra os arquivos do destino e avisa, antes de confirmar, quando já existe um com o mesmo nome. Erros aparecem em texto claro (somente leitura, sem espaço, sem permissão, destino dentro de si mesmo) |
 | Lixeira | Apagar move para `.lixeira` da própria fonte, por 30 dias. Tela **Lixeira** no rodapé do menu lateral, com restaurar, apagar de vez e esvaziar |
+| Avisos | Empilhados (máx. 3) no canto superior direito, com cor por tipo (sucesso verde 3 s, aviso âmbar 5 s, erro vermelho 7 s), barra de contagem que pausa ao passar o mouse e botão de fechar. Com um painel do topo aberto (transferências, pendrives, conta), descem para o meio da lateral direita |
 | Pendrives | Listagem e remoção segura por uma ponte com um serviço local de USB |
 | Nuvens | Conexão de Google Drive, OneDrive, Dropbox e outros pela tela de Administração, montados via rclone |
 | Arquivos compactados e Office | Listar, editar, criar e extrair arquivos compactados; converter documentos Office |
