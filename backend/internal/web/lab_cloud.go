@@ -53,6 +53,15 @@ var labCloudProvs = []labCloudProv{
 	{ID: "mega", Name: "Mega", Folder: "Mega", Kind: "senha", RcloneType: "mega"},
 }
 
+// Seção do rclone.conf que guarda o login. No Google Drive ela fica oculta (_GoogleDrive) e a pasta visível
+// em Nuvens é uma combinação de "Meu Drive" com "Computadores/<nome>" (o rclone-mount ignora remotos que começam com _).
+func (p *labCloudProv) section() string {
+	if p.RcloneType == "drive" {
+		return "_" + p.Folder
+	}
+	return p.Folder
+}
+
 func labCloudProvByID(id string) *labCloudProv {
 	for i := range labCloudProvs {
 		if labCloudProvs[i].ID == id {
@@ -118,8 +127,9 @@ type labCloudInfo struct {
 }
 
 type labCloudState struct {
-	Apps  map[string]labCloudApp  `json:"apps"`
-	Conns map[string]labCloudInfo `json:"conns"`
+	Apps   map[string]labCloudApp     `json:"apps"`
+	Conns  map[string]labCloudInfo    `json:"conns"`
+	Pastas map[string][]labCloudPasta `json:"pastas,omitempty"` // computadores do Google Drive (pastas de "Computadores")
 }
 
 func labCloudWrite(name string, data []byte) error {
@@ -174,7 +184,7 @@ func labCloudWriteConf(st labCloudState) error {
 		if _, on := st.Conns[p.ID]; !on {
 			continue
 		}
-		sb.WriteString("[" + p.Folder + "]\n")
+		sb.WriteString("[" + p.section() + "]\n")
 		keys := make([]string, 0, len(kv))
 		for k := range kv {
 			keys = append(keys, k)
@@ -184,6 +194,9 @@ func labCloudWriteConf(st labCloudState) error {
 			sb.WriteString(k + " = " + kv[k] + "\n")
 		}
 		sb.WriteString("\n")
+		if p.RcloneType == "drive" {
+			sb.WriteString(labCloudCombine(&p, st.Pastas[p.ID]))
+		}
 	}
 	if err := labCloudWrite("rclone.conf", []byte(sb.String())); err != nil {
 		return err
@@ -376,16 +389,17 @@ func labCloudWho(p *labCloudProv, access string) (account string, extra map[stri
 // ---- API (só administradores) ----
 
 type labCloudItem struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Kind      string `json:"kind"`
-	Paste     bool   `json:"paste,omitempty"`
-	Callback  string `json:"callback"`
-	HasApp    bool   `json:"hasApp"`
-	Connected bool   `json:"connected"`
-	Account   string `json:"account,omitempty"`
-	ReadOnly  bool   `json:"readOnly"`
-	Since     string `json:"since,omitempty"`
+	ID        string          `json:"id"`
+	Name      string          `json:"name"`
+	Kind      string          `json:"kind"`
+	Paste     bool            `json:"paste,omitempty"`
+	Callback  string          `json:"callback"`
+	HasApp    bool            `json:"hasApp"`
+	Connected bool            `json:"connected"`
+	Account   string          `json:"account,omitempty"`
+	ReadOnly  bool            `json:"readOnly"`
+	Since     string          `json:"since,omitempty"`
+	Pastas    []labCloudPasta `json:"pastas,omitempty"`
 }
 
 func labCloudOn() error {
@@ -409,7 +423,7 @@ func labCloudListHandler(w http.ResponseWriter, r *http.Request, d *Context) (in
 		c, on := st.Conns[p.ID]
 		_, app := st.Apps[p.ID]
 		out = append(out, labCloudItem{ID: p.ID, Name: p.Name, Kind: p.Kind, Paste: p.Paste, Callback: p.redirect(r), HasApp: app || p.Kind == "senha",
-			Connected: on, Account: c.Account, ReadOnly: !on || c.ReadOnly, Since: c.Connected})
+			Connected: on, Account: c.Account, ReadOnly: !on || c.ReadOnly, Since: c.Connected, Pastas: st.Pastas[p.ID]})
 	}
 	return labJSON(w, map[string]any{"items": out, "callback": labCloudOrigin(r) + "/api/lab/cloud/callback"})
 }
@@ -629,6 +643,7 @@ func labCloudDisconnectHandler(w http.ResponseWriter, r *http.Request, d *Contex
 	defer labCloudMu.Unlock()
 	st := labCloudLoad()
 	delete(st.Conns, id)
+	delete(st.Pastas, id)
 	_ = labCloudSetSection(id, nil)
 	if err := labCloudSave(st); err != nil {
 		return http.StatusInternalServerError, err

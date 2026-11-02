@@ -10,3 +10,4 @@ export const disconnect = (id) => send("lab/cloud", "DELETE", undefined, { id })
 export const refresh = () => send("lab/cloud/refresh", "POST");
 export const pasteBack = (url) => send("lab/cloud/colar", "POST", { url });
 export const quota = () => request("lab/cloud/quota");
+export const findComputers = (id) => send("lab/cloud/computadores", "POST", undefined, { id });

@@ -196,3 +196,65 @@ func TestLabCloudQuota(t *testing.T) {
 		t.Fatalf("rede caída: %+v", o)
 	}
 }
+
+// Google Drive: o remoto real fica oculto (_GoogleDrive) e a pasta visível junta "Meu Drive" com "Computadores/<nome>".
+func TestLabCloudDriveComputers(t *testing.T) {
+	var gotQ string
+	prov := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Authorization") != "Bearer AT" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		gotQ = r.URL.Query().Get("q")
+		_, _ = w.Write([]byte(`{"files":[
+			{"id":"1imhT3abcdefghijk","name":"PSD"},
+			{"id":"2otherFolderIdxyz","name":"Fotos","parents":["1imhT3abcdefghijk"]},
+			{"id":"3dupAAAAAAAAAAAA","name":"Casa \"=:/x"},
+			{"id":"4dupBBBBBBBBBBBB","name":"Casa \"=:/x"}]}`))
+	}))
+	defer prov.Close()
+	dir := t.TempDir()
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DIR", dir)
+	t.Setenv("FILEBROWSER_LAB_CLOUD_DRIVE_FILES", prov.URL)
+	exp := time.Now().Add(time.Hour).UTC().Format(time.RFC3339)
+	tok := `{"access_token":"AT","token_type":"Bearer","refresh_token":"RT","expiry":"` + exp + `"}`
+	if err := os.WriteFile(filepath.Join(dir, "rclone.conf"), []byte("[_GoogleDrive]\ntoken = "+tok+"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	p := labCloudProvByID("drive")
+	comps, err := labCloudFindComputers(p, labCloudApp{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(gotQ, "'me' in owners") {
+		t.Fatalf("consulta sem filtro de dono: %q", gotQ)
+	}
+	if len(comps) != 3 || comps[2].Name != "PSD" || !strings.HasPrefix(comps[0].Name, "Casa _x (") {
+		t.Fatalf("computadores inesperados: %+v", comps)
+	}
+
+	// conf: seção oculta com o login, um alias por computador e a pasta visível (combine)
+	_ = labCloudSetSection("drive", map[string]string{"type": "drive", "token": tok, "scope": "drive"})
+	st := labCloudState{Apps: map[string]labCloudApp{}, Conns: map[string]labCloudInfo{"drive": {ReadOnly: false}}, Pastas: map[string][]labCloudPasta{"drive": comps[2:]}}
+	if err := labCloudWriteConf(st); err != nil {
+		t.Fatal(err)
+	}
+	conf, _ := os.ReadFile(filepath.Join(dir, "rclone.conf"))
+	for _, want := range []string{"[_GoogleDrive]\n", "type = drive", "[_GoogleDrive_1imhT3ab]\ntype = alias\nremote = _GoogleDrive,root_folder_id=1imhT3abcdefghijk:",
+		"[_GoogleDrive_computadores]\ntype = combine\nupstreams = \"PSD=_GoogleDrive_1imhT3ab:\"\n",
+		"[GoogleDrive]\ntype = combine\nupstreams = \"Meu Drive=_GoogleDrive:\" \"Computadores=_GoogleDrive_computadores:\""} {
+		if !strings.Contains(string(conf), want) {
+			t.Fatalf("rclone.conf sem %q:\n%s", want, conf)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dir, "escrita-GoogleDrive")); err != nil {
+		t.Fatal("a pasta visível deveria liberar escrita")
+	}
+	// sem computadores, a pasta ainda tem "Meu Drive"
+	st.Pastas = nil
+	_ = labCloudWriteConf(st)
+	conf, _ = os.ReadFile(filepath.Join(dir, "rclone.conf"))
+	if !strings.Contains(string(conf), "upstreams = \"Meu Drive=_GoogleDrive:\"\n") || strings.Contains(string(conf), "alias") {
+		t.Fatalf("sem computadores o conf deveria ter só Meu Drive:\n%s", conf)
+	}
+}

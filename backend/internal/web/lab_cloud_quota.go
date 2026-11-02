@@ -36,7 +36,7 @@ var (
 	}{}
 )
 
-// token guardado pelo rclone para a seção [Folder]
+// token guardado pelo rclone para a seção do login (p.section())
 func labCloudConfToken(p *labCloudProv) (access, refresh string, exp time.Time) {
 	b, err := os.ReadFile(filepath.Join(labCloudDir(), "rclone.conf"))
 	if err != nil {
@@ -46,7 +46,7 @@ func labCloudConfToken(p *labCloudProv) (access, refresh string, exp time.Time) 
 	for _, ln := range strings.Split(string(b), "\n") {
 		ln = strings.TrimSpace(ln)
 		if strings.HasPrefix(ln, "[") {
-			in = ln == "["+p.Folder+"]"
+			in = ln == "["+p.section()+"]"
 			continue
 		}
 		if in && strings.HasPrefix(ln, "token") {
