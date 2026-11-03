@@ -9,7 +9,7 @@ const side = computed(() => ui.transfersOpen || ui.usbOpen || ui.userOpen);
 </script>
 
 <template>
-  <div class="toasts" :class="{ side }" aria-live="polite">
+  <div class="toasts" :class="{ mid: side }" aria-live="polite">
     <div v-for="t in app.toasts" :key="t.id" class="toast" :class="'k-' + t.kind" :role="t.kind === 'err' ? 'alert' : 'status'">
       <Icon :name="ICON[t.kind] || 'check'" /><span>{{ t.text }}</span>
       <button class="tx" type="button" aria-label="Fechar aviso" @click="closeToast(t.id)"><Icon name="x" /></button>
