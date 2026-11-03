@@ -21,7 +21,14 @@ if (isApp) { window.addEventListener("labshare", read); read(); }
 export const clearShare = () => { if (isApp) window.LabNative.clearShare(); };
 export const getLock = () => (isApp ? window.LabNative.getLock() : false);
 export const setLock = (on) => { if (isApp) window.LabNative.setLock(!!on); };
-export const pickFolder = () => { if (isApp) window.LabNative.pickFolder(); };
+// abre a tela de seleção do app (pastas e arquivos juntos); ao confirmar, o app avisa com o evento "labpicked"
+export const pickItems = () => { if (isApp) window.LabNative.pickItems(); };
+
+// os arquivos do celular não passam pelo seletor do navegador: o app os serve em /__labfile/<id> e o envio lê em partes (Range)
+export const nativeItems = () => nativeShare.files.map((f) => ({
+  file: { name: f.name, size: Math.max(0, f.size || 0), native: "/__labfile/" + f.id },
+  rel: f.rel || f.name,
+}));
 export const changeServer = () => { if (isApp) window.LabNative.changeServer(); };
 
 // as barras do Android (status e navegação) seguem o tema escolhido no site

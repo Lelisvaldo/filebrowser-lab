@@ -20,7 +20,7 @@ import { clip, setClip, clearClip } from "@/store/clipboard";
 import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
 import { moveReason } from "@/lib/moveReason";
-import { nativeShare, isApp, pickFolder as pickPhoneFolder } from "@/store/native";
+import { nativeShare, nativeItems, isApp, pickItems } from "@/store/native";
 import { stage, addStage, clearStage } from "@/store/stage";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
@@ -62,7 +62,6 @@ function crumbOver(path, e) { if (isLabDrag(e)) { e.preventDefault(); dropKey.va
 const totalSize = computed(() => items.value.reduce((s, i) => s + (i.size || 0), 0));
 const usePct = (it) => (totalSize.value > 0 ? (it.size || 0) / totalSize.value : 0);
 const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0)));
-const fileInput = ref(null);
 const stageInput = ref(null);
 const stageFolderInput = ref(null);
 const upMenu = ref(false);
@@ -271,42 +270,25 @@ async function startUpload(all) {
   if (!list.length) return;
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
 }
-// app Android: o botão da barra de compartilhamento pede para abrir o seletor (o app entrega os arquivos recebidos)
-let pendingRels = null; // caminhos relativos dos arquivos entregues pelo app (pasta inteira, com subpastas)
-let pendingDirs = [];
-let stagedList = [];
-
-// "+ Arquivos" / "Arquivos…" e "+ Pasta" / "Pasta…": acrescentam à lista de envio
-watch(() => stage.askFiles, () => stageInput.value?.click());
-watch(() => stage.askFolder, () => { if (isApp) pickPhoneFolder(); else stageFolderInput.value?.click(); });
+// "+ Arquivos" / "Arquivos…" e "+ Pasta" / "Pasta…" (computador): acrescentam à lista de envio. No app Android há uma tela só.
+watch(() => stage.askFiles, () => { if (isApp) pickItems(); else stageInput.value?.click(); });
+watch(() => stage.askFolder, () => { if (isApp) pickItems(); else stageFolderInput.value?.click(); });
 function onStagePick(e) {
   addStage(filesFromInput(e.target));
   e.target.value = "";
 }
+// no app, ao confirmar a tela de seleção o envio começa para a pasta aberta
+const onPicked = () => { stage.send++; };
+onMounted(() => window.addEventListener("labpicked", onPicked));
+onBeforeUnmount(() => window.removeEventListener("labpicked", onPicked));
 
-// "Enviar para esta pasta": junta o que está na lista (do computador) com o que o app Android tem guardado (do celular)
+// "Enviar para esta pasta": junta o que está na lista (do computador) com o que veio do celular
 watch(() => stage.send, async () => {
   if (!canCreate.value) return;
-  stagedList = [...stage.items];
-  pendingRels = nativeShare.files.map((f) => f.rel || f.name);
-  pendingDirs = [...nativeShare.dirs];
-  if (nativeShare.files.length) { fileInput.value?.click(); return; } // o app entrega os arquivos guardados ao seletor marcado
-  const all = [...stagedList, ...pendingDirs.map((rel) => ({ dir: true, rel }))];
-  stagedList = []; pendingDirs = [];
+  const all = [...stage.items, ...nativeItems(), ...nativeShare.dirs.map((rel) => ({ dir: true, rel }))];
   await startUpload(all);
   clearStage();
 });
-
-async function onPick(e) {
-  let files = filesFromInput(e.target);
-  e.target.value = "";
-  if (pendingRels && pendingRels.length === files.length) files = files.map((f, i) => ({ file: f.file, rel: pendingRels[i] }));
-  pendingRels = null;
-  files = [...files, ...stagedList, ...pendingDirs.map((rel) => ({ dir: true, rel }))];
-  stagedList = []; pendingDirs = [];
-  await startUpload(files);
-  clearStage();
-}
 
 // ---- arrastar e soltar ----
 function dragEnter(e) { if (e.dataTransfer?.types?.includes("Files")) { dragDepth++; dragging.value = true; } }
@@ -540,7 +522,7 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
       <div class="tbar" :class="{ has: selected.length }">
         <template v-if="!selected.length">
           <span v-if="canCreate" class="upwrap">
-            <button class="btn pri" type="button" @click="upMenu = !upMenu" title="Enviar" aria-label="Enviar" :aria-expanded="upMenu"><Icon name="upload" /><span class="lbl">Enviar</span></button>
+            <button class="btn pri" type="button" @click="isApp ? pickItems() : (upMenu = !upMenu)" title="Enviar" aria-label="Enviar" :aria-expanded="upMenu"><Icon name="upload" /><span class="lbl">Enviar</span></button>
             <div v-if="upMenu" class="upmenu" role="menu" @click="upMenu = false">
               <button type="button" role="menuitem" @click="stage.askFiles++"><Icon name="file" /> Arquivos…</button>
               <button type="button" role="menuitem" @click="stage.askFolder++"><Icon name="folderopen" /> Pasta…</button>
@@ -566,7 +548,6 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
           <button class="btn" aria-label="Mais ações" aria-haspopup="menu" @click.stop="moreMenu($event)" title="Mais"><Icon name="more" /><span class="lbl">Mais</span></button>
         </template>
       </div>
-      <input ref="fileInput" type="file" multiple hidden accept="application/x-lab-consume" @change="onPick($event)" />
       <input ref="stageInput" type="file" multiple hidden @change="onStagePick($event)" />
       <input ref="stageFolderInput" type="file" webkitdirectory hidden @change="onStagePick($event)" />
 

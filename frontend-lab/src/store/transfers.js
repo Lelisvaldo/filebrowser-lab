@@ -100,6 +100,14 @@ async function ensureDirs(t) {
   }
 }
 
+// arquivo do navegador (Blob) ou arquivo do celular servido pelo app (file.native): devolve os bytes de [a, b)
+async function bytesOf(file, a, b) {
+  if (!file.native) return a === 0 && b >= file.size ? file : file.slice(a, b);
+  const r = await fetch(file.native, { headers: { Range: `bytes=${a}-${b - 1}` }, cache: "no-store" });
+  if (!r.ok && r.status !== 206) throw new Error("Não consegui ler o arquivo no celular.");
+  return r.blob();
+}
+
 function sendPart(t, blob, offset, total, chunked) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -147,12 +155,12 @@ async function run(t) {
   try {
     if (t.base === 0) await ensureDirs(t);
     if (!chunk || t.size <= chunk) {
-      await sendPart(t, t._file, 0, t.size, false);
+      await sendPart(t, await bytesOf(t._file, 0, t.size), 0, t.size, false);
       t.base = t.size;
     } else {
       while (t.base < t.size && t.status === "running") {
         const end = Math.min(t.base + chunk, t.size);
-        await sendPart(t, t._file.slice(t.base, end), t.base, t.size, true);
+        await sendPart(t, await bytesOf(t._file, t.base, end), t.base, t.size, true);
         t.base = end;
       }
     }

@@ -46,14 +46,18 @@ public class MainActivity extends BridgeActivity {
     private static final long RELOCK_MS = 30_000;
     /** Arquivo recebido por Compartilhar ou lido de uma pasta escolhida; rel guarda o caminho dentro da pasta (null = só o nome). */
     private static final class Item {
-        final Uri uri;
+        final String id;
+        final Uri uri;       // arquivo recebido por Compartilhar (content://)
+        final java.io.File file; // arquivo escolhido na tela de seleção do app
         final String rel;
-        Item(Uri uri, String rel) { this.uri = uri; this.rel = rel; }
+        Item(String id, Uri uri, java.io.File file, String rel) { this.id = id; this.uri = uri; this.file = file; this.rel = rel; }
     }
 
-    private final List<Item> shared = new ArrayList<>();
-    private final List<String> sharedDirs = new ArrayList<>(); // todas as pastas da pasta escolhida (inclusive vazias)
-    private androidx.activity.result.ActivityResultLauncher<Uri> folderPicker;
+    private final java.util.concurrent.CopyOnWriteArrayList<Item> shared = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, Item> byId = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicInteger seq = new java.util.concurrent.atomic.AtomicInteger();
+    private androidx.activity.result.ActivityResultLauncher<Intent> itemPicker;
+    private final java.util.concurrent.CopyOnWriteArrayList<String> sharedDirs = new java.util.concurrent.CopyOnWriteArrayList<>(); // todas as pastas escolhidas (inclusive vazias)
     private long pausedAt = 0;
     private boolean locked = false;
     private boolean uploading = false;
@@ -81,25 +85,14 @@ public class MainActivity extends BridgeActivity {
                     .show();
         }
         WebView wv = getBridge().getWebView();
-        wv.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
-            @Override
-            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
-                // só o seletor marcado pelo site ("consumir") recebe o que o app guardou; os outros abrem o seletor normal do Android
-                String[] acc = params == null ? null : params.getAcceptTypes();
-                boolean consume = acc != null && java.util.Arrays.asList(acc).contains("application/x-lab-consume");
-                if (consume && !shared.isEmpty()) {
-                    Uri[] arr = new Uri[shared.size()];
-                    for (int k = 0; k < arr.length; k++) arr[k] = shared.get(k).uri;
-                    shared.clear();
-                    sharedDirs.clear();
-                    cb.onReceiveValue(arr);
-                    notifyShare();
-                    return true;
-                }
-                return super.onShowFileChooser(view, cb, params);
-            }
-        });
         getBridge().setWebViewClient(new BridgeWebViewClient(getBridge()) {
+            @Override
+            public android.webkit.WebResourceResponse shouldInterceptRequest(WebView view, android.webkit.WebResourceRequest req) {
+                String p = req.getUrl().getPath();
+                if (p != null && p.startsWith("/__labfile/")) return serveFile(p.substring(11), req.getRequestHeaders());
+                return super.shouldInterceptRequest(view, req);
+            }
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -107,17 +100,24 @@ public class MainActivity extends BridgeActivity {
             }
         });
         wv.setDownloadListener((url, ua, cd, mime, len) -> Downloader.start(MainActivity.this, url, ua, cd, mime));
-        folderPicker = registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree(), tree -> {
-            if (tree == null) return;
+        itemPicker = registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), res -> {
+            if (res.getResultCode() != RESULT_OK || res.getData() == null) return;
+            final ArrayList<String> paths = res.getData().getStringArrayListExtra(PickerActivity.EXTRA_PATHS);
+            if (paths == null || paths.isEmpty()) return;
             new Thread(() -> {
                 List<Item> found = new ArrayList<>();
                 List<String> dirs = new ArrayList<>();
-                androidx.documentfile.provider.DocumentFile root = androidx.documentfile.provider.DocumentFile.fromTreeUri(MainActivity.this, tree);
-                if (root != null) walk(root, root.getName() == null ? "pasta" : root.getName(), found, dirs);
+                for (String p : paths) {
+                    java.io.File f = new java.io.File(p);
+                    if (f.isDirectory()) walk(f, f.getName(), found, dirs);
+                    else if (f.isFile()) found.add(newItem(null, f, null));
+                }
                 runOnUiThread(() -> {
-                    shared.addAll(found); // acumula: dá para juntar várias pastas e arquivos antes de enviar
+                    shared.addAll(found);
                     sharedDirs.addAll(dirs);
                     notifyShare();
+                    // quem escolheu pela tela do app quer enviar já: o site começa o envio para a pasta aberta
+                    getBridge().getWebView().evaluateJavascript("window.dispatchEvent(new Event('labpicked'))", null);
                 });
             }, "lab-walk").start();
         });
@@ -230,14 +230,85 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    /** Lê a pasta escolhida inteira (subpastas incluídas), guardando o caminho relativo de cada arquivo. */
-    private void walk(androidx.documentfile.provider.DocumentFile dir, String prefix, List<Item> out, List<String> dirs) {
+    private Item newItem(Uri uri, java.io.File file, String rel) {
+        Item it = new Item("f" + seq.incrementAndGet(), uri, file, rel);
+        byId.put(it.id, it);
+        return it;
+    }
+
+    /** Lê a pasta inteira (subpastas incluídas), guardando o caminho relativo de cada arquivo e todas as pastas, vazias ou não. */
+    private void walk(java.io.File dir, String prefix, List<Item> out, List<String> dirs) {
         dirs.add(prefix);
-        androidx.documentfile.provider.DocumentFile[] kids = dir.listFiles();
-        for (androidx.documentfile.provider.DocumentFile f : kids) {
-            String name = f.getName() == null ? "arquivo" : f.getName();
-            if (f.isDirectory()) walk(f, prefix + "/" + name, out, dirs);
-            else if (f.isFile()) out.add(new Item(f.getUri(), prefix + "/" + name));
+        java.io.File[] kids = dir.listFiles();
+        if (kids == null) return;
+        for (java.io.File f : kids) {
+            if (f.isDirectory()) walk(f, prefix + "/" + f.getName(), out, dirs);
+            else if (f.isFile()) out.add(newItem(null, f, prefix + "/" + f.getName()));
+        }
+    }
+
+    private java.io.InputStream openItem(Item it) throws java.io.IOException {
+        return it.file != null ? new java.io.FileInputStream(it.file) : getContentResolver().openInputStream(it.uri);
+    }
+
+    private long sizeOf(Item it) {
+        if (it.file != null) return it.file.length();
+        try (Cursor c = getContentResolver().query(it.uri, null, null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                int s = c.getColumnIndex(OpenableColumns.SIZE);
+                if (s >= 0 && !c.isNull(s)) return c.getLong(s);
+            }
+        } catch (Exception ignored) { }
+        return -1;
+    }
+
+    /** Entrega os bytes de um arquivo escolhido ao site (/__labfile/<id>), aceitando Range para o envio em partes. */
+    private android.webkit.WebResourceResponse serveFile(String id, java.util.Map<String, String> reqHeaders) {
+        final Item it = byId.get(id);
+        java.util.Map<String, String> h = new java.util.HashMap<>();
+        h.put("Accept-Ranges", "bytes");
+        if (it == null) return new android.webkit.WebResourceResponse("text/plain", "utf-8", 404, "Not Found", h, new java.io.ByteArrayInputStream(new byte[0]));
+        try {
+            long size = sizeOf(it);
+            long start = 0, end = size - 1;
+            boolean ranged = false;
+            String rg = reqHeaders == null ? null : reqHeaders.get("Range");
+            if (rg == null && reqHeaders != null) rg = reqHeaders.get("range");
+            if (rg != null && rg.startsWith("bytes=") && size >= 0) {
+                String[] pr = rg.substring(6).split("-", -1);
+                if (!pr[0].isEmpty()) start = Long.parseLong(pr[0]);
+                if (pr.length > 1 && !pr[1].isEmpty()) end = Math.min(size - 1, Long.parseLong(pr[1]));
+                ranged = true;
+            }
+            java.io.InputStream in = openItem(it);
+            long skipped = 0;
+            while (skipped < start) {
+                long n = in.skip(start - skipped);
+                if (n <= 0) break;
+                skipped += n;
+            }
+            final long len = size >= 0 ? Math.max(0, end - start + 1) : -1;
+            if (len >= 0) h.put("Content-Length", String.valueOf(len));
+            if (ranged) h.put("Content-Range", "bytes " + start + "-" + end + "/" + size);
+            final java.io.InputStream src = in;
+            java.io.InputStream limited = len < 0 ? src : new java.io.FilterInputStream(src) {
+                long left = len;
+                @Override public int read() throws java.io.IOException {
+                    if (left <= 0) return -1;
+                    int b = super.read();
+                    if (b >= 0) left--;
+                    return b;
+                }
+                @Override public int read(byte[] b, int off, int n) throws java.io.IOException {
+                    if (left <= 0) return -1;
+                    int r = super.read(b, off, (int) Math.min(n, left));
+                    if (r > 0) left -= r;
+                    return r;
+                }
+            };
+            return new android.webkit.WebResourceResponse("application/octet-stream", null, ranged ? 206 : 200, ranged ? "Partial Content" : "OK", h, limited);
+        } catch (Exception e) {
+            return new android.webkit.WebResourceResponse("text/plain", "utf-8", 500, "Error", h, new java.io.ByteArrayInputStream(new byte[0]));
         }
     }
 
@@ -248,10 +319,10 @@ public class MainActivity extends BridgeActivity {
         String a = i.getAction();
         if (Intent.ACTION_SEND.equals(a)) {
             Uri u = i.getParcelableExtra(Intent.EXTRA_STREAM);
-            if (u != null) shared.add(new Item(u, null));
+            if (u != null) shared.add(newItem(u, null, null));
         } else if (Intent.ACTION_SEND_MULTIPLE.equals(a)) {
             ArrayList<Uri> l = i.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
-            if (l != null) for (Uri u : l) shared.add(new Item(u, null));
+            if (l != null) for (Uri u : l) shared.add(newItem(u, null, null));
         }
     }
 
@@ -266,29 +337,28 @@ public class MainActivity extends BridgeActivity {
         public String shareInfo() {
             JSONArray out = new JSONArray();
             JSONArray ds = new JSONArray();
-            for (String d : new ArrayList<>(sharedDirs)) ds.put(d);
+            for (String d : sharedDirs) ds.put(d);
             try {
-                for (Item it : new ArrayList<>(shared)) {
-                    Uri u = it.uri;
-                    String name = u.getLastPathSegment();
-                    long size = -1;
-                    try (Cursor c = getContentResolver().query(u, null, null, null, null)) {
-                        if (c != null && c.moveToFirst()) {
-                            int n = c.getColumnIndex(OpenableColumns.DISPLAY_NAME), s = c.getColumnIndex(OpenableColumns.SIZE);
-                            if (n >= 0) name = c.getString(n);
-                            if (s >= 0 && !c.isNull(s)) size = c.getLong(s);
-                        }
-                    } catch (Exception ignored) { }
-                    out.put(new JSONObject().put("name", name).put("size", size).put("rel", it.rel == null ? JSONObject.NULL : it.rel));
+                for (Item it : shared) {
+                    String name = it.file != null ? it.file.getName() : it.uri.getLastPathSegment();
+                    if (it.file == null) {
+                        try (Cursor c = getContentResolver().query(it.uri, null, null, null, null)) {
+                            if (c != null && c.moveToFirst()) {
+                                int n = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                                if (n >= 0) name = c.getString(n);
+                            }
+                        } catch (Exception ignored) { }
+                    }
+                    out.put(new JSONObject().put("id", it.id).put("name", name).put("size", sizeOf(it)).put("rel", it.rel == null ? JSONObject.NULL : it.rel));
                 }
             } catch (Exception ignored) { }
             try { return new JSONObject().put("files", out).put("dirs", ds).toString(); } catch (Exception e) { return "{}"; }
         }
 
-        /** Abre o seletor de pastas do Android; o conteúdo (com subpastas) vira a lista de envio. */
+        /** Abre a tela de seleção do app (pastas e arquivos na mesma lista); o que for marcado vira a lista de envio. */
         @JavascriptInterface
-        public void pickFolder() {
-            runOnUiThread(() -> folderPicker.launch(null));
+        public void pickItems() {
+            runOnUiThread(() -> itemPicker.launch(new Intent(MainActivity.this, PickerActivity.class)));
         }
 
         @JavascriptInterface

@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import Icon from "./Icon.vue";
 import { stage, summary, clearStage, sendStage, askFiles, askFolder } from "@/store/stage";
 import { bytes } from "@/lib/format";
+import { isApp } from "@/store/native";
 
 const route = useRoute();
 const inFolder = computed(() => route.name === "browse");
@@ -19,8 +20,11 @@ const plural = (n, a, b) => n + " " + (n === 1 ? a : b);
       <span class="sh">{{ inFolder ? "As pastas são recriadas no servidor com tudo que está dentro." : "Abra a pasta de destino no servidor." }}</span>
     </span>
     <button v-if="inFolder" class="btn pri" type="button" @click="sendStage">Enviar para esta pasta</button>
-    <button class="btn" type="button" @click="askFiles">+ Arquivos</button>
-    <button class="btn" type="button" @click="askFolder">+ Pasta</button>
+    <button v-if="isApp" class="btn" type="button" @click="askFiles">+ Adicionar</button>
+    <template v-else>
+      <button class="btn" type="button" @click="askFiles">+ Arquivos</button>
+      <button class="btn" type="button" @click="askFolder">+ Pasta</button>
+    </template>
     <button class="btn" type="button" @click="clearStage">Cancelar</button>
   </div>
 </template>
