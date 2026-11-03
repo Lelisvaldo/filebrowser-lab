@@ -630,3 +630,11 @@ body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
 .pick-warn{display:flex;gap:10px;align-items:flex-start;margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--warnbg);color:var(--warn);font-size:.88rem}
 .pick-warn b{color:inherit}
 .pick-warn .ico{flex:none;margin-top:2px}
+
+/* app Android: arquivos recebidos por "Compartilhar" */
+.sharebar{position:fixed;z-index:80;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);border:1px solid var(--acc);border-radius:12px;padding:10px 12px;box-shadow:0 8px 28px #0006}
+.sharebar>.i{width:22px;height:22px;color:var(--acc);flex:none}
+.sharebar .st{flex:1;min-width:180px}
+.sharebar .sh{display:block;color:var(--sub);font-size:.85rem}
+.appbox{display:flex;flex-direction:column;gap:12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.applock{display:flex;gap:8px;align-items:center}

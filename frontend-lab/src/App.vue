@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import DialogHost from "@/components/DialogHost.vue";
 import Toasts from "@/components/Toasts.vue";
+import ShareBar from "@/components/ShareBar.vue";
 import SettingsDrawer from "@/components/SettingsDrawer.vue";
 import TransfersPop from "@/components/TransfersPop.vue";
 import Logo from "@/components/Logo.vue";
@@ -227,5 +228,6 @@ const usbPath = (d) => routeFor("Pendrives", "/" + d.name + "/");
   </template>
   <ShareDialog />
   <DialogHost />
+  <ShareBar />
   <Toasts />
 </template>

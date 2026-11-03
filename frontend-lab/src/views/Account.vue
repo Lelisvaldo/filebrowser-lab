@@ -11,10 +11,13 @@ import { date } from "@/lib/format";
 import { cfg } from "@/lib/config";
 import QrCode from "@/components/QrCode.vue";
 import { openShare } from "@/store/shareDlg";
+import { isApp, getLock, setLock, changeServer } from "@/store/native";
 
 const route = useRoute();
 const router = useRouter();
 const origin = window.location.origin;
+const lockOn = ref(getLock());
+const toggleLock = (on) => { setLock(on); lockOn.value = on; };
 const tab = computed(() => route.params.tab || "perfil");
 const tabs = [["perfil", "Perfil", "person"], ["seguranca", "Segurança", "shield"], ["chaves", "Chaves de API", "key"], ["links", "Links compartilhados", "link"]];
 onMounted(() => { hideStatus(); page.title = "Minha conta"; });
@@ -117,6 +120,11 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
       </section>
 
       <section v-else-if="tab === 'seguranca'" class="card segcard">
+        <div v-if="isApp" class="appbox">
+          <div class="ch"><span class="chi"><Icon name="lock" /></span><div class="cht"><b>App Android</b><small>Bloqueio ao abrir e servidor</small></div></div>
+          <label class="applock"><input type="checkbox" :checked="lockOn" @change="toggleLock($event.target.checked)" /> Pedir biometria ou PIN ao abrir o app</label>
+          <button class="btn" type="button" @click="changeServer">Trocar o endereço do servidor</button>
+        </div>
         <div class="ch"><span class="chi"><Icon name="shield" /></span><div class="cht"><b>Verificação em duas etapas</b><small>Aplicativo autenticador</small></div><span class="stchip" :class="app.user.otpEnabled ? 'ok' : 'off'"><Icon :name="app.user.otpEnabled ? 'tick' : 'dismiss'" />{{ app.user.otpEnabled ? "Ativada" : "Desativada" }}</span></div>
         <form class="sec-form" @submit.prevent="otpStart">
           <div class="pwf"><Icon name="lock" /><input v-model="otpPass" type="password" autocomplete="current-password" placeholder="Sua senha" aria-label="Sua senha" /></div>

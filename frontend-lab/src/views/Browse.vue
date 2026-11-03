@@ -20,6 +20,7 @@ import { clip, setClip, clearClip } from "@/store/clipboard";
 import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
 import { moveReason } from "@/lib/moveReason";
+import { nativeShare } from "@/store/native";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -258,6 +259,9 @@ async function startUpload(files) {
   if (!list.length) return;
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
 }
+// app Android: o botão da barra de compartilhamento pede para abrir o seletor (o app entrega os arquivos recebidos)
+watch(() => nativeShare.send, () => { if (canCreate.value) fileInput.value?.click(); });
+
 async function onPick(e, folder) {
   const files = filesFromInput(e.target);
   e.target.value = "";

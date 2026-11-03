@@ -1,0 +1,12 @@
+{
+  "appId": "io.github.lelisvaldo.filebrowserlab",
+  "appName": "Filebrowser Lab",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "allowNavigation": ["*"]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

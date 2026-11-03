@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cores do site (tema escuro; o app troca as barras de acordo com o tema do site via LabNative.setBars) -->
+<resources>
+    <color name="colorPrimary">#120A33</color>
+    <color name="colorPrimaryDark">#120A33</color>
+    <color name="colorAccent">#01CED3</color>
+    <color name="lab_bg_dark">#170A38</color>
+</resources>
