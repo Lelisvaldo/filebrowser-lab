@@ -18,6 +18,7 @@ export const clearShare = () => { if (isApp) window.LabNative.clearShare(); };
 export const sendShared = () => { nativeShare.send++; };
 export const getLock = () => (isApp ? window.LabNative.getLock() : false);
 export const setLock = (on) => { if (isApp) window.LabNative.setLock(!!on); };
+export const pickFolder = () => { if (isApp) window.LabNative.pickFolder(); };
 export const changeServer = () => { if (isApp) window.LabNative.changeServer(); };
 
 // as barras do Android (status e navegação) seguem o tema escolhido no site

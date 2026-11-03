@@ -48,20 +48,33 @@ small{color:var(--sub)}code{background:var(--dkin);padding:1px 5px;border-radius
   var norm = function (v) { v = (v || "").trim().replace(/\/+$/, ""); if (v && !/^https?:\/\//i.test(v)) v = "https://" + v; return v; };
   var say = function (t, wait) { m.textContent = t; m.className = "msg on" + (wait ? " wait" : ""); };
   var withTimeout = function (ms) { var c = new AbortController(); setTimeout(function () { c.abort(); }, ms); return c.signal; };
+  // confere no app (nativo) se o endereço é um filebrowser-lab; fora do app (ou sem a ponte) segue como antes
+  function check(url, cb) {
+    if (!window.LabNative || !window.LabNative.probe) { cb({ ok: true, legacy: true }); return; }
+    var done = false;
+    var t = setTimeout(function () { if (!done) { done = true; cb({ ok: false, code: 0 }); } }, 10000);
+    window.__labProbe = function (r) { if (!done) { done = true; clearTimeout(t); cb(r); } };
+    window.LabNative.probe(url);
+  }
   function go(url) {
     say("Conectando a " + url + "…", true); retry.hidden = true;
-    fetch(url + "/health", { mode: "no-cors", cache: "no-store", signal: withTimeout(8000) }).then(function () {
-      try { localStorage.setItem(KEY, url); } catch (e) {}
-      location.replace(url + "/");
-    }).catch(function () {
-      say("Não consegui falar com " + url + ". Confira o Wi-Fi da casa e se o certificado da casa está instalado neste aparelho.");
-      retry.hidden = false;
+    check(url, function (r) {
+      if (r.ok) {
+        try { localStorage.setItem(KEY, url); } catch (e) {}
+        location.replace(url + "/");
+      } else if (r.code > 0) {
+        say("Esse endereço respondeu, mas não é um servidor filebrowser-lab (código " + r.code + "). Confira o endereço, por exemplo https://filebrowser.lab.");
+        retry.hidden = false;
+      } else {
+        say("Não consegui falar com " + url + ". Confira o Wi-Fi da casa e se o certificado da casa está instalado neste aparelho.");
+        retry.hidden = false;
+      }
     });
   }
   document.getElementById("f").addEventListener("submit", function (e) { e.preventDefault(); var v = norm(u.value); if (!v) { say("Digite o endereço do servidor."); return; } go(v); });
   retry.addEventListener("click", function () { var v = norm(u.value) || get(); if (v) go(v); });
   var saved = get(), change = /[?&]trocar=1/.test(location.search);
-  if (saved) u.value = saved;
+  u.value = saved || "https://filebrowser.lab"; // endereço já preenchido nesta fase de testes; o usuário pode apagar e digitar outro
   if (saved && !change) { sub.textContent = "Abrindo o servidor…"; go(saved); }
 })();
 </script>

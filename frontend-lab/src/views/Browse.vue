@@ -20,7 +20,7 @@ import { clip, setClip, clearClip } from "@/store/clipboard";
 import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
 import { moveReason } from "@/lib/moveReason";
-import { nativeShare } from "@/store/native";
+import { nativeShare, isApp, pickFolder as pickPhoneFolder } from "@/store/native";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -260,11 +260,14 @@ async function startUpload(files) {
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
 }
 // app Android: o botão da barra de compartilhamento pede para abrir o seletor (o app entrega os arquivos recebidos)
-watch(() => nativeShare.send, () => { if (canCreate.value) fileInput.value?.click(); });
+let pendingRels = null; // caminhos relativos dos arquivos entregues pelo app (pasta inteira, com subpastas)
+watch(() => nativeShare.send, () => { if (!canCreate.value) return; pendingRels = nativeShare.files.map((f) => f.rel || f.name); fileInput.value?.click(); });
 
 async function onPick(e, folder) {
-  const files = filesFromInput(e.target);
+  let files = filesFromInput(e.target);
   e.target.value = "";
+  if (pendingRels && pendingRels.length === files.length) files = files.map((f, i) => ({ file: f.file, rel: pendingRels[i] }));
+  pendingRels = null;
   await startUpload(files);
 }
 
@@ -500,7 +503,7 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
       <div class="tbar" :class="{ has: selected.length }">
         <template v-if="!selected.length">
           <button v-if="canCreate" class="btn pri" type="button" @click="fileInput.click()" title="Enviar" aria-label="Enviar"><Icon name="upload" /><span class="lbl">Enviar</span></button>
-          <button v-if="canCreate" class="btn" type="button" title="Enviar uma pasta inteira" @click="folderInput.click()" aria-label="Enviar pasta"><Icon name="folderopen" /><span class="lbl">Enviar pasta</span></button>
+          <button v-if="canCreate" class="btn" type="button" title="Enviar uma pasta inteira" @click="isApp ? pickPhoneFolder() : folderInput.click()" aria-label="Enviar pasta"><Icon name="folderopen" /><span class="lbl">Enviar pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
