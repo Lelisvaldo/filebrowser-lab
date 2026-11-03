@@ -2,26 +2,25 @@
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 import Icon from "./Icon.vue";
-import { nativeShare, clearShare, sendShared } from "@/store/native";
+import { stage, summary, clearStage, sendStage, askFiles, askFolder } from "@/store/stage";
 import { bytes } from "@/lib/format";
 
 const route = useRoute();
-const n = computed(() => nativeShare.files.length);
 const inFolder = computed(() => route.name === "browse");
-const folder = computed(() => { const f = nativeShare.files.find((x) => x.rel && x.rel.includes("/")); return f ? f.rel.split("/")[0] : ""; });
-const total = computed(() => nativeShare.files.reduce((s, f) => s + Math.max(0, f.size || 0), 0));
+const plural = (n, a, b) => n + " " + (n === 1 ? a : b);
 </script>
 
 <template>
-  <div v-if="n" class="sharebar" role="status">
+  <div v-if="summary.any" class="sharebar" role="status">
     <Icon name="upload" />
     <span class="st">
-      <b v-if="folder">Pasta «{{ folder }}» · {{ n }} {{ n === 1 ? "arquivo" : "arquivos" }}</b>
-      <b v-else>{{ n }} {{ n === 1 ? "arquivo" : "arquivos" }} do celular</b>
-      <small v-if="total"> · {{ bytes(total) }}</small>
-      <span class="sh">{{ inFolder ? "Escolha a pasta e toque em Enviar." : "Abra a pasta de destino e toque em Enviar." }}</span>
+      <b>Para enviar: <template v-if="summary.folders">{{ plural(summary.folders, "pasta", "pastas") }}<template v-if="summary.files"> · </template></template><template v-if="summary.files">{{ plural(summary.files, "arquivo", "arquivos") }}</template></b>
+      <small v-if="summary.size"> · {{ bytes(summary.size) }}</small>
+      <span class="sh">{{ inFolder ? "As pastas são recriadas no servidor com tudo que está dentro." : "Abra a pasta de destino no servidor." }}</span>
     </span>
-    <button v-if="inFolder" class="btn pri" type="button" @click="sendShared">Enviar para esta pasta</button>
-    <button class="btn" type="button" @click="clearShare">Cancelar</button>
+    <button v-if="inFolder" class="btn pri" type="button" @click="sendStage">Enviar para esta pasta</button>
+    <button class="btn" type="button" @click="askFiles">+ Arquivos</button>
+    <button class="btn" type="button" @click="askFolder">+ Pasta</button>
+    <button class="btn" type="button" @click="clearStage">Cancelar</button>
   </div>
 </template>

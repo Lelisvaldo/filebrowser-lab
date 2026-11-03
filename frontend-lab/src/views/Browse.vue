@@ -21,6 +21,7 @@ import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
 import { moveReason } from "@/lib/moveReason";
 import { nativeShare, isApp, pickFolder as pickPhoneFolder } from "@/store/native";
+import { stage, addStage, clearStage } from "@/store/stage";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -62,7 +63,9 @@ const totalSize = computed(() => items.value.reduce((s, i) => s + (i.size || 0),
 const usePct = (it) => (totalSize.value > 0 ? (it.size || 0) / totalSize.value : 0);
 const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0)));
 const fileInput = ref(null);
-const folderInput = ref(null);
+const stageInput = ref(null);
+const stageFolderInput = ref(null);
+const upMenu = ref(false);
 
 // Raiz de Nuvens e de Pendrives: só lista pontos de montagem (conexões de nuvem, pendrives); não se cria, move nem apaga nada aqui.
 const mountRoot = computed(() => ["Nuvens", "Pendrives"].includes(source.value) && !dirPath.value.split("/").filter(Boolean).length);
@@ -244,8 +247,10 @@ async function newFile() {
   try { await filesApi.writeText(source.value, join(dirPath.value, name, false), ""); await load(true); router.push(routeFor(source.value, join(dirPath.value, name, false)).replace(/\/$/, "")); } catch (e) { toastError(e); }
 }
 
-async function startUpload(files) {
-  if (!files.length) return;
+async function startUpload(all) {
+  const dirs = all.filter((f) => f.dir).map((f) => f.rel);
+  const files = all.filter((f) => !f.dir);
+  if (!files.length && !dirs.length) return;
   if (!canCreate.value) { toast("Você não tem permissão para enviar aqui.", "err"); return; }
   const names = new Set((data.value?.items || []).map((i) => i.name));
   const clash = files.filter((f) => names.has(f.rel.split("/")[0]));
@@ -256,19 +261,51 @@ async function startUpload(files) {
     if (ok) overwrite = true;
     else { const skip = new Set(clash); list = files.filter((f) => !skip.has(f)); }
   }
+  // recria no servidor a estrutura de pastas (inclusive as vazias), das mais rasas para as mais fundas
+  if (dirs.length) {
+    for (const d of [...new Set(dirs)].sort((a, b) => a.split("/").length - b.split("/").length)) {
+      try { await filesApi.mkdir(source.value, join(dirPath.value, d, true)); } catch (_e) { /* já existe */ }
+    }
+    await load(true);
+  }
   if (!list.length) return;
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
 }
 // app Android: o botão da barra de compartilhamento pede para abrir o seletor (o app entrega os arquivos recebidos)
 let pendingRels = null; // caminhos relativos dos arquivos entregues pelo app (pasta inteira, com subpastas)
-watch(() => nativeShare.send, () => { if (!canCreate.value) return; pendingRels = nativeShare.files.map((f) => f.rel || f.name); fileInput.value?.click(); });
+let pendingDirs = [];
+let stagedList = [];
 
-async function onPick(e, folder) {
+// "+ Arquivos" / "Arquivos…" e "+ Pasta" / "Pasta…": acrescentam à lista de envio
+watch(() => stage.askFiles, () => stageInput.value?.click());
+watch(() => stage.askFolder, () => { if (isApp) pickPhoneFolder(); else stageFolderInput.value?.click(); });
+function onStagePick(e) {
+  addStage(filesFromInput(e.target));
+  e.target.value = "";
+}
+
+// "Enviar para esta pasta": junta o que está na lista (do computador) com o que o app Android tem guardado (do celular)
+watch(() => stage.send, async () => {
+  if (!canCreate.value) return;
+  stagedList = [...stage.items];
+  pendingRels = nativeShare.files.map((f) => f.rel || f.name);
+  pendingDirs = [...nativeShare.dirs];
+  if (nativeShare.files.length) { fileInput.value?.click(); return; } // o app entrega os arquivos guardados ao seletor marcado
+  const all = [...stagedList, ...pendingDirs.map((rel) => ({ dir: true, rel }))];
+  stagedList = []; pendingDirs = [];
+  await startUpload(all);
+  clearStage();
+});
+
+async function onPick(e) {
   let files = filesFromInput(e.target);
   e.target.value = "";
   if (pendingRels && pendingRels.length === files.length) files = files.map((f, i) => ({ file: f.file, rel: pendingRels[i] }));
   pendingRels = null;
+  files = [...files, ...stagedList, ...pendingDirs.map((rel) => ({ dir: true, rel }))];
+  stagedList = []; pendingDirs = [];
   await startUpload(files);
+  clearStage();
 }
 
 // ---- arrastar e soltar ----
@@ -502,8 +539,13 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
 
       <div class="tbar" :class="{ has: selected.length }">
         <template v-if="!selected.length">
-          <button v-if="canCreate" class="btn pri" type="button" @click="fileInput.click()" title="Enviar" aria-label="Enviar"><Icon name="upload" /><span class="lbl">Enviar</span></button>
-          <button v-if="canCreate" class="btn" type="button" title="Enviar uma pasta inteira" @click="isApp ? pickPhoneFolder() : folderInput.click()" aria-label="Enviar pasta"><Icon name="folderopen" /><span class="lbl">Enviar pasta</span></button>
+          <span v-if="canCreate" class="upwrap">
+            <button class="btn pri" type="button" @click="upMenu = !upMenu" title="Enviar" aria-label="Enviar" :aria-expanded="upMenu"><Icon name="upload" /><span class="lbl">Enviar</span></button>
+            <div v-if="upMenu" class="upmenu" role="menu" @click="upMenu = false">
+              <button type="button" role="menuitem" @click="stage.askFiles++"><Icon name="file" /> Arquivos…</button>
+              <button type="button" role="menuitem" @click="stage.askFolder++"><Icon name="folderopen" /> Pasta…</button>
+            </div>
+          </span>
           <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
@@ -524,8 +566,9 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
           <button class="btn" aria-label="Mais ações" aria-haspopup="menu" @click.stop="moreMenu($event)" title="Mais"><Icon name="more" /><span class="lbl">Mais</span></button>
         </template>
       </div>
-      <input ref="fileInput" type="file" multiple hidden @change="onPick($event)" />
-      <input ref="folderInput" type="file" webkitdirectory hidden @change="onPick($event)" />
+      <input ref="fileInput" type="file" multiple hidden accept="application/x-lab-consume" @change="onPick($event)" />
+      <input ref="stageInput" type="file" multiple hidden @change="onStagePick($event)" />
+      <input ref="stageFolderInput" type="file" webkitdirectory hidden @change="onStagePick($event)" />
 
       <div v-if="loading" class="vazio">Carregando…</div>
       <div v-else-if="error" class="vazio">{{ error }}</div>

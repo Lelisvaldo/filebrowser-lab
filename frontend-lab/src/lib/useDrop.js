@@ -5,11 +5,13 @@ async function walk(entry, prefix, out) {
     out.push({ file, rel: prefix + entry.name });
   } else if (entry.isDirectory) {
     const reader = entry.createReader();
+    const before = out.length;
     let batch;
     do {
       batch = await new Promise((res, rej) => reader.readEntries(res, rej));
       for (const e of batch) await walk(e, prefix + entry.name + "/", out);
     } while (batch.length);
+    if (out.length === before) out.push({ dir: true, rel: prefix + entry.name }); // pasta vazia: também é recriada no servidor
   }
 }
 

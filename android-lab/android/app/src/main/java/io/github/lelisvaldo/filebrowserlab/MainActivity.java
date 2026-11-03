@@ -52,6 +52,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private final List<Item> shared = new ArrayList<>();
+    private final List<String> sharedDirs = new ArrayList<>(); // todas as pastas da pasta escolhida (inclusive vazias)
     private androidx.activity.result.ActivityResultLauncher<Uri> folderPicker;
     private long pausedAt = 0;
     private boolean locked = false;
@@ -83,10 +84,14 @@ public class MainActivity extends BridgeActivity {
         wv.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
             @Override
             public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
-                if (!shared.isEmpty()) {
+                // só o seletor marcado pelo site ("consumir") recebe o que o app guardou; os outros abrem o seletor normal do Android
+                String[] acc = params == null ? null : params.getAcceptTypes();
+                boolean consume = acc != null && java.util.Arrays.asList(acc).contains("application/x-lab-consume");
+                if (consume && !shared.isEmpty()) {
                     Uri[] arr = new Uri[shared.size()];
                     for (int k = 0; k < arr.length; k++) arr[k] = shared.get(k).uri;
                     shared.clear();
+                    sharedDirs.clear();
                     cb.onReceiveValue(arr);
                     notifyShare();
                     return true;
@@ -106,11 +111,12 @@ public class MainActivity extends BridgeActivity {
             if (tree == null) return;
             new Thread(() -> {
                 List<Item> found = new ArrayList<>();
+                List<String> dirs = new ArrayList<>();
                 androidx.documentfile.provider.DocumentFile root = androidx.documentfile.provider.DocumentFile.fromTreeUri(MainActivity.this, tree);
-                if (root != null) walk(root, root.getName() == null ? "pasta" : root.getName(), found);
+                if (root != null) walk(root, root.getName() == null ? "pasta" : root.getName(), found, dirs);
                 runOnUiThread(() -> {
-                    shared.clear();
-                    shared.addAll(found);
+                    shared.addAll(found); // acumula: dá para juntar várias pastas e arquivos antes de enviar
+                    sharedDirs.addAll(dirs);
                     notifyShare();
                 });
             }, "lab-walk").start();
@@ -225,11 +231,12 @@ public class MainActivity extends BridgeActivity {
     }
 
     /** Lê a pasta escolhida inteira (subpastas incluídas), guardando o caminho relativo de cada arquivo. */
-    private void walk(androidx.documentfile.provider.DocumentFile dir, String prefix, List<Item> out) {
+    private void walk(androidx.documentfile.provider.DocumentFile dir, String prefix, List<Item> out, List<String> dirs) {
+        dirs.add(prefix);
         androidx.documentfile.provider.DocumentFile[] kids = dir.listFiles();
         for (androidx.documentfile.provider.DocumentFile f : kids) {
             String name = f.getName() == null ? "arquivo" : f.getName();
-            if (f.isDirectory()) walk(f, prefix + "/" + name, out);
+            if (f.isDirectory()) walk(f, prefix + "/" + name, out, dirs);
             else if (f.isFile()) out.add(new Item(f.getUri(), prefix + "/" + name));
         }
     }
@@ -258,6 +265,8 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public String shareInfo() {
             JSONArray out = new JSONArray();
+            JSONArray ds = new JSONArray();
+            for (String d : new ArrayList<>(sharedDirs)) ds.put(d);
             try {
                 for (Item it : new ArrayList<>(shared)) {
                     Uri u = it.uri;
@@ -273,7 +282,7 @@ public class MainActivity extends BridgeActivity {
                     out.put(new JSONObject().put("name", name).put("size", size).put("rel", it.rel == null ? JSONObject.NULL : it.rel));
                 }
             } catch (Exception ignored) { }
-            return out.toString();
+            try { return new JSONObject().put("files", out).put("dirs", ds).toString(); } catch (Exception e) { return "{}"; }
         }
 
         /** Abre o seletor de pastas do Android; o conteúdo (com subpastas) vira a lista de envio. */
@@ -285,6 +294,7 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void clearShare() {
             shared.clear();
+            sharedDirs.clear();
             notifyShare();
         }
 

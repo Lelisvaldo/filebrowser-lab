@@ -638,3 +638,10 @@ body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
 .sharebar .sh{display:block;color:var(--sub);font-size:.85rem}
 .appbox{display:flex;flex-direction:column;gap:12px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--line)}
 .applock{display:flex;gap:8px;align-items:center}
+
+/* menu do botão Enviar */
+.upwrap{position:relative;display:inline-flex}
+.upmenu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:180px;background:var(--bg);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px #0005;padding:6px;display:flex;flex-direction:column}
+.upmenu button{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--txt);font:inherit;cursor:pointer;text-align:left}
+.upmenu button:hover{background:var(--hover)}
+.upmenu .i{width:20px;height:20px;color:var(--acc)}
