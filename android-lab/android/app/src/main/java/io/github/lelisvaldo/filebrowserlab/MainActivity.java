@@ -1,6 +1,10 @@
 package io.github.lelisvaldo.filebrowserlab;
 
+import android.Manifest;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
@@ -14,6 +18,8 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
@@ -41,6 +47,7 @@ public class MainActivity extends BridgeActivity {
     private final List<Uri> shared = new ArrayList<>();
     private long pausedAt = 0;
     private boolean locked = false;
+    private boolean uploading = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,6 +74,9 @@ public class MainActivity extends BridgeActivity {
                 notifyShare();
             }
         });
+        wv.setDownloadListener((url, ua, cd, mime, len) -> Downloader.start(MainActivity.this, url, ua, cd, mime));
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7);
         applyBars(prefs().getBoolean("dark", true)); // última cor conhecida do site, para não piscar ao abrir
         collectShare(getIntent());
         lock();
@@ -203,6 +213,38 @@ public class MainActivity extends BridgeActivity {
         public void setBars(boolean dark) {
             prefs().edit().putBoolean("dark", dark).apply();
             runOnUiThread(() -> applyBars(dark));
+        }
+
+        /** Envios em andamento no site: mantém o app vivo em segundo plano e mostra o progresso numa notificação. */
+        @JavascriptInterface
+        public void uploadState(int count, int pct, String name, boolean paused) {
+            Context c = getApplicationContext();
+            if (!uploading) {
+                uploading = true;
+                TransferService.begin(c);
+            }
+            TransferService.ensureChannel(c);
+            String title = count > 1 ? "Enviando " + count + " arquivos" : "Enviando " + name;
+            NotificationCompat.Builder b = new NotificationCompat.Builder(c, TransferService.CHANNEL)
+                    .setSmallIcon(android.R.drawable.stat_sys_upload).setContentTitle(title)
+                    .setContentText(paused ? "Pausado" : pct + "%").setOngoing(true).setOnlyAlertOnce(true)
+                    .setProgress(100, Math.max(0, Math.min(100, pct)), false).setContentIntent(TransferService.openApp(c));
+            try { c.getSystemService(NotificationManager.class).notify(TransferService.FG_ID, b.build()); } catch (SecurityException ignored) { }
+        }
+
+        @JavascriptInterface
+        public void uploadDone(int done, int failed) {
+            Context c = getApplicationContext();
+            if (uploading) {
+                uploading = false;
+                TransferService.end(c);
+            }
+            TransferService.ensureChannel(c);
+            String text = failed > 0 ? failed + " não enviado(s), " + done + " enviado(s)" : done + (done == 1 ? " arquivo enviado" : " arquivos enviados");
+            NotificationCompat.Builder b = new NotificationCompat.Builder(c, TransferService.CHANNEL)
+                    .setSmallIcon(failed > 0 ? android.R.drawable.stat_notify_error : android.R.drawable.stat_sys_upload_done)
+                    .setContentTitle("Envio concluído").setContentText(text).setAutoCancel(true).setContentIntent(TransferService.openApp(c));
+            try { c.getSystemService(NotificationManager.class).notify(2, b.build()); } catch (SecurityException ignored) { }
         }
 
         @JavascriptInterface
