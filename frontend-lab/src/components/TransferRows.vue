@@ -15,8 +15,7 @@ const text = (t) => {
   if (t.status === "queued") return "Na fila";
   if (t.status === "paused") return pc(t) + "% · pausado";
   const e = eta(t);
-  const itens = mv(t) && t.items > 1 ? " · item " + t.item + " de " + t.items : "";
-  return pc(t) + "%" + (t.speed ? " · " + speed(t.speed) : "") + (isFinite(e) ? " · faltam " + duration(e) : "") + itens;
+  return pc(t) + "%" + (t.speed ? " · " + speed(t.speed) : "") + (isFinite(e) ? " · faltam " + duration(e) : "");
 };
 </script>
 
@@ -25,10 +24,10 @@ const text = (t) => {
     <template v-for="t in visible()" :key="t.id">
       <div v-if="compact" class="tc2" :class="{ ok: t.status === 'done' }" :title="mv(t) ? t.label : t.source + t.path">
         <div class="tn">{{ mv(t) ? (t.kind === "move" ? "Mover: " : "Copiar: ") : "" }}{{ t.name }}</div>
-        <div v-if="mv(t) && t.fromDir" class="meta tft">{{ t.fromDir }} → {{ t.dir }}<template v-if="real(t) && t.items > 1 && t.curName"> · {{ t.curName }}</template></div>
+        <div v-if="mv(t) && t.fromDir" class="meta tft">{{ t.fromDir }} → {{ t.dir }}<template v-if="real(t) && t.items > 1"> · item {{ t.item }} de {{ t.items }}<template v-if="t.curName">: {{ t.curName }}</template></template></div>
         <div class="tr2">
           <div class="bar" :class="{ anim: t.status === 'running' && !real(t), cheio: t.status === 'error' }"><i :style="{ width: pc(t) + '%' }"></i></div>
-          <span class="meta">{{ text(t) }}</span>
+          <span class="meta" :class="{ fx: real(t) && t.status === 'running' }">{{ text(t) }}</span>
           <div class="acts">
             <button v-if="t.status === 'running' && !mv(t)" class="ib" :aria-label="'Pausar ' + t.name" title="Pausar" @click="pause(t)"><Icon name="pause" /></button>
             <button v-else-if="t.status === 'paused'" class="ib" :aria-label="'Retomar ' + t.name" title="Retomar" @click="resume(t)"><Icon name="play" /></button>

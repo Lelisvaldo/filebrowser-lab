@@ -197,7 +197,9 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .tc2 .tr2{display:flex;align-items:center;gap:10px}
 .tc2 .tft{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem}
 .tc2 .bar{flex:1;min-width:80px}
-.tc2 .meta{white-space:nowrap}
+.tc2 .meta{white-space:nowrap;font-variant-numeric:tabular-nums}
+.tc2 .meta.fx{flex:none;width:15.5em;text-align:right}
+@media (max-width:420px){.tc2 .meta.fx{width:14.5em;font-size:.74rem}}
 .tc2.ok .meta{color:var(--ok);font-weight:500}
 .tc2 .acts{display:flex;flex:none}
 .tc2 .ib{width:28px;height:28px}
