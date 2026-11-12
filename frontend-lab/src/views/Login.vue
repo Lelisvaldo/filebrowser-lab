@@ -1,11 +1,13 @@
 <script setup>
 import Logo from "@/components/Logo.vue";
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import Icon from "@/components/Icon.vue";
 import * as authApi from "@/api/auth";
 import { loadSession, ui, setUi, isDark } from "@/store/app";
 import { cfg, appName, baseURL } from "@/lib/config";
+import { isApp, bioAvailable, hasSavedLogin, saveLogin, clearSavedLogin, requestSavedLogin } from "@/store/native";
+import { askConfirm } from "@/store/dialogs";
 
 const router = useRouter();
 const route = useRoute();
@@ -21,7 +23,47 @@ const step = ref("login"); // login | otp | change
 const userInput = ref(null);
 
 const oidc = computed(() => cfg.oidcAvailable);
-onMounted(() => userInput.value?.focus());
+const pkOk = computed(() => !isApp && !!cfg.passkeyAvailable && authApi.passkeySupported());
+const appBio = ref(isApp && hasSavedLogin());
+// Entrar com a biometria do aparelho (chave de acesso): sem digitar usuário e senha.
+// Se este aparelho já usou antes, pede sozinho ao abrir a tela, exceto logo depois de um "Sair" feito pelo usuário.
+async function doBio(auto = false) {
+  error.value = "";
+  busy.value = true;
+  try { await authApi.passkeyLoginPasswordless(); await finish(); }
+  catch (e) {
+    const cancelado = e && (e.name === "NotAllowedError" || e.name === "AbortError");
+    if (!(auto && cancelado)) error.value = cancelado ? "Biometria cancelada. Toque em \"Entrar com biometria\" para tentar de novo." : (e.status === 403 ? "Esta chave não é aceita para entrar sem senha. Entre com a senha e cadastre uma nova chave em Conta." : "Não foi possível entrar com a biometria. Use usuário e senha.");
+  } finally { busy.value = false; }
+}
+// App: usuário e senha guardados no cofre do Android. A resposta (depois da biometria) chega pelo evento "labsavedlogin".
+let autoSaved = false;
+function onSaved(e) {
+  const d = e.detail || {};
+  busy.value = false;
+  if (d.user) { user.value = d.user; pass.value = d.pass; autoSaved = true; void submit(); }
+  else if (d.error === "invalid") { appBio.value = false; error.value = "A biometria do aparelho mudou. Entre com a senha e ative de novo."; }
+  else if (d.error === "cancel") error.value = "Biometria cancelada. Toque em \"Entrar com biometria\" para tentar de novo.";
+}
+function doAppBio() { error.value = ""; busy.value = true; requestSavedLogin(); }
+// depois de entrar com a senha no app, oferece guardar o login (uma vez; "Agora não" lembra a escolha)
+async function offerSave() {
+  try {
+    if (!isApp || autoSaved || hasSavedLogin() || !bioAvailable() || localStorage.getItem("lab.bio.no") === "1") return;
+    if (await askConfirm({ title: "Entrar com biometria?", message: "Da próxima vez basta a biometria, sem digitar usuário e senha. A senha fica guardada só no cofre do Android, protegida pela biometria do aparelho. Dá para desligar em Conta → Segurança.", confirm: "Ativar" })) {
+      if (!saveLogin(user.value, pass.value)) error.value = "Não foi possível guardar o login neste aparelho.";
+    } else localStorage.setItem("lab.bio.no", "1");
+  } catch (_e) { /* sem armazenamento: não oferece */ }
+}
+onMounted(() => {
+  userInput.value?.focus();
+  if (isApp) window.addEventListener("labsavedlogin", onSaved);
+  let manual = false, usou = false;
+  try { manual = sessionStorage.getItem("lab.skippk") === "1"; sessionStorage.removeItem("lab.skippk"); usou = localStorage.getItem("lab.pk") === "1"; } catch (_e) { /* sem armazenamento */ }
+  if (pkOk.value && usou && !manual) void doBio(true);
+  if (isApp && hasSavedLogin() && !manual) doAppBio();
+});
+onBeforeUnmount(() => window.removeEventListener("labsavedlogin", onSaved));
 
 function target() {
   const n = String(route.query.next || "");
@@ -52,9 +94,11 @@ async function submit() {
     } else {
       await authApi.login(user.value, pass.value, otp.value);
     }
+    await offerSave();
     await finish();
   } catch (e) {
-    if (e.code === "change-password") { step.value = "change"; error.value = ""; }
+    if (autoSaved && e.status === 401) { clearSavedLogin(); appBio.value = false; error.value = "A senha mudou. Entre com a senha e ative a biometria de novo."; autoSaved = false; }
+    else if (e.code === "change-password") { step.value = "change"; error.value = ""; }
     else if (e.code === "passkey") { step.value = "passkey"; error.value = ""; await doPasskey(); }
     else if (e.code === "otp") { step.value = "otp"; error.value = otp.value ? "Código incorreto." : ""; }
     else if (e.status === 401 || e.status === 403) error.value = step.value === "otp" ? "Código incorreto." : "Usuário ou senha incorretos.";
@@ -93,6 +137,8 @@ const toggleTheme = () => setUi({ theme: isDark() ? "light" : "dark" });
         <label v-if="step === 'otp'" class="lg-campo"><Icon name="shield" /><input v-model="otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="Código de 6 dígitos" aria-label="Código de verificação" autofocus /></label>
         <button v-if="step === 'passkey'" class="lg-btn" type="button" :disabled="busy" @click="doPasskey">Usar a chave de acesso</button>
         <button v-else class="lg-btn" type="submit" :disabled="busy">{{ busy ? "Aguarde…" : step === "change" ? "Salvar e entrar" : "Entrar" }}</button>
+        <button v-if="pkOk && step === 'login'" class="lg-btn lg-bio" type="button" :disabled="busy" @click="doBio(false)"><Icon name="shield" /> Entrar com biometria</button>
+        <button v-if="appBio && step === 'login'" class="lg-btn lg-bio" type="button" :disabled="busy" @click="doAppBio"><Icon name="shield" /> Entrar com biometria</button>
         <a v-if="oidc && step === 'login'" class="lg-alt" :href="baseURL + 'api/auth/oidc/login'">{{ cfg.oidcLoginButtonText || "Entrar com SSO" }}</a>
       </form>
       <div class="lg-rodape">{{ appName }} {{ cfg.version ? "· " + cfg.version : "" }} · base Filebrowser Quantum</div>

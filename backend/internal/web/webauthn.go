@@ -99,6 +99,66 @@ func finishPasskeyLoginHandler(w http.ResponseWriter, r *http.Request, d *Contex
 	return 0, nil
 }
 
+// @Summary Begin passwordless passkey login
+// @Description Returns a WebAuthn assertion challenge for logging in with only a passkey (user verification required).
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} map[string]interface{} "Passkey assertion options"
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /api/auth/webauthn/begin-passwordless [post]
+func beginPasswordlessLoginHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	if !auth.IsWebAuthnEnabled() {
+		return http.StatusForbidden, errors.ErrPasskeyNotEnabled
+	}
+	registerRequestOrigin(r)
+	sessionID, assertion, err := auth.GetWebAuthn().BeginPasswordlessLogin(deriveRPID(r))
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	return http.StatusOK, json.NewEncoder(w).Encode(map[string]interface{}{
+		"sessionID": sessionID,
+		"publicKey": assertion.Response,
+	})
+}
+
+// @Summary Finish passwordless passkey login
+// @Description Verifies the assertion, finds the user from the passkey and returns a session token.
+// @Tags Auth
+// @Param session_id query string true "Session ID from begin-passwordless"
+// @Success 200 {string} string "JWT token"
+// @Failure 403 {object} map[string]string "Forbidden"
+// @Router /api/auth/webauthn/finish-passwordless [post]
+func finishPasswordlessLoginHandler(w http.ResponseWriter, r *http.Request, d *Context) (int, error) {
+	if !auth.IsWebAuthnEnabled() {
+		return http.StatusForbidden, errors.ErrPasskeyNotEnabled
+	}
+	registerRequestOrigin(r)
+	sessionID := r.URL.Query().Get("session_id")
+	if sessionID == "" {
+		return http.StatusBadRequest, errors.ErrPasskeyInvalidSession
+	}
+	user, err := auth.GetWebAuthn().FinishPasswordlessLogin(sessionID, r)
+	if err != nil {
+		return http.StatusForbidden, err
+	}
+	// senha provisória: a troca de senha continua obrigatória e só acontece pelo fluxo normal
+	if user.LoginMethod == users.LoginMethodPassword && user.RequirePasswordChange {
+		return http.StatusForbidden, errors.ErrPasswordChangeRequired
+	}
+	if err = state.UpdateUser(user, "", "PasskeyCredentials"); err != nil {
+		return http.StatusInternalServerError, err
+	}
+	d.User = user
+	status, err := printToken(w, r, d.User, "")
+	if err != nil || status != 0 {
+		return status, err
+	}
+	activity.RecordLogin(r, d.User)
+	return 0, nil
+}
+
 // @Summary Begin passkey registration
 // @Description Returns WebAuthn credential creation options for adding a new passkey.
 // @Tags Auth

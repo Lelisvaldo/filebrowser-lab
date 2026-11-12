@@ -83,6 +83,8 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	api.HandleFunc("GET /auth/oidc/login", withRateLimit(AuthRateLimitOIDC, oidcLoginHandler))
 	api.HandleFunc("POST /auth/webauthn/begin-login", withoutUser(withRateLimitChain(AuthRateLimitCredential, beginPasskeyLoginHandler)))
 	api.HandleFunc("POST /auth/webauthn/finish-login", withoutUser(withRateLimitChain(AuthRateLimitCredential, finishPasskeyLoginHandler)))
+	api.HandleFunc("POST /auth/webauthn/begin-passwordless", withoutUser(withRateLimitChain(AuthRateLimitCredential, beginPasswordlessLoginHandler)))
+	api.HandleFunc("POST /auth/webauthn/finish-passwordless", withoutUser(withRateLimitChain(AuthRateLimitCredential, finishPasswordlessLoginHandler)))
 	api.HandleFunc("POST /auth/webauthn/begin-register", withUser(withRateLimitChain(AuthRateLimitAuthenticated, beginPasskeyRegistrationHandler)))
 	api.HandleFunc("POST /auth/webauthn/finish-register", withUser(withRateLimitChain(AuthRateLimitAuthenticated, finishPasskeyRegistrationHandler)))
 	api.HandleFunc("DELETE /auth/webauthn/{id}", withUser(withRateLimitChain(AuthRateLimitAuthenticated, deletePasskeyCredentialHandler)))

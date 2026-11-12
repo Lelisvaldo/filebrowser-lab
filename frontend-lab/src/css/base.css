@@ -244,6 +244,8 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .lg-campo input::placeholder{color:var(--sub)}
 .lg-btn{min-height:48px;border:0;border-radius:12px;background:var(--gA);color:#0e0726;font:inherit;font-weight:700;font-size:1rem;cursor:pointer;margin-top:6px}
 .lg-btn:hover{filter:brightness(1.08)}
+.lg-btn.lg-bio{display:flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--txt);border:1px solid var(--line)}
+.lg-btn.lg-bio .i{width:20px;height:20px;color:var(--acc)}
 .lg-nota{margin:2px 0 0;font-size:.78rem;color:var(--sub);text-align:center}
 .lg-rodape{text-align:center;font-size:.78rem;color:var(--sub)}
 /* login sem barras de rolagem: o cartão encolhe conforme a altura da janela */

@@ -75,11 +75,19 @@ export async function passkeyRegister(name, password) {
   const r = await request("auth/webauthn/begin-register", { method: "POST", headers });
   const cred = await navigator.credentials.create({ publicKey: toCreation(r.publicKey) });
   await request("auth/webauthn/finish-register", { method: "POST", params: { session_id: r.sessionID, name }, body: credJson(cred), headers, raw: true });
+  try { localStorage.setItem("lab.pk", "1"); } catch (_e) { /* idem */ }
 }
 export async function passkeyLogin(username, password) {
   const r = await request("auth/webauthn/begin-login", { method: "POST", params: { username }, headers: { "X-Password": encodeURIComponent(password) }, quiet401: true });
   const cred = await navigator.credentials.get({ publicKey: toRequest(r.publicKey) });
   await request("auth/webauthn/finish-login", { method: "POST", params: { session_id: r.sessionID }, body: credJson(cred), raw: true, quiet401: true });
+}
+// Entrar só com a chave de acesso (biometria do aparelho), sem digitar usuário e senha: a chave é "descobrível" e o servidor exige verificação do usuário.
+export async function passkeyLoginPasswordless() {
+  const r = await request("auth/webauthn/begin-passwordless", { method: "POST", quiet401: true });
+  const cred = await navigator.credentials.get({ publicKey: toRequest(r.publicKey) });
+  await request("auth/webauthn/finish-passwordless", { method: "POST", params: { session_id: r.sessionID }, body: credJson(cred), raw: true, quiet401: true });
+  try { localStorage.setItem("lab.pk", "1"); } catch (_e) { /* sem armazenamento: só não pede sozinho da próxima vez */ }
 }
 export const passkeyDelete = (id, password) => request("auth/webauthn/" + encodeURIComponent(id), { method: "DELETE", headers: password ? { "X-Password": encodeURIComponent(password) } : {}, raw: true });
 export const passkeyList = () => get("lab/passkeys");

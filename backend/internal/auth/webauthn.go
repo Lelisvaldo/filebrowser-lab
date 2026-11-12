@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 
@@ -185,8 +186,81 @@ func (s *WebAuthnService) FinishMFALogin(sessionID string, r *http.Request) (*us
 	return user, nil
 }
 
+// BeginPasswordlessLogin inicia o login só com a passkey (sem usuário nem senha). Exige verificação do usuário
+// (biometria/PIN do aparelho), o que faz a chave valer por "algo que você tem" + "algo que você é".
+func (s *WebAuthnService) BeginPasswordlessLogin(rpID string) (sessionID string, assertion *protocol.CredentialAssertion, err error) {
+	opts := []webauthn.LoginOption{webauthn.WithUserVerification(protocol.VerificationRequired)}
+	if rpID != "" {
+		opts = append(opts, webauthn.WithLoginRelyingPartyID(rpID))
+	}
+	assertion, sessionData, err := s.wa.BeginDiscoverableLogin(opts...)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to begin passwordless WebAuthn login: %w", err)
+	}
+	sessionID = generateSessionID()
+	s.sessions.Store(sessionID, &webAuthnSession{
+		SessionData: sessionData,
+		ExpiresAt:   time.Now().Add(5 * time.Minute),
+	})
+	return sessionID, assertion, nil
+}
+
+// FinishPasswordlessLogin confere a resposta, descobre o usuário pelo "user handle" da chave e devolve o usuário.
+func (s *WebAuthnService) FinishPasswordlessLogin(sessionID string, r *http.Request) (*users.User, error) {
+	sessionVal, ok := s.sessions.Load(sessionID)
+	if !ok {
+		return nil, errors.ErrPasskeyInvalidSession
+	}
+	sess, ok := sessionVal.(*webAuthnSession)
+	if !ok {
+		return nil, errors.ErrPasskeyInvalidSession
+	}
+	defer s.sessions.Delete(sessionID)
+	if time.Now().After(sess.ExpiresAt) {
+		return nil, errors.ErrPasskeyInvalidSession
+	}
+	if sess.SessionData == nil || sess.SessionData.UserVerification != protocol.VerificationRequired {
+		return nil, errors.ErrPasskeyInvalidSession
+	}
+
+	handler := func(rawID, userHandle []byte) (webauthn.User, error) {
+		id, perr := strconv.ParseUint(string(userHandle), 10, 64)
+		if perr != nil {
+			return nil, errors.ErrPasskeyNoCredential
+		}
+		u, uerr := s.userByID(id)
+		if uerr != nil {
+			return nil, errors.ErrPasskeyNoCredential
+		}
+		return u, nil
+	}
+	wuser, credential, err := s.wa.FinishPasskeyLogin(handler, *sess.SessionData, r)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", errors.ErrPasskeyVerification, err)
+	}
+	user, ok := wuser.(*users.User)
+	if !ok {
+		return nil, errors.ErrPasskeyVerification
+	}
+	credB64 := base64.RawURLEncoding.EncodeToString(credential.ID)
+	for i := range user.PasskeyCredentials {
+		if user.PasskeyCredentials[i].ID == credB64 {
+			users.UpdateCredentialFromLibrary(&user.PasskeyCredentials[i], credential)
+			break
+		}
+	}
+	return user, nil
+}
+
 func (s *WebAuthnService) BeginRegistration(user *users.User, rpID string) (sessionID string, creation *protocol.CredentialCreation, err error) {
-	var opts []webauthn.RegistrationOption
+	// Lab: a chave precisa ser "descobrível" (guarda o usuário no autenticador) e exigir biometria/PIN do aparelho,
+	// senão não dá para entrar sem digitar usuário e senha.
+	requireRK := true
+	opts := []webauthn.RegistrationOption{webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
+		RequireResidentKey: &requireRK,
+		ResidentKey:        protocol.ResidentKeyRequirementRequired,
+		UserVerification:   protocol.VerificationRequired,
+	})}
 	if rpID != "" {
 		opts = append(opts, webauthn.WithRegistrationRelyingPartyID(rpID))
 	}

@@ -75,7 +75,7 @@ async function pEnd() {
 }
 const userName = computed(() => (app.user && app.user.username) || "");
 const initial = computed(() => (userName.value[0] || "?").toUpperCase());
-async function sair() { setUi({ menuOpen: false }); await doLogout(); void router.replace("/login"); }
+async function sair() { setUi({ menuOpen: false }); await doLogout(true); void router.replace("/login"); }
 
 watch(() => route.fullPath, () => { if (ui.menuOpen) setUi({ menuOpen: false }); });
 watch(() => route.name, (n) => { if (n === "home") page.title = ""; });

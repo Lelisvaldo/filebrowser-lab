@@ -11,6 +11,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
+import android.security.keystore.KeyProperties;
+import android.security.keystore.UserNotAuthenticatedException;
+import android.util.Base64;
 import android.view.View;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
@@ -33,8 +38,19 @@ import com.getcapacitor.BridgeWebViewClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 
 /**
  * Casca Android do filebrowser-lab: abre o servidor no WebView e acrescenta
@@ -180,6 +196,128 @@ public class MainActivity extends BridgeActivity {
 
     private boolean authenticating = false;
 
+    // ---- entrar com biometria: usuário e senha guardados no cofre do Android (Keystore) ----
+    // Chave RSA no Keystore: a pública cifra sem pedir biometria (na hora de ativar); a privada só decifra depois de uma
+    // autenticação biométrica/PIN feita nos últimos 30 s (a mesma do bloqueio do app, então no uso normal é um toque só).
+    private static final String KEY_ALIAS = "lab_login_v1";
+    private boolean savedLoginPending = false;
+
+    private boolean bioAvailable() {
+        return BiometricManager.from(this).canAuthenticate(authenticators()) == BiometricManager.BIOMETRIC_SUCCESS;
+    }
+
+    private boolean hasSavedLogin() {
+        return prefs().getString("savedLogin", null) != null;
+    }
+
+    private void clearSavedLoginData() {
+        prefs().edit().remove("savedLogin").remove("savedUser").apply();
+        try { KeyStore ks = KeyStore.getInstance("AndroidKeyStore"); ks.load(null); ks.deleteEntry(KEY_ALIAS); } catch (Exception ignored) { }
+    }
+
+    private OAEPParameterSpec oaep() {
+        return new OAEPParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA1, PSource.PSpecified.DEFAULT);
+    }
+
+    private boolean saveLoginData(String user, String pass) {
+        try {
+            byte[] plain = (user + "\n" + pass).getBytes(StandardCharsets.UTF_8);
+            if (plain.length > 180) return false;
+            clearSavedLoginData();
+            KeyPairGenerator g = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
+            KeyGenParameterSpec.Builder b = new KeyGenParameterSpec.Builder(KEY_ALIAS, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                    .setKeySize(2048)
+                    .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA1)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_RSA_OAEP)
+                    .setUserAuthenticationRequired(true);
+            if (Build.VERSION.SDK_INT >= 30) b.setUserAuthenticationParameters(30, KeyProperties.AUTH_BIOMETRIC_STRONG | KeyProperties.AUTH_DEVICE_CREDENTIAL);
+            else b.setUserAuthenticationValidityDurationSeconds(30);
+            g.initialize(b.build());
+            PublicKey pub = g.generateKeyPair().getPublic();
+            PublicKey open = KeyFactory.getInstance(pub.getAlgorithm()).generatePublic(new X509EncodedKeySpec(pub.getEncoded()));
+            Cipher c = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+            c.init(Cipher.ENCRYPT_MODE, open, oaep());
+            prefs().edit().putString("savedLogin", Base64.encodeToString(c.doFinal(plain), Base64.NO_WRAP)).putString("savedUser", user).apply();
+            return true;
+        } catch (Exception e) {
+            clearSavedLoginData();
+            return false;
+        }
+    }
+
+    /** Pede o login guardado: se o app ainda está travado, espera destravar; devolve à página pelo evento "labsavedlogin". */
+    private void requestSavedLoginOnUi() {
+        if (!hasSavedLogin()) { sendSavedLogin(null, null, "none"); return; }
+        if (locked || authenticating) { savedLoginPending = true; return; }
+        runSavedLogin();
+    }
+
+    private void runSavedLogin() {
+        try {
+            String r = decryptSaved();
+            String[] p = r.split("\n", 2);
+            sendSavedLogin(p[0], p.length > 1 ? p[1] : "", null);
+        } catch (UserNotAuthenticatedException e) {
+            promptForSavedLogin();
+        } catch (KeyPermanentlyInvalidatedException e) {
+            clearSavedLoginData();
+            sendSavedLogin(null, null, "invalid");
+        } catch (Exception e) {
+            clearSavedLoginData();
+            sendSavedLogin(null, null, "invalid");
+        }
+    }
+
+    private String decryptSaved() throws Exception {
+        KeyStore ks = KeyStore.getInstance("AndroidKeyStore");
+        ks.load(null);
+        PrivateKey key = (PrivateKey) ks.getKey(KEY_ALIAS, null);
+        if (key == null) throw new KeyPermanentlyInvalidatedException();
+        Cipher c = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+        c.init(Cipher.DECRYPT_MODE, key, oaep());
+        return new String(c.doFinal(Base64.decode(prefs().getString("savedLogin", ""), Base64.NO_WRAP)), StandardCharsets.UTF_8);
+    }
+
+    private void promptForSavedLogin() {
+        if (authenticating) { savedLoginPending = true; return; }
+        authenticating = true;
+        BiometricPrompt bp = new BiometricPrompt(this, ContextCompat.getMainExecutor(this), new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
+                authenticating = false;
+                try {
+                    String[] p = decryptSaved().split("\n", 2);
+                    sendSavedLogin(p[0], p.length > 1 ? p[1] : "", null);
+                } catch (Exception e) {
+                    clearSavedLoginData();
+                    sendSavedLogin(null, null, "invalid");
+                }
+            }
+
+            @Override
+            public void onAuthenticationError(int code, CharSequence msg) {
+                authenticating = false;
+                sendSavedLogin(null, null, "cancel");
+            }
+        });
+        BiometricPrompt.PromptInfo.Builder info = new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Filebrowser Lab")
+                .setSubtitle("Entrar com a sua biometria")
+                .setAllowedAuthenticators(authenticators());
+        if (Build.VERSION.SDK_INT < 30) info.setNegativeButtonText("Cancelar");
+        bp.authenticate(info.build());
+    }
+
+    private void sendSavedLogin(String user, String pass, String error) {
+        final WebView wv = getBridge().getWebView();
+        try {
+            JSONObject o = new JSONObject();
+            if (error != null) o.put("error", error); else o.put("user", user).put("pass", pass);
+            final String js = "window.dispatchEvent(new CustomEvent('labsavedlogin',{detail:" + o.toString() + "}))";
+            wv.post(() -> wv.evaluateJavascript(js, null));
+        } catch (Exception ignored) { }
+    }
+
     private void lock() {
         if (locked) return;
         if (!prefs().getBoolean("lock", true)) { afterUnlock(); return; }
@@ -223,6 +361,7 @@ public class MainActivity extends BridgeActivity {
 
     /** Depois de destravar: pede a permissão de notificações (uma vez) para o progresso dos envios e downloads. */
     private void afterUnlock() {
+        if (savedLoginPending) { savedLoginPending = false; runSavedLogin(); }
         if (Build.VERSION.SDK_INT >= 33 && !prefs().getBoolean("askedNotif", false)
                 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             prefs().edit().putBoolean("askedNotif", true).apply();
@@ -441,6 +580,27 @@ public class MainActivity extends BridgeActivity {
                 w.post(() -> w.evaluateJavascript("window.__labProbe&&window.__labProbe(" + res + ")", null));
             }, "lab-probe").start();
         }
+
+        /** Há biometria/PIN configurado no aparelho (dá para guardar o login)? */
+        @JavascriptInterface
+        public boolean bioAvailable() { return MainActivity.this.bioAvailable(); }
+
+        @JavascriptInterface
+        public boolean hasSavedLogin() { return MainActivity.this.hasSavedLogin(); }
+
+        @JavascriptInterface
+        public String savedUser() { return prefs().getString("savedUser", ""); }
+
+        /** Guarda usuário e senha no cofre do Android, protegidos pela biometria. Devolve false se não deu. */
+        @JavascriptInterface
+        public boolean saveLogin(String user, String pass) { return saveLoginData(user == null ? "" : user, pass == null ? "" : pass); }
+
+        @JavascriptInterface
+        public void clearSavedLogin() { clearSavedLoginData(); }
+
+        /** Pede o login guardado; a resposta chega pelo evento "labsavedlogin" (detail: {user, pass} ou {error}). */
+        @JavascriptInterface
+        public void requestSavedLogin() { runOnUiThread(MainActivity.this::requestSavedLoginOnUi); }
 
         @JavascriptInterface
         public void changeServer() {

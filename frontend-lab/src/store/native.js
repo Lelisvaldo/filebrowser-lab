@@ -29,6 +29,13 @@ export const nativeItems = () => nativeShare.files.map((f) => ({
   file: { name: f.name, size: Math.max(0, f.size || 0), native: "/__labfile/" + f.id },
   rel: f.rel || f.name,
 }));
+// entrar com biometria no app: usuário e senha ficam no cofre do Android (Keystore), liberados só pela biometria/PIN
+export const bioAvailable = () => isApp && !!window.LabNative.bioAvailable && window.LabNative.bioAvailable();
+export const hasSavedLogin = () => isApp && !!window.LabNative.hasSavedLogin && window.LabNative.hasSavedLogin();
+export const savedUser = () => (isApp && window.LabNative.savedUser ? window.LabNative.savedUser() : "");
+export const saveLogin = (u, p) => isApp && !!window.LabNative.saveLogin && window.LabNative.saveLogin(u, p);
+export const clearSavedLogin = () => { if (isApp && window.LabNative.clearSavedLogin) window.LabNative.clearSavedLogin(); };
+export const requestSavedLogin = () => { if (isApp && window.LabNative.requestSavedLogin) window.LabNative.requestSavedLogin(); };
 export const changeServer = () => { if (isApp) window.LabNative.changeServer(); };
 
 // as barras do Android (status e navegação) seguem o tema escolhido no site

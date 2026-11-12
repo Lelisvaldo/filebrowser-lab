@@ -135,7 +135,8 @@ for (const ev of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"
 // o navegador congela abas em segundo plano: ao voltar, confere na hora (sem esperar o próximo ciclo)
 document.addEventListener("visibilitychange", () => { if (!document.hidden) checkIdle(); });
 
-export async function doLogout() {
+export async function doLogout(manual = false) {
+  if (manual) { try { sessionStorage.setItem("lab.skippk", "1"); } catch (_e) { /* sem armazenamento */ } } // "Sair" feito pelo usuário: o login não pede a biometria sozinho
   clearInterval(renewTimer);
   clearInterval(idleTimer);
   await authApi.logout();

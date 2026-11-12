@@ -11,12 +11,14 @@ import { date } from "@/lib/format";
 import { cfg } from "@/lib/config";
 import QrCode from "@/components/QrCode.vue";
 import { openShare } from "@/store/shareDlg";
-import { isApp, getLock, setLock, changeServer } from "@/store/native";
+import { isApp, getLock, setLock, changeServer, hasSavedLogin, clearSavedLogin } from "@/store/native";
 
 const route = useRoute();
 const router = useRouter();
 const origin = window.location.origin;
 const lockOn = ref(getLock());
+const bioSaved = ref(hasSavedLogin());
+const bioOff = () => { clearSavedLogin(); bioSaved.value = false; try { localStorage.removeItem("lab.bio.no"); } catch (_e) { /* ok */ } };
 const toggleLock = (on) => { setLock(on); lockOn.value = on; };
 const tab = computed(() => route.params.tab || "perfil");
 const tabs = [["perfil", "Perfil", "person"], ["seguranca", "Segurança", "shield"], ["chaves", "Chaves de API", "key"], ["links", "Links compartilhados", "link"]];
@@ -123,6 +125,8 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
         <div v-if="isApp" class="appbox">
           <div class="ch"><span class="chi"><Icon name="lock" /></span><div class="cht"><b>App Android</b><small>Bloqueio ao abrir e servidor</small></div></div>
           <label class="applock"><input type="checkbox" :checked="lockOn" @change="toggleLock($event.target.checked)" /> Pedir biometria ou PIN ao abrir o app</label>
+          <button v-if="bioSaved" class="btn" type="button" @click="bioOff">Desligar a entrada com biometria (apagar a senha guardada)</button>
+          <small v-else class="meta">Entrada com biometria desligada. Para ativar, saia e entre de novo com a senha: o app pergunta.</small>
           <button class="btn" type="button" @click="changeServer">Trocar o endereço do servidor</button>
         </div>
         <div class="ch"><span class="chi"><Icon name="shield" /></span><div class="cht"><b>Verificação em duas etapas</b><small>Aplicativo autenticador</small></div><span class="stchip" :class="app.user.otpEnabled ? 'ok' : 'off'"><Icon :name="app.user.otpEnabled ? 'tick' : 'dismiss'" />{{ app.user.otpEnabled ? "Ativada" : "Desativada" }}</span></div>
@@ -141,7 +145,7 @@ onMounted(() => { void loadKeys(); void loadLinks(); });
         </form>
         <div v-if="pkOn" class="pk-sec">
         <h2>Chave de acesso (passkey)</h2>
-        <p class="meta">Segundo fator no login: biometria do aparelho ou chave de segurança, depois da senha.</p>
+        <p class="meta">Entrar só com a biometria do aparelho (rosto, digital ou PIN), sem digitar usuário e senha. Cadastre uma chave em cada aparelho. Chaves cadastradas antes de 11/11/2026 só servem como segundo fator: cadastre uma nova para entrar sem senha.</p>
         <div v-if="pks.length" class="tbl">
           <div v-for="c in pks" :key="c.id" class="trow"><div class="main"><b>{{ c.name }}</b><small>criada {{ c.createdAt ? date(new Date(c.createdAt * 1000).toISOString()) : "" }}</small></div><button class="ib" title="Remover" aria-label="Remover chave" @click="pkDel(c)"><Icon name="trash" /></button></div>
         </div>

@@ -19,7 +19,7 @@ function config() { setUi({ userOpen: false, settingsOpen: true }); }
 function conta() { close(); void router.push("/ajustes"); }
 async function sair() {
   close();
-  await doLogout();
+  await doLogout(true);
   router.replace("/login");
 }
 </script>

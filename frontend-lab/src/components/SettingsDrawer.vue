@@ -12,7 +12,7 @@ watch(() => ui.settingsOpen, async (o) => { if (o) { await nextTick(); closeBtn.
 
 async function sair() {
   close();
-  await doLogout();
+  await doLogout(true);
   router.replace("/login");
 }
 function go(path) { close(); router.push(path); }

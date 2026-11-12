@@ -47,7 +47,7 @@ func changeRequiredPasswordHandler(w http.ResponseWriter, r *http.Request, d *Co
 	if settings.Config.Auth.Methods.PasswordAuth.EnforcedOtp && user.TOTPSecret == "" {
 		return http.StatusForbidden, errors.ErrNoTotpConfigured
 	}
-	if user.HasPasskeyMFA() && user.TOTPSecret == "" {
+	if labPasskeyMFARequired(user) && user.TOTPSecret == "" {
 		return http.StatusForbidden, errors.ErrPasskeyMFARequired
 	}
 	if user.LoginMethod != users.LoginMethodPassword {
