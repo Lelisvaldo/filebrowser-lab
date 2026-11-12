@@ -291,8 +291,8 @@ function onStagePick(e) {
 function boxPick(folder) { autoSend = true; (folder ? stageFolderInput : stageInput).value?.click(); }
 // no app, ao confirmar a tela de seleção o envio começa para a pasta aberta
 const onPicked = () => { stage.send++; };
-onMounted(() => window.addEventListener("labpicked", onPicked));
-onBeforeUnmount(() => window.removeEventListener("labpicked", onPicked));
+onMounted(() => { window.addEventListener("labpicked", onPicked); window.addEventListener("paste", onPaste); });
+onBeforeUnmount(() => { window.removeEventListener("labpicked", onPicked); window.removeEventListener("paste", onPaste); });
 
 // "Enviar para esta pasta": junta o que está na lista (do computador) com o que veio do celular
 watch(() => stage.send, async () => {
@@ -409,6 +409,24 @@ async function paste() {
     void refreshSources();
   } catch (e) { toastError(e); }
 }
+// Copiar/recortar dentro do site deixa um marcador de texto na área de transferência do sistema: assim, um Ctrl+V depois decide
+// pelo mais recente (marcador = colar interno; arquivos = veio do Explorer) em vez de misturar com uma cópia antiga.
+function markInternalClip() { try { navigator.clipboard?.writeText("filebrowser-lab: itens copiados (cole dentro do site)").catch(() => {}); } catch (_e) { /* sem permissão: segue só com o colar interno */ } }
+async function onPaste(e) {
+  if (/input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (isFile.value) return;
+  const dt = e.clipboardData;
+  const hasFiles = dt && [...(dt.items || [])].some((i) => i.kind === "file");
+  if (!hasFiles) { if (clip.items.length) { e.preventDefault(); void paste(); } return; }
+  e.preventDefault();
+  if (!canCreate.value) { toast("Não é possível enviar para esta pasta.", "err"); return; }
+  const list = await filesFromDrop(dt); // mesmo leitor do arrastar e soltar: pastas viram estrutura, pastas vazias também
+  if (!list.length) { toast("O navegador não entregou o que foi colado.", "err"); return; }
+  const dirs = new Set(list.filter((i) => i.rel.includes("/") || i.dir).map((i) => i.rel.split("/")[0])).size;
+  const files = list.filter((i) => !i.dir).length;
+  toast(`Colado: ${files} arquivo(s)${dirs ? ` em ${dirs} pasta(s)` : ""}. Enviando…`, "info");
+  await startUpload(list);
+}
 function onKey(e) {
   if (/input|textarea|select/i.test(e.target.tagName) || e.target.isContentEditable) return;
   if (isFile.value) return;
@@ -416,9 +434,9 @@ function onKey(e) {
   const key = e.key;
   const step = isGrid.value ? gridCols() : 1;
   if (mod && key.toLowerCase() === "a") { e.preventDefault(); sel.value = new Set(items.value.map((i) => i.path)); }
-  else if (mod && key.toLowerCase() === "c" && selected.value.length) { e.preventDefault(); setClip("copy", source.value, selected.value); toast(`${selected.value.length} copiado(s). Cole com Ctrl+V.`); }
-  else if (mod && key.toLowerCase() === "x" && selected.value.length && canModify.value) { e.preventDefault(); setClip("cut", source.value, selected.value); toast(`${selected.value.length} recortado(s). Cole com Ctrl+V.`); }
-  else if (mod && key.toLowerCase() === "v") { e.preventDefault(); void paste(); }
+  else if (mod && key.toLowerCase() === "c" && selected.value.length) { e.preventDefault(); setClip("copy", source.value, selected.value); markInternalClip(); toast(`${selected.value.length} copiado(s). Cole com Ctrl+V.`); }
+  else if (mod && key.toLowerCase() === "x" && selected.value.length && canModify.value) { e.preventDefault(); setClip("cut", source.value, selected.value); markInternalClip(); toast(`${selected.value.length} recortado(s). Cole com Ctrl+V.`); }
+  else if (mod && key.toLowerCase() === "v") { /* o evento "paste" decide: arquivos do Explorer sobem; senão cola o que foi copiado no site */ }
   else if (key === "ArrowDown") { e.preventDefault(); moveCursor((cursor.value < 0 ? -step : cursor.value) + step, e); }
   else if (key === "ArrowUp") { e.preventDefault(); moveCursor((cursor.value < 0 ? 0 : cursor.value) - step, e); }
   else if (key === "ArrowRight" && isGrid.value) { e.preventDefault(); moveCursor(cursor.value + 1, e); }

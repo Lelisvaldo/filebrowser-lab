@@ -2,7 +2,7 @@
 import { reactive } from "vue";
 import { apiPath, request } from "@/api/client";
 import * as filesApi from "@/api/files";
-import { app, toast, toastError } from "./app";
+import { app, toast, toastError, setBusyCheck } from "./app";
 import { moveReason } from "@/lib/moveReason";
 
 export const transfers = reactive({ items: [] });
@@ -80,6 +80,7 @@ function trim() {
 
 export const visible = () => transfers.items.filter((t) => !t.hidden && t.status !== "canceled" && (t.kind === "up" || t.kind === "move" || t.kind === "copy"));
 export const active = () => transfers.items.filter((t) => ["queued", "running", "paused"].includes(t.status));
+setBusyCheck(() => active().length > 0); // atividade em andamento impede o logout por inatividade
 export const running = () => transfers.items.filter((t) => t.status === "running" && t.kind === "up");
 
 function pump() {

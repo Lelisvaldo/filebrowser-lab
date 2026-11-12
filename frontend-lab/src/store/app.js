@@ -103,10 +103,41 @@ export async function loadSession() {
 function startRenew() {
   clearInterval(renewTimer);
   renewTimer = setInterval(() => { authApi.renew().catch(() => {}); }, 10 * 60 * 1000);
+  startIdle();
 }
+
+// ---- logout por inatividade ----
+// Sem mouse, teclado, toque ou rolagem por IDLE_MS a sessão é encerrada, em qualquer aparelho.
+// Não encerra enquanto houver algo em execução: envio/mover/copiar na fila (transfers.js registra o teste) ou vídeo/áudio tocando.
+const IDLE_MS = 2 * 60 * 60 * 1000;
+let lastActive = Date.now();
+let idleTimer = null;
+let busyCheck = () => false;
+export const setBusyCheck = (fn) => { busyCheck = fn; };
+const mediaPlaying = () => [...document.querySelectorAll("video,audio")].some((m) => !m.paused && !m.ended);
+const touch = () => { lastActive = Date.now(); };
+function checkIdle() {
+  if (!app.user) return;
+  if (busyCheck() || mediaPlaying()) { touch(); return; }
+  if (Date.now() - lastActive >= IDLE_MS) void idleLogout();
+}
+async function idleLogout() {
+  await doLogout().catch(() => {});
+  window.dispatchEvent(new Event("lab:session-expired"));
+  toast("Sessão encerrada por inatividade. Entre de novo.", "info");
+}
+function startIdle() {
+  touch();
+  clearInterval(idleTimer);
+  idleTimer = setInterval(checkIdle, 30 * 1000);
+}
+for (const ev of ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"]) window.addEventListener(ev, touch, { passive: true, capture: true });
+// o navegador congela abas em segundo plano: ao voltar, confere na hora (sem esperar o próximo ciclo)
+document.addEventListener("visibilitychange", () => { if (!document.hidden) checkIdle(); });
 
 export async function doLogout() {
   clearInterval(renewTimer);
+  clearInterval(idleTimer);
   await authApi.logout();
   app.user = null;
   app.sources = {};
