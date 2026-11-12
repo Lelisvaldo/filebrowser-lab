@@ -645,3 +645,30 @@ body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
 .upmenu button{display:flex;align-items:center;gap:10px;height:42px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--txt);font:inherit;cursor:pointer;text-align:left}
 .upmenu button:hover{background:var(--hover)}
 .upmenu .i{width:20px;height:20px;color:var(--acc)}
+
+/* caixa Enviar (computador) */
+.upbox h2{margin:0 0 4px;font-size:1.1rem}
+.upzone{display:flex;flex-direction:column;align-items:center;gap:6px;padding:34px 16px;border:2px dashed var(--line);border-radius:14px;background:var(--card);color:var(--mut,var(--txt));font:inherit;cursor:pointer}
+.upzone:hover{border-color:var(--acc);background:var(--accbg)}
+.upzone .i{width:36px;height:36px;color:var(--acc)}
+.upzone b{color:var(--txt)}
+.upbox .linkbtn{align-self:center;border:0;background:none;color:var(--acc);font:inherit;cursor:pointer;text-decoration:underline;padding:4px}
+.upbox .dlg-act{display:flex;justify-content:flex-end}
+
+/* explorador do computador (Enviar) */
+.dlg.pcp{width:min(640px,100%);height:min(620px,calc(100vh - 32px));overflow:hidden}
+.pcp-h{display:flex;flex-direction:column;gap:2px}.pcp-h small{color:var(--sub)}
+.pcp-bar{display:flex;align-items:center;gap:8px}
+.pcp-path{flex:1;min-width:0;display:flex;flex-wrap:nowrap;align-items:center;gap:4px;overflow-x:auto;white-space:nowrap;color:var(--sub)}
+.pcp-path button{border:0;background:none;color:var(--txt);font:inherit;cursor:pointer;padding:2px 4px;border-radius:6px}
+.pcp-path button:hover{background:var(--hover)}
+.pcp-list{flex:1;min-height:0;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.pcp-row{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px;cursor:pointer;border-bottom:1px solid var(--line)}
+.pcp-row:last-child{border-bottom:0}.pcp-row:hover{background:var(--hover)}.pcp-row.on{background:var(--accbg)}
+.pcp-ck{border:0;background:none;color:var(--acc);padding:4px;cursor:pointer;display:grid;place-items:center}
+.pcp-ic{width:22px;height:22px;color:var(--acc);flex:none}
+.pcp-n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcp-go{width:18px;height:18px;color:var(--sub)}
+.pcp-msg{padding:28px 16px;text-align:center;color:var(--sub)}.pcp-msg.err{color:#d33}
+.pcp-tip{margin:0;font-size:.82rem;color:var(--sub)}
+.pcp-act{display:flex;align-items:center;gap:8px;justify-content:flex-end}.pcp-sum{margin-right:auto;font-weight:600}

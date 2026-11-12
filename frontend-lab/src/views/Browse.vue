@@ -21,7 +21,8 @@ import { refreshTrash } from "@/store/trash";
 import { deleteNotice } from "@/lib/trashInfo";
 import { moveReason } from "@/lib/moveReason";
 import { nativeShare, nativeItems, isApp, pickItems } from "@/store/native";
-import { stage, addStage, clearStage } from "@/store/stage";
+import { stage, addStage, clearStage, hasPcPicker } from "@/store/stage";
+import PcPicker from "@/components/PcPicker.vue";
 import FolderStyle from "@/components/FolderStyle.vue";
 import * as arcApi from "@/api/archive";
 import * as officeApi from "@/api/office";
@@ -64,7 +65,16 @@ const usePct = (it) => (totalSize.value > 0 ? (it.size || 0) / totalSize.value :
 const maxSize = computed(() => Math.max(1, ...items.value.map((i) => i.size || 0)));
 const stageInput = ref(null);
 const stageFolderInput = ref(null);
-const upMenu = ref(false);
+const upBox = ref(false); // caixa "Enviar" no computador: solte pastas e arquivos juntos, ou clique para escolher
+let autoSend = false;
+const pcRoot = ref(null); // pasta-base escolhida na janela nativa; abre o explorador com caixinhas
+let pcSend = true;
+async function openPc(send) {
+  pcSend = send;
+  try { pcRoot.value = await window.showDirectoryPicker({ id: "lab-enviar", mode: "read" }); }
+  catch (e) { if (e?.name !== "AbortError") { if (send) upBox.value = true; else stageInput.value?.click(); } }
+}
+function onPcDone(items) { pcRoot.value = null; addStage(items); if (pcSend) stage.send++; }
 
 // Raiz de Nuvens e de Pendrives: só lista pontos de montagem (conexões de nuvem, pendrives); não se cria, move nem apaga nada aqui.
 const mountRoot = computed(() => ["Nuvens", "Pendrives"].includes(source.value) && !dirPath.value.split("/").filter(Boolean).length);
@@ -271,12 +281,14 @@ async function startUpload(all) {
   enqueueUploads(source.value, dirPath.value, list, { overwrite });
 }
 // "+ Arquivos" / "Arquivos…" e "+ Pasta" / "Pasta…" (computador): acrescentam à lista de envio. No app Android há uma tela só.
-watch(() => stage.askFiles, () => { if (isApp) pickItems(); else stageInput.value?.click(); });
+watch(() => stage.askFiles, () => { if (isApp) pickItems(); else if (hasPcPicker) openPc(false); else stageInput.value?.click(); });
 watch(() => stage.askFolder, () => { if (isApp) pickItems(); else stageFolderInput.value?.click(); });
 function onStagePick(e) {
   addStage(filesFromInput(e.target));
   e.target.value = "";
+  if (autoSend) { autoSend = false; upBox.value = false; stage.send++; }
 }
+function boxPick(folder) { autoSend = true; (folder ? stageFolderInput : stageInput).value?.click(); }
 // no app, ao confirmar a tela de seleção o envio começa para a pasta aberta
 const onPicked = () => { stage.send++; };
 onMounted(() => window.addEventListener("labpicked", onPicked));
@@ -294,7 +306,7 @@ watch(() => stage.send, async () => {
 function dragEnter(e) { if (e.dataTransfer?.types?.includes("Files")) { dragDepth++; dragging.value = true; } }
 function dragLeave() { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) dragging.value = false; }
 async function drop(e) {
-  dragDepth = 0; dragging.value = false;
+  dragDepth = 0; dragging.value = false; upBox.value = false;
   if (!e.dataTransfer?.types?.includes("Files")) return;
   e.preventDefault();
   await startUpload(await filesFromDrop(e.dataTransfer));
@@ -521,13 +533,7 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
 
       <div class="tbar" :class="{ has: selected.length }">
         <template v-if="!selected.length">
-          <span v-if="canCreate" class="upwrap">
-            <button class="btn pri" type="button" @click="isApp ? pickItems() : (upMenu = !upMenu)" title="Enviar" aria-label="Enviar" :aria-expanded="upMenu"><Icon name="upload" /><span class="lbl">Enviar</span></button>
-            <div v-if="upMenu" class="upmenu" role="menu" @click="upMenu = false">
-              <button type="button" role="menuitem" @click="stage.askFiles++"><Icon name="file" /> Arquivos…</button>
-              <button type="button" role="menuitem" @click="stage.askFolder++"><Icon name="folderopen" /> Pasta…</button>
-            </div>
-          </span>
+          <button v-if="canCreate" class="btn pri" type="button" @click="isApp ? pickItems() : hasPcPicker ? openPc(true) : (upBox = true)" title="Enviar" aria-label="Enviar"><Icon name="upload" /><span class="lbl">Enviar</span></button>
           <button v-if="canCreate" class="btn" type="button" @click="newFolder" title="Nova pasta" aria-label="Nova pasta"><Icon name="foldernew" /><span class="lbl">Nova pasta</span></button>
           <button v-if="canCreate" class="btn" type="button" title="Novo arquivo de texto" @click="newFile" aria-label="Novo arquivo"><Icon name="file" /><span class="lbl">Novo arquivo</span></button>
           <span class="sp"></span>
@@ -593,6 +599,19 @@ const headBrand = computed(() => brandOf(source.value, dirPath.value));
     </div>
 
     <div v-if="mq" class="marquee" :style="{ left: mq.left + 'px', top: mq.top + 'px', width: mq.width + 'px', height: mq.height + 'px' }"></div>
+    <div v-if="upBox" class="dlg-scrim" @click.self="upBox = false" @keydown.esc="upBox = false">
+      <div class="dlg upbox" role="dialog" aria-label="Enviar para esta pasta">
+        <h2>Enviar para {{ folderName }}</h2>
+        <button type="button" class="upzone" @click="boxPick(false)">
+          <Icon name="upload" />
+          <b>Solte aqui pastas e arquivos</b>
+          <span>ou clique para escolher arquivos</span>
+        </button>
+        <button type="button" class="linkbtn" @click="boxPick(true)">Escolher uma pasta inteira</button>
+        <div class="dlg-act"><button class="btn" type="button" @click="upBox = false">Cancelar</button></div>
+      </div>
+    </div>
+    <PcPicker v-if="pcRoot" :root="pcRoot" :dest="folderName" :send-now="pcSend" @done="onPcDone" @close="pcRoot = null" />
     <div v-if="dragging" class="dropzone"><div><Icon name="upload" /><b>Solte para enviar para {{ folderName }}</b></div></div>
     <FolderStyle v-if="styleFor" :source="source" :path="styleFor.path" :name="styleFor.name" @close="styleFor = null" />
     <ItemMenu v-if="menu" :x="menu.x" :y="menu.y" :entries="menu.entries" @pick="menuPick" @close="menu = null" />

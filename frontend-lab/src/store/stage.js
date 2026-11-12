@@ -4,6 +4,8 @@ import { reactive, computed } from "vue";
 import { nativeShare, clearShare as clearNative } from "./native";
 
 // items: { file, rel } (arquivo) ou { dir: true, rel } (pasta, vazia ou não)
+// janela nativa para escolher a pasta-base (Chrome/Edge); sem ela cai nos seletores simples
+export const hasPcPicker = typeof window !== "undefined" && typeof window.showDirectoryPicker === "function" && window.isSecureContext;
 export const stage = reactive({ items: [], send: 0, askFiles: 0, askFolder: 0 });
 
 export function addStage(list) {
