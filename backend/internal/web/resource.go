@@ -331,6 +331,7 @@ type MoveCopyRequest struct {
 	Action    string         `json:"action"`    // "copy", "move", or "rename"
 	Overwrite bool           `json:"overwrite"` // Overwrite if destination exists
 	Rename    bool           `json:"rename"`    // Auto-rename if destination exists
+	Job       string         `json:"job,omitempty"` // lab: id aleatório do cliente para consultar o progresso (GET /api/lab/job)
 }
 
 // MoveCopyResponse represents the response from a move/copy operation
@@ -1228,6 +1229,13 @@ func ResourcePatchHandler(w http.ResponseWriter, r *http.Request, d *Context) (i
 		Failed:    make([]MoveCopyItem, 0),
 	}
 
+	// lab: progresso consultável (só mover/copiar; renomear é instantâneo)
+	var labJob *fileutils.Progress
+	if req.Job != "" && req.Action != "rename" && d.User != nil {
+		labJob = fileutils.StartJob(req.Job, d.User.ID, len(req.Items))
+		defer labJob.Finish(req.Job)
+	}
+
 	// Process each item
 	for _, item := range req.Items {
 		clientFromPath := item.FromPath
@@ -1455,6 +1463,7 @@ func ResourcePatchHandler(w http.ResponseWriter, r *http.Request, d *Context) (i
 
 		// Perform the action
 		err = patchAction(r.Context(), patchActionParams{
+			job:      labJob,
 			action:   req.Action,
 			srcIndex: item.FromSource,
 			dstIndex: item.ToSource,
@@ -1603,6 +1612,7 @@ func addVersionSuffix(source string) string {
 }
 
 type patchActionParams struct {
+	job      *fileutils.Progress
 	action   string
 	srcIndex string
 	dstIndex string
@@ -1615,6 +1625,8 @@ type patchActionParams struct {
 func patchAction(ctx context.Context, params patchActionParams) error {
 	switch params.action {
 	case "copy":
+		params.job.BeginItem(params.src)
+		defer params.job.EndItem(params.src)
 		err := files.CopyResource(params.isSrcDir, params.srcIndex, params.dstIndex, params.src, params.dst)
 		return err
 	case "rename", "move":
@@ -1642,6 +1654,8 @@ func patchAction(ctx context.Context, params patchActionParams) error {
 
 		// delete thumbnails
 		preview.DelThumbs(ctx, *fileInfo)
+		params.job.BeginItem(params.src)
+		defer params.job.EndItem(params.src)
 		err = files.MoveResource(params.isSrcDir, params.srcIndex, params.dstIndex, params.src, params.dst)
 		if err != nil {
 			return err

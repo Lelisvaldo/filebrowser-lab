@@ -37,17 +37,39 @@ export function noteDownload(name, size) {
 // Mover/copiar dentro do servidor: o PATCH é uma chamada só (sem bytes), então a fila mostra "em andamento" até terminar.
 export async function trackedMoveCopy(items, action, opts) {
   const first = items[0] || {};
+  const jobId = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/-/g, "");
   const nome = (p) => String(p || "").replace(/\/+$/, "").split("/").pop();
   const dest = (first.toSource || "") + (first.to ? String(first.to).replace(/[^/]*\/?$/, "") : "");
   const raw = {
     id: ++seq, kind: action === "move" ? "move" : "copy", name: items.length === 1 ? nome(first.from) : items.length + " itens",
     source: first.fromSource || "", dir: dest, path: "", size: 0, loaded: 0, base: 0, status: "running", error: "", speed: 0,
     label: (action === "move" ? "Movendo" : "Copiando") + " para " + dest,
+    fromDir: (first.fromSource || "") + (first.from ? String(first.from).replace(/[^/]*\/?$/, "") : ""), // de onde vem
+    item: 0, items: items.length,
   };
   transfers.items.push(raw);
   const t = transfers.items[transfers.items.length - 1]; // proxy reativo: só ele atualiza a tela
+  // o servidor conta os bytes do item em andamento; aqui só se pergunta a cada segundo (mover na mesma partição é instantâneo e nem aparece)
+  let last = { at: Date.now(), done: 0, item: 0 };
+  let polling = false;
+  const poll = setInterval(async () => {
+    if (polling || t.status !== "running") return;
+    polling = true;
+    try {
+      const s = await filesApi.jobProgress(jobId);
+      if (!s || t.status !== "running") return;
+      const now = Date.now();
+      if (s.item !== last.item) last = { at: now, done: 0, item: s.item }; // item novo: recomeça a velocidade
+      if (now > last.at && s.done >= last.done) {
+        const inst = ((s.done - last.done) * 1000) / (now - last.at);
+        t.speed = t.speed > 0 && s.item === t.item ? t.speed * 0.6 + inst * 0.4 : inst; // média suave
+      }
+      last.at = now; last.done = s.done;
+      t.size = s.total; t.loaded = s.done; t.item = s.item; t.items = s.items; t.curName = s.name;
+    } finally { polling = false; }
+  }, 1000);
   try {
-    const res = await filesApi.moveCopy(items, action, opts);
+    const res = await filesApi.moveCopy(items, action, { ...opts, job: jobId });
     const failed = res?.failed?.length || 0;
     // o servidor numera "nome (2)" quando o destino já tem um item com o mesmo nome: avisa qual ficou
     const base = (p) => String(p || "").replace(/\/+$/, "").split("/").pop();
@@ -66,6 +88,7 @@ export async function trackedMoveCopy(items, action, opts) {
     t.error = moveReason(motivo) || "Falhou";
     throw e;
   } finally {
+    clearInterval(poll);
     trim();
   }
 }

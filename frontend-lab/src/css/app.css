@@ -171,7 +171,7 @@ a.chip{text-decoration:none}
 .chkl{flex-direction:row!important;align-items:center;gap:6px!important;color:var(--txt)!important}
 code{background:var(--bar);border-radius:5px;padding:1px 5px}
 
-@media (max-width:760px){
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){
   .busca input{display:none}
   .busca .sbtn{display:grid}
   .busca.open{position:fixed;z-index:8;left:0;right:0;top:0;height:var(--top);background:var(--side);padding:0 8px;gap:4px}
@@ -199,7 +199,7 @@ code{background:var(--bar);border-radius:5px;padding:1px 5px}
 .dock-h[aria-expanded="false"] .i{transform:rotate(180deg)}
 .dock-b{max-height:min(46vh,340px);overflow-y:auto;padding:8px 8px 4px}
 .dock-f{padding:4px 12px 10px;display:flex;justify-content:flex-end}
-@media (max-width:760px){.dock{bottom:max(12px,env(safe-area-inset-bottom,0px))}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.dock{bottom:max(12px,env(safe-area-inset-bottom,0px))}}
 select.scopein{min-height:38px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--txt);padding:0 8px;font:inherit}
 
 /* linhas de formulário que ocupam a largura toda: campos esticam, botão fica na ponta direita */
@@ -221,7 +221,7 @@ select.scopein,.sortsel select{min-height:40px}
 .tvazio.vi{padding:18px 4px}
 .sem-usb{display:flex;align-items:center;gap:12px}
 .sem-usb .i{color:var(--sub);opacity:.7}
-@media (min-width:761px){body.rail .sem-usb{justify-content:center;padding:6px 0}}
+@media (min-width:761px) and (min-height:501px),(min-width:761px) and (pointer:fine){body.rail .sem-usb{justify-content:center;padding:6px 0}}
 
 /* rodapé: fixo no fim da área de conteúdo (fora da rolagem), sempre numa linha só */
 .statusbar{flex:none;display:flex;align-items:center;gap:12px;min-height:32px;padding:0 max(16px,env(safe-area-inset-right,0px)) 0 max(16px,env(safe-area-inset-left,0px));background:var(--side);border-top:1px solid var(--line);color:var(--sub);font-size:.8rem;white-space:nowrap;overflow:hidden}
@@ -232,7 +232,7 @@ select.scopein,.sortsel select{min-height:40px}
 .sb-mini i{display:block;height:100%;background:var(--fill);border-radius:99px}
 .sb-sep{width:1px;height:14px;background:var(--line);flex:none}
 .statusbar .sb-sel,.statusbar .sb-sel b{color:var(--acc)}
-@media (max-width:760px){.statusbar .sb-disk,.statusbar .sb-opt{display:none}.selcount{white-space:nowrap}.statusbar .sp{display:none}.statusbar{justify-content:flex-end}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.statusbar .sb-disk,.statusbar .sb-opt{display:none}.selcount{white-space:nowrap}.statusbar .sp{display:none}.statusbar{justify-content:flex-end}}
 
 /* ícones no lugar de texto: rótulos só como dica (title) e leitor de tela */
 .lbl{display:none}
@@ -246,7 +246,7 @@ select{appearance:none;-webkit-appearance:none;padding-right:34px!important;back
 /* busca: só a lupa; expande ao passar o mouse ou focar (no celular a lupa abre a barra) */
 a.ib{text-decoration:none}
 .badge.ok{background:var(--ok);color:var(--bg)}
-@media (min-width:761px){
+@media (min-width:761px) and (min-height:501px),(min-width:761px) and (pointer:fine){
   .busca .sbtn{display:grid}
   .busca input{width:0;padding:0;border-width:0;opacity:0;margin-left:-4px;transition:width .2s,opacity .15s,padding .2s}
   .busca:hover input,.busca:focus-within input,.busca input:not(:placeholder-shown){width:230px;padding:0 14px;border-width:1px;opacity:1;margin-left:0}
@@ -268,7 +268,7 @@ a.ib{text-decoration:none}
 .frow .bar.cheio{--grad:var(--gC)}
 .frow .bar.cheio i{background:var(--gC)}
 .frow .bar i{background:var(--gB)}
-@media (max-width:760px){.frow.hasbar{grid-template-columns:36px minmax(0,1fr) 56px 124px 84px 36px}.frow.hasbar .m{font-size:.78rem}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.frow.hasbar{grid-template-columns:36px minmax(0,1fr) 56px 124px 84px 36px}.frow.hasbar .m{font-size:.78rem}}
 @media (max-width:520px){.frow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow .hide-s,.fh.hide-s{display:none}.frow.urow{grid-template-columns:44px minmax(0,1fr) 84px 36px}.frow.urow .bar{display:none}.frow.hasbar{grid-template-columns:40px minmax(0,1fr) 44px 80px 34px;gap:6px}}
 .cur-row{outline:2px solid var(--acc);outline-offset:-2px}
 .marquee{position:absolute;z-index:20;border:1px solid var(--acc);background:color-mix(in srgb,var(--acc) 18%,transparent);pointer-events:none;border-radius:3px}
@@ -287,7 +287,7 @@ a.ib{text-decoration:none}
 .scoperow .chkl:last-child{justify-self:end}
 select.scopein{width:auto}
 .card .form>.btn,.card .form>button.btn{align-self:flex-end}
-@media (max-width:760px){.scoperow{grid-template-columns:minmax(0,1fr) auto}.scoperow .scopein{grid-column:1/-1;order:3}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.scoperow{grid-template-columns:minmax(0,1fr) auto}.scoperow .scopein{grid-column:1/-1;order:3}}
 
 /* Paleta variada: cada pasta e cada tipo de arquivo tem a sua cor (classe h-*, variável --h). */
 :root{--c-cyan:#0a8f95;--c-violet:#6a56d8;--c-magenta:#c4199f;--c-pink:#d6336c;--c-orange:#c9640d;--c-green:#1d8a57;--c-blue:#1d6fc0;--c-yellow:#a67c00;--c-red:#c8332f}
@@ -401,7 +401,7 @@ main{position:relative}
 .crow .m,.crow .s{color:var(--sub);font-size:.85rem;text-align:right}
 .crow .bar{height:7px}
 .selbar{position:sticky;bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 6px 24px rgba(0,0,0,.25)}
-@media (max-width:760px){.crow{grid-template-columns:44px minmax(0,1fr) 52px 76px}.crow .bar{display:none}.tmap{aspect-ratio:100/90}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.crow{grid-template-columns:44px minmax(0,1fr) 52px 76px}.crow .bar{display:none}.tmap{aspect-ratio:100/90}}
 .cleanup .tbar .meta{min-width:0;flex:1 1 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cleanup .tbar .sp{display:none}
 .tm{padding:10px 12px;text-shadow:0 1px 2px rgba(0,0,0,.45)}
 .tm .tn{font-size:1.15rem;font-weight:700;line-height:1.2;padding-right:30px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;white-space:normal}
@@ -496,7 +496,7 @@ body.rail .tree,body.rail .tw-root{display:none}
 .arc-row:hover{background:var(--hover)}.arc-row.sel{background:var(--accbg)}
 .arc-row .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.arc-row .m,.arc-row .s{color:var(--sub);font-size:.85rem}.arc-row .s{text-align:right}
 .arc-row .chk{display:grid;place-items:center;width:36px;height:36px;border:0;background:none;color:var(--acc);cursor:pointer}
-@media (max-width:760px){.arc-row{grid-template-columns:44px minmax(0,1fr) 84px 36px}.arc-row .m{display:none}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.arc-row{grid-template-columns:44px minmax(0,1fr) 84px 36px}.arc-row .m{display:none}}
 .arc-prev{z-index:90}
 .arc-pbox{width:min(900px,100%);height:min(80vh,720px);padding:0;overflow:hidden}
 .arc-ptop{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.arc-ptop small{color:var(--sub)}
@@ -511,7 +511,7 @@ body.rail .tree,body.rail .tw-root{display:none}
 /* Minha conta > Segurança (layout novo) */
 .tabs.icotabs button{display:inline-flex;align-items:center;gap:7px}
 .tabs.icotabs button .i{width:18px;height:18px}
-@media (max-width:760px){.tabs.icotabs button:not([aria-selected="true"]) .tl{display:none}.tabs.icotabs button{padding:10px 12px}}
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){.tabs.icotabs button:not([aria-selected="true"]) .tl{display:none}.tabs.icotabs button{padding:10px 12px}}
 .card.segcard{display:flex;flex-direction:column;gap:14px}
 .ch{display:flex;align-items:center;gap:12px}
 .chi{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:var(--hover);color:var(--acc);flex:none}
@@ -672,3 +672,13 @@ body.rail .foot .nav.lixo .t,body.rail .foot .nav.lixo .cnt{display:none}
 .pcp-msg{padding:28px 16px;text-align:center;color:var(--sub)}.pcp-msg.err{color:#d33}
 .pcp-tip{margin:0;font-size:.82rem;color:var(--sub)}
 .pcp-act{display:flex;align-items:center;gap:8px;justify-content:flex-end}.pcp-sum{margin-right:auto;font-weight:600}
+
+/* celular deitado: pouca altura, então corta o que ocupa espaço e deixa a lista aparecer */
+@media (max-height:500px) and (pointer:coarse){
+  :root{--top:48px;--row:40px}
+  .page{padding-block:8px 24px}
+  .phead{margin-bottom:8px}
+  .ph-ico{width:34px;height:34px;border-radius:10px}
+  .ph-t h1,.phead.lhead h1{font-size:1.2rem}
+  .tbar{margin-bottom:8px}
+}

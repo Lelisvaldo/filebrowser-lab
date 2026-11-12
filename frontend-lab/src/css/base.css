@@ -52,7 +52,7 @@ body.rail .brandcell b{display:none}
 .nav.usb>.i:first-child{color:var(--ok)}
 .sem-usb{padding:6px 12px;white-space:nowrap;color:var(--sub);font-size:.85rem}
 .foot{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
-@media (min-width:761px){
+@media (min-width:761px) and (min-height:501px),(min-width:761px) and (pointer:fine){
   body.rail .nav{justify-content:center;padding:0}
   body.rail .nav .t,body.rail .nav .ej,body.rail .sem-usb{display:none}
   body.rail .grp{height:1px;padding:0;margin:10px 14px;background:var(--line);font-size:0;overflow:hidden}
@@ -195,6 +195,7 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .tc2{display:flex;flex-direction:column;gap:3px;min-width:0}
 .tc2 .tn{font-size:.88rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tc2 .tr2{display:flex;align-items:center;gap:10px}
+.tc2 .tft{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem}
 .tc2 .bar{flex:1;min-width:80px}
 .tc2 .meta{white-space:nowrap}
 .tc2.ok .meta{color:var(--ok);font-weight:500}
@@ -257,7 +258,7 @@ body.cfg-open .cfg{display:flex}body.cfg-open .cfg-scrim{display:block}
 .conta .l{flex:1;min-width:0}.conta .l b{display:block;font-weight:600}.conta .l span{font-size:.85rem;color:var(--sub)}
 
 .scrim{display:none}
-@media (max-width:760px){
+@media (max-width:760px),(max-height:500px) and (pointer:coarse){
   .app{grid-template-columns:minmax(0,1fr)}
   .brandcell{display:none}
   main{grid-column:1}

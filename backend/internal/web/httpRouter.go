@@ -25,6 +25,7 @@ func configureHTTPRouter(router, api, publicRoutes, publicApi *http.ServeMux) {
 	// filebrowser-lab: pendrives (ponte com o usb-manager do servidor)
 	api.HandleFunc("GET /lab/host", withUser(hostHandler))
 	api.HandleFunc("GET /lab/passkeys", withUser(passkeysHandler))
+	api.HandleFunc("GET /lab/job", withUser(labJobHandler))
 	api.HandleFunc("GET /lab/archive/list", withUser(labArchiveListHandler))
 	api.HandleFunc("GET /lab/archive/file", withUser(labArchiveFileHandler))
 	api.HandleFunc("POST /lab/archive/edit", withUser(labArchiveEditHandler))

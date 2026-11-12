@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.SharedPreferences;
+import android.graphics.drawable.ColorDrawable;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.security.keystore.UserNotAuthenticatedException;
 import android.util.Base64;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -28,7 +30,10 @@ import androidx.core.app.NotificationCompat;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.getcapacitor.BridgeActivity;
@@ -91,6 +96,19 @@ public class MainActivity extends BridgeActivity {
             if (old != null) old.uncaughtException(t, e);
         });
         super.onCreate(savedInstanceState);
+        // Celular deitado: a área do recorte da câmera ficava como uma faixa cinza. Agora a janela ocupa essa área (pintada com a cor
+        // do tema) e o conteúdo é empurrado para fora do recorte, então nada fica escondido atrás da câmera.
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
+        getWindow().setBackgroundDrawable(new ColorDrawable(0xFF120A33));
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
+            Insets c = insets.getInsets(WindowInsetsCompat.Type.displayCutout());
+            v.setPadding(c.left, 0, c.right, 0);
+            return new WindowInsetsCompat.Builder(insets).setInsets(WindowInsetsCompat.Type.displayCutout(), Insets.NONE).build();
+        });
         final String crash = prefs().getString("crash", null);
         if (crash != null) {
             prefs().edit().remove("crash").apply();
@@ -175,6 +193,7 @@ public class MainActivity extends BridgeActivity {
     private void applyBars(boolean dark) {
         Window w = getWindow();
         int bar = dark ? 0xFF120A33 : 0xFFDBDFE4;
+        w.setBackgroundDrawable(new ColorDrawable(dark ? 0xFF170A38 : 0xFFE6E9ED)); // também pinta a área do recorte da câmera
         w.setStatusBarColor(bar);
         w.setNavigationBarColor(bar);
         WindowInsetsControllerCompat c = WindowCompat.getInsetsController(w, w.getDecorView());

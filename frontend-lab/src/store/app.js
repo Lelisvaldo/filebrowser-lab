@@ -46,7 +46,8 @@ export function persist() {
   } catch (_e) { /* sem storage: segue */ }
 }
 
-const mqMobile = window.matchMedia("(max-width:760px)");
+// modo celular: tela estreita OU celular deitado (baixo e com toque); tablet e PC mantêm o layout largo
+const mqMobile = window.matchMedia("(max-width:760px),(max-height:500px) and (pointer:coarse)");
 export const isMobile = () => mqMobile.matches;
 
 export function applyUi() {

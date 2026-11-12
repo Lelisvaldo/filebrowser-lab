@@ -25,12 +25,14 @@ export const mkdir = (source, path) => send("resources", "POST", undefined, { so
 export const writeText = (source, path, text) => send("resources", "PUT", text, { source, path }, { raw: true });
 export const remove = (items) => send("resources/bulk", "DELETE", items.map((i) => ({ source: i.source, path: i.path })), undefined, { raw: true });
 
-export async function moveCopy(items, action, { overwrite = false, rename = false } = {}) {
+export async function moveCopy(items, action, { overwrite = false, rename = false, job = undefined } = {}) {
   return send("resources", "PATCH", {
     items: items.map((i) => ({ fromSource: i.fromSource, fromPath: i.from, toSource: i.toSource, toPath: i.to })),
-    action, overwrite, rename,
+    action, overwrite, rename, job,
   });
 }
+// andamento de um mover/copiar em curso (bytes do item atual); null se o servidor não conhece o id (ainda ou mais)
+export const jobProgress = (id) => get("lab/job", { id }).catch(() => null);
 
 // scope (opcional): "Fonte:/subpasta/"
 export const search = (query, sources, scope) => get("tools/search", { query, sources: sources.join(","), scope });

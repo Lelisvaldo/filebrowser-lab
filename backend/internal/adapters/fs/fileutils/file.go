@@ -128,7 +128,12 @@ func copySingleFile(source, dest string) error {
 	defer dst.Close()
 
 	// Copy the contents of the file.
-	if err = copyFileContents(dst, src); err != nil {
+	if lp := progressFor(source); lp != nil {
+		err = copyWithProgress(dst, src, lp) // lab: conta os bytes para a tela de Transferências
+	} else {
+		err = copyFileContents(dst, src)
+	}
+	if err != nil {
 		return err
 	}
 
